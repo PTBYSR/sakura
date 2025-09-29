@@ -1,0 +1,38 @@
+{
+  "name": "sakura-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sakura monorepo containing dashboard, widget, and backend services",
+  "workspaces": [
+    "dashboard",
+    "widget"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:dashboard\" \"npm run dev:widget\"",
+    "dev:dashboard": "npm run dev --workspace=dashboard",
+    "dev:widget": "npm run dev --workspace=widget",
+    "dev:backend": "cd backend && python -m venv venv && venv\\Scripts\\activate && uvicorn main:app --reload",
+    "build": "npm run build:dashboard && npm run build:widget",
+    "build:dashboard": "npm run build --workspace=dashboard",
+    "build:widget": "npm run build --workspace=widget",
+    "start": "concurrently \"npm run start:dashboard\" \"npm run start:widget\" \"npm run start:backend\"",
+    "start:dashboard": "npm run start --workspace=dashboard",
+    "start:widget": "npm run start --workspace=widget",
+    "start:backend": "cd backend && python main.py",
+    "lint": "npm run lint:dashboard && npm run lint:widget",
+    "lint:dashboard": "npm run lint --workspace=dashboard",
+    "lint:widget": "npm run lint --workspace=widget",
+    "install:all": "npm install && npm install --workspace=dashboard && npm install --workspace=widget",
+    "clean": "npm run clean:dashboard && npm run clean:widget",
+    "clean:dashboard": "rm -rf dashboard/node_modules dashboard/.next",
+    "clean:widget": "rm -rf widget/node_modules widget/.next",
+    "setup:backend": "cd backend && python -m venv venv && venv\\Scripts\\activate && uvicorn main:app --reload "
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}
