@@ -24,6 +24,12 @@ from dotenv import load_dotenv
 from langsmith import traceable
 from tqdm import tqdm
 import re
+import json
+import os
+
+# Database middleware
+from storage import ChatStorage
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -33,6 +39,14 @@ logger = logging.getLogger(__name__)
 print("🔧 Loading environment variables...")
 load_dotenv()
 print("✅ Environment variables loaded")
+
+# MongoDB setup
+uri = os.getenv("MONGO_URI")
+print(f"🔗 Connecting to MongoDB Atlas: {uri}")
+
+# Initialize storage
+storage = ChatStorage(uri)
+
 
 # FastAPI app initialization
 app = FastAPI(title="Regirl Chat API", version="1.0.0")
@@ -58,6 +72,24 @@ class ChatResponse(BaseModel):
     session_id: str
     timestamp: str
     processing_time: float
+
+class UserData(BaseModel):
+    name: str
+    email: str
+    ip: str
+    location: dict
+    device: dict
+    timestamp: str
+    lastSeen: str
+    totalVisits: int
+    chatId: str
+    vibe: str
+    visitDuration: int
+
+
+class UserDataResponse(BaseModel):
+    success: bool
+    message: str
 
 # LangGraph State
 class State(TypedDict):
@@ -218,6 +250,38 @@ system_message = {
 }
 
 
+def save_user_data(user_data: UserData) -> bool:
+    """
+    Save user data to a JSON file, appending to existing data
+    """
+    try:
+        users_file = "users.json"
+        
+        # Load existing users or create empty list
+        if os.path.exists(users_file):
+            with open(users_file, 'r', encoding='utf-8') as f:
+                users = json.load(f)
+        else:
+            users = []
+        
+        # Convert Pydantic model to dict
+        user_dict = user_data.dict()
+        
+        # Append new user
+        users.append(user_dict)
+        
+        # Save back to file with proper formatting
+        with open(users_file, 'w', encoding='utf-8') as f:
+            json.dump(users, f, indent=2, ensure_ascii=False)
+        
+        print(f"✅ User data saved: {user_data.name} ({user_data.email})")
+        print(f"📊 Total users: {len(users)}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error saving user data: {e}")
+        return False
+
 @traceable
 def process_chat_message(query: str, session_id: str) -> str:
     """
@@ -266,37 +330,107 @@ async def health_check():
         "timestamp": datetime.now().isoformat()
     }
 
+@app.post("/users", response_model=UserDataResponse)
+async def save_user_endpoint(user_data: UserData):
+    print(f"👤 User data endpoint called")
+    print(f"📝 Name: {user_data.name}")
+    print(f"📧 Email: {user_data.email}")
+    print(f"🌍 Location: {user_data.location.get('city', 'Unknown')}, {user_data.location.get('country', 'Unknown')}")
+    
+
+    try:
+        user = storage.get_or_create_user(email=user_data.email, name=user_data.name)
+        return UserDataResponse(success=True, message="User stored in MongoDB")
+    except Exception as e:
+        print(f"❌ MongoDB error: {e}")
+        raise HTTPException(status_code=500, detail="DB error")
+
+
+
+    # try:
+    #     # Save user data to JSON file
+    #     success = save_user_data(user_data)
+
+        
+        
+    #     if success:
+    #         return UserDataResponse(
+    #             success=True,
+    #             message="User data saved successfully"
+    #         )
+    #     else:
+    #         raise HTTPException(status_code=500, detail="Failed to save user data")
+            
+    # except HTTPException:
+    #     raise
+    # except Exception as e:
+    #     print(f"❌ Unexpected error in user endpoint: {e}")
+    #     raise HTTPException(status_code=500, detail="Internal server error")
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
     start_time = time.time()
     session_id = request.session_id or f"session_{int(time.time())}"
     
     print(f"📞 Chat endpoint called")
-    print(f"🆔 Session ID: {session_id}")
-    print(f"📨 Message: '{request.message}'")
-    
+    print(f"🆔 Session ID: {session_id}") 
     try:
-        # Process the message
+        # Example: email should come from frontend/user context
+        user_email = "test@example.com"  
+        user = storage.get_or_create_user(user_email)
+
+        # Start new chat if none exists
+        chat_id = session_id if session_id else storage.start_chat(user["_id"])
+
+        # Save user message
+        storage.add_message(chat_id, "user", request.message)
+
+        # Process with LangGraph
         response_text = process_chat_message(request.message, session_id)
-        
+
+        # Save agent reply
+        storage.add_message(chat_id, "agent", response_text)
+
         processing_time = time.time() - start_time
         timestamp = datetime.now().isoformat()
-        
-        print(f"⏱️  Processing time: {processing_time:.2f} seconds")
-        print(f"📤 Response length: {len(response_text)} characters")
-        
+
         return ChatResponse(
             response=response_text,
-            session_id=session_id,
+            session_id=chat_id,
             timestamp=timestamp,
             processing_time=processing_time
         )
-        
-    except HTTPException:
-        raise
     except Exception as e:
-        print(f"❌ Unexpected error in chat endpoint: {e}")
+        print(f"❌ Error in /chat: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+    print(f"📨 Message: '{request.message}'")
+
+
+
+
+    
+    # try:
+    #     # Process the message
+    #     response_text = process_chat_message(request.message, session_id)
+        
+    #     processing_time = time.time() - start_time
+    #     timestamp = datetime.now().isoformat()
+        
+    #     print(f"⏱️  Processing time: {processing_time:.2f} seconds")
+    #     print(f"📤 Response length: {len(response_text)} characters")
+        
+    #     return ChatResponse(
+    #         response=response_text,
+    #         session_id=session_id,
+    #         timestamp=timestamp,
+    #         processing_time=processing_time
+    #     )
+        
+    # except HTTPException:
+    #     raise
+    # except Exception as e:
+    #     print(f"❌ Unexpected error in chat endpoint: {e}")
+    #     raise HTTPException(status_code=500, detail="Internal server error")
 
 # Startup event
 @app.on_event("startup")
