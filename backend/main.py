@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from fastapi import Query
 from typing import Optional
 import logging
 import time
@@ -29,6 +30,10 @@ import os
 
 # Database middleware
 from storage import ChatStorage
+
+# Load AOPS data
+with open("aops.json", "r", encoding="utf-8") as f:
+    AOPS = json.load(f)
 
 
 # Configure logging
@@ -66,6 +71,7 @@ print("✅ CORS configured")
 class ChatRequest(BaseModel):
     message: str
     session_id: Optional[str] = None
+    email: Optional[str] = None
 
 class ChatResponse(BaseModel):
     response: str
@@ -95,7 +101,160 @@ class UserDataResponse(BaseModel):
 class State(TypedDict):
     messages: Annotated[list, add_messages]
 
+
+
+# AOP Execution
+def format_step_for_user(step: dict) -> str:
+    """
+    Get the human-facing message for a step, using 'user_prompt' if available.
+    """
+    return step.get("user_prompt", f"➡️ Proceeding with step: {step['id']}")
+
+
+def run_aop(
+    aop: dict,
+    user_message: str,
+    user_inputs: dict = None,
+    chat_id: str = None,
+    storage=None
+) -> str:
+    """
+    Executes any AOP step by step, pausing if input is required.
+    - Saves debug logs with msg_type="debug"
+    - Saves user-facing replies with msg_type="reply"
+    - Returns only the latest reply for frontend
+    """
+    logger.info(f"🚀 Running AOP: {aop['aop_name']} for message: '{user_message}'")
+
+    user_inputs = user_inputs or {}
+    steps = {step["id"]: step for step in aop["steps"]}
+
+    # Load state from DB
+    state = storage.get_state(chat_id) if chat_id and storage else {}
+
+    # Resume from last step if saved, otherwise start fresh
+    current_step_id = state.get("step_id", aop["steps"][0]["id"])
+    current_step = steps[current_step_id]
+
+    last_user_reply = None  # <-- what we’ll return to frontend
+
+    # 🔹 Debug log (start)
+    if chat_id:
+        storage.add_message(chat_id, "agent", f"▶ Starting AOP: {aop['aop_name']}", msg_type="debug")
+
+    while current_step:
+        step_id = current_step["id"]
+        step_type = current_step["type"]
+
+        # 🔹 Debug log (step info)
+        if chat_id:
+            storage.add_message(chat_id, "agent", f"➡️ Step {step_id} ({step_type})", msg_type="debug")
+
+        # Format user-facing message
+        user_message_out = format_step_for_user(current_step)
+
+        # 🔹 Save agent reply (user sees this)
+        if chat_id:
+            storage.add_message(chat_id, "agent", user_message_out, msg_type="reply")
+        last_user_reply = user_message_out
+
+        # If input required but not yet provided → pause
+        if current_step.get("requires_response") and step_id not in user_inputs:
+            logger.info(f"⏸ Pausing at step '{step_id}' (waiting for input)")
+            if chat_id:
+                storage.set_chat_state(chat_id, {
+                    "aop_name": aop["aop_name"],
+                    "step_id": step_id
+                })
+            return last_user_reply
+
+        # If input provided → store in state
+        if step_id in user_inputs:
+            state[step_id] = user_inputs[step_id]
+            if chat_id and storage:
+                storage.update_state(chat_id, {step_id: user_inputs[step_id]})
+
+        # --- Decision step ---
+        if step_type == "decision":
+            matched_next = None
+            for rule in current_step.get("decision_logic", []):
+                condition = rule["condition"]
+                try:
+                    if eval(condition, {}, state):
+                        matched_next = rule["next"]
+                        if chat_id:
+                            storage.add_message(chat_id, "agent",
+                                f"🔀 Condition matched: {condition} → {matched_next}",
+                                msg_type="debug"
+                            )
+                        break
+                except Exception as e:
+                    logger.error(f"❌ Error evaluating condition '{condition}': {e}")
+
+            if not matched_next:
+                if chat_id:
+                    storage.add_message(chat_id, "agent",
+                        f"⚠️ No matching condition at {step_id}",
+                        msg_type="debug"
+                    )
+                break
+            current_step_id = matched_next
+
+        # --- Action step ---
+        elif step_type == "action":
+            action = current_step.get("action")
+            if chat_id:
+                storage.add_message(chat_id, "agent", f"⚙️ Executing action: {action}", msg_type="debug")
+            current_step_id = current_step.get("success_next")
+
+        else:
+            if chat_id:
+                storage.add_message(chat_id, "agent", f"❓ Unknown step type: {step_type}", msg_type="debug")
+            break
+
+        # Persist step before moving forward
+        if chat_id and storage:
+            storage.set_chat_state(chat_id, {
+                "aop_name": aop["aop_name"],
+                "step_id": current_step_id
+            })
+
+        current_step = steps.get(current_step_id) if current_step_id else None
+
+    # 🔹 Debug log (end)
+    if chat_id:
+        storage.add_message(chat_id, "agent", f"🏁 Finished AOP: {aop['aop_name']}", msg_type="debug")
+
+    return last_user_reply or f"✅ Finished {aop['aop_name']}"
+
+
 # Tools
+@tool
+def match_aop(user_message: str) -> str:
+    """
+    Match the user's message to an available AOP.
+    Returns the AOP name or 'none'.
+    """
+    # Give the LLM the list of AOPs
+    logger.info(f"🎯 Matching AOP for message: '{user_message}'")
+    aop_names = [a["aop_name"] for a in AOPS]
+    descriptions = "\n".join([f"- {a['aop_name']}: {a['description']}" for a in AOPS])
+
+    prompt = f"""
+    User message: "{user_message}"
+    Available AOPs:
+    {descriptions}
+
+    Which AOP best matches the user request? 
+    Respond with the exact AOP name or 'none' if none apply.
+    """
+
+    result = llm.invoke(prompt)  # use your initialized LLM
+    chosen = result.content.strip()
+    logger.info(f"✅ LLM decided: {chosen}")
+    return chosen
+
+
 @tool
 def get_stock_price(symbol: str) -> float:
     """
@@ -315,6 +474,9 @@ def process_chat_message(query: str, session_id: str) -> str:
         raise HTTPException(status_code=500, detail=f"Error processing message: {str(e)}")
 
 # API Routes
+
+
+
 @app.get("/")
 async def root():
     print("🏠 Root endpoint accessed")
@@ -372,27 +534,50 @@ async def chat_endpoint(request: ChatRequest):
     start_time = time.time()
     session_id = request.session_id or f"session_{int(time.time())}"
     
-    print(f"📞 Chat endpoint called")
-    print(f"🆔 Session ID: {session_id}") 
+    logger.info(f"📞 Chat request received | Session: {session_id} | Email: {request.email}")
+    logger.info(f"📝 User message: '{request.message}'")
     try:
         # Example: email should come from frontend/user context
-        user_email = "test@example.com"  
+        user_email = request.email  
+        if not user_email:
+            raise HTTPException(status_code=400, detail="Email is required")
+
         user = storage.get_or_create_user(user_email)
 
         # Start new chat if none exists
-        chat_id = session_id if session_id else storage.start_chat(user["_id"])
+        chat_id = storage.get_or_create_open_chat(str(user["_id"]))
+
 
         # Save user message
         storage.add_message(chat_id, "user", request.message)
 
-        # Process with LangGraph
-        response_text = process_chat_message(request.message, session_id)
 
+        # 🔹 First, check if an AOP applies
+        aop_name = match_aop(request.message)
+        if aop_name and aop_name.lower() != "none":
+            logger.info(f"🤖 AOP detected: {aop_name}")
+            aop = next((a for a in AOPS if a["aop_name"] == aop_name), None)
+            if aop:
+                response_text = run_aop(aop, request.message, chat_id=chat_id, storage=storage)
+            else:
+                logger.error(f"⚠️ AOP '{aop_name}' not found in definitions")
+                response_text = "I detected an AOP intent, but could not load it."
+        else:
+            # Fallback to normal chatbot
+            logger.info("💬 No AOP triggered, falling back to normal chatbot")
+            response_text = process_chat_message(request.message, session_id)
+
+
+
+
+       
         # Save agent reply
         storage.add_message(chat_id, "agent", response_text)
 
         processing_time = time.time() - start_time
         timestamp = datetime.now().isoformat()
+
+        logger.info(f"✅ Chat handled successfully in {processing_time:.2f}s")
 
         return ChatResponse(
             response=response_text,
@@ -406,7 +591,17 @@ async def chat_endpoint(request: ChatRequest):
     print(f"📨 Message: '{request.message}'")
 
 
+@app.get("/chats")
+async def get_chats(email: str = Query(...)):
+    """
+    Return all chats for a given user email.
+    """
+    user = storage.users.find_one({"email": email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
+    chats = list(storage.chats.find({"user_id": str(user["_id"])}, {"_id": 0}))
+    return {"chats": chats} 
 
     
     # try:

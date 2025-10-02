@@ -89,6 +89,27 @@ export default function ChatPage() {
     }
   }, [stage]);
 
+
+  // Load messages on mount
+useEffect(() => {
+  if (typeof window !== "undefined") {
+    const savedMessages = localStorage.getItem("messages");
+    if (savedMessages) {
+      setMessages(JSON.parse(savedMessages));
+    }
+  }
+}, []);
+
+// Persist messages whenever they change
+useEffect(() => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem("messages", JSON.stringify(messages));
+  }
+}, [messages]);
+
+
+
+
   // Init checks
   useEffect(() => {
     checkApiHealth();
@@ -142,7 +163,7 @@ export default function ChatPage() {
           city: locationData.city || 'Unknown',
           region: locationData.region || 'Unknown',
           country: locationData.country_name || 'Unknown',
-          timezone: locationData.timezone || 'Unknown',
+          timezone: locationData.taimezone || 'Unknown',
         },
         device: { userAgent, platform, language },
         timestamp: new Date().toISOString(),
@@ -232,6 +253,21 @@ export default function ChatPage() {
 
       const chatResponse: ChatResponse = await response.json();
 
+      let cleanResponse = chatResponse.response;
+
+      // Example filter: remove system/meta markers
+      cleanResponse = cleanResponse
+        .split("\n")
+        .filter(line =>
+          !line.startsWith("▶") &&   // remove AOP start
+          !line.startsWith("➡️") &&  // remove step markers
+          !line.startsWith("⏸") &&  // remove pause markers
+          !line.startsWith("💬 Agent:") // remove redundant agent prefix
+        )
+        .join("\n")
+        .trim();
+      
+      
       const assistantMessage: Message = {
         id: `assistant_${Date.now()}`,
         content: chatResponse.response,
@@ -368,26 +404,26 @@ export default function ChatPage() {
 
       {/* Input */}
       <div className="bg-white border-t border-gray-200 px-6 py-4">
-        <div className="flex items-end space-x-4">
-          <div className="flex-1">
+        <div className="flex items-center gap-5 border-2 border-black rounded-full pl-5 pr-1 py-1">
             <textarea
+              onFocus={(e) => {console.log("focus: " + e)}}
               ref={inputRef}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder={`Ask me anything, ${name}...`}
-              className="text-black w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+              className="text-black w-full px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
               rows={1}
               disabled={isLoading || apiStatus === 'offline'}
-              style={{ minHeight: '44px', maxHeight: '120px' }}
+              style={{ minHeight: '', maxHeight: '120px' }}
             />
-          </div>
+         
           <button
             onClick={sendMessage}
             disabled={!inputMessage.trim() || isLoading || apiStatus === 'offline'}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 flex items-center space-x-2"
+            className="border border-black text-white p-2 rounded-full hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 "
           >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5 text-gray-500" />}
             <span className="hidden sm:inline">Send</span>
           </button>
         </div>
