@@ -542,42 +542,38 @@ async def options_chat():
 
 
 
+# Replace your existing @app.post("/users") endpoint in main.py with this:
+
 @app.post("/users", response_model=UserDataResponse)
 async def save_user_endpoint(user_data: UserData):
     print(f"👤 User data endpoint called")
     print(f"📝 Name: {user_data.name}")
     print(f"📧 Email: {user_data.email}")
-    print(f"🌍 Location: {user_data.location.get('city', 'Unknown')}, {user_data.location.get('country', 'Unknown')}")
+    print(f"🌍 Location: {user_data.location}")
+    print(f"📱 Device: {user_data.device}")
+    print(f"🎭 Vibe: {user_data.vibe}")
+    print(f"🌐 IP: {user_data.ip}")
     
-
     try:
-        user = storage.get_or_create_user(email=user_data.email, name=user_data.name)
-        return UserDataResponse(success=True, message="User stored in MongoDB")
+        # Convert Pydantic model to dict
+        user_dict = user_data.dict()
+        
+        # Use the new storage method to save complete user data
+        success = storage.save_complete_user_data(user_dict)
+        
+        if success:
+            print(f"✅ User data saved successfully with all fields")
+            return UserDataResponse(success=True, message="User stored in MongoDB with complete data")
+        else:
+            print(f"⚠️ Failed to save user data")
+            raise HTTPException(status_code=400, detail="Failed to save user data")
+        
     except Exception as e:
         print(f"❌ MongoDB error: {e}")
-        raise HTTPException(status_code=500, detail="DB error")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"DB error: {str(e)}")
 
-
-
-    # try:
-    #     # Save user data to JSON file
-    #     success = save_user_data(user_data)
-
-        
-        
-    #     if success:
-    #         return UserDataResponse(
-    #             success=True,
-    #             message="User data saved successfully"
-    #         )
-    #     else:
-    #         raise HTTPException(status_code=500, detail="Failed to save user data")
-            
-    # except HTTPException:
-    #     raise
-    # except Exception as e:
-    #     print(f"❌ Unexpected error in user endpoint: {e}")
-    #     raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
@@ -671,6 +667,8 @@ async def get_user_by_email(email: str):
         user["_id"] = str(user["_id"])
         
         print(f"✅ User found: {user.get('name', 'Unknown')}")
+        print(f"📋 User fields: {list(user.keys())}")
+        print(f"🔍 Full user data: {user}")  # Debug: see everything
         return {"user": user}
         
     except HTTPException:
@@ -679,6 +677,23 @@ async def get_user_by_email(email: str):
         print(f"❌ Error fetching user: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+@app.get("/debug/users")
+async def debug_all_users():
+    """
+    Debug endpoint to see all users with all fields
+    """
+    try:
+        users = list(storage.users.find({}).limit(10))
+        for user in users:
+            user["_id"] = str(user["_id"])
+        
+        return {
+            "count": len(users),
+            "users": users,
+            "sample_fields": list(users[0].keys()) if users else []
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/users")
 async def get_all_users(
@@ -686,13 +701,14 @@ async def get_all_users(
     limit: int = Query(100, ge=1, le=1000)
 ):
     """
-    Get all users with pagination
+    Get all users with pagination - returns ALL user fields
     """
     print(f"📊 Fetching all users (skip={skip}, limit={limit})")
     try:
-        users = list(storage.users.find({}, {"_id": 1, "name": 1, "email": 1, "created_at": 1, "last_seen": 1})
-                    .skip(skip)
-                    .limit(limit))
+        users = list(storage.users.find({})  # Remove field projection to get ALL fields
+        # users = list(storage.users.find({}, {"_id": 1, "name": 1, "email": 1, "created_at": 1, "last_seen": 1})
+            .skip(skip)
+            .limit(limit))
         
         # Convert ObjectId to string
         for user in users:
@@ -701,6 +717,7 @@ async def get_all_users(
         total_count = storage.users.count_documents({})
         
         print(f"✅ Found {len(users)} users (total: {total_count})")
+        print(f"📋 Sample user fields: {list(users[0].keys()) if users else 'No users'}")
         return {
             "users": users,
             "total": total_count,

@@ -1,6 +1,7 @@
 # storage.py
 from pymongo import MongoClient
 from datetime import datetime
+from typing import Optional, Dict, Any
 import uuid
 
 class ChatStorage:
@@ -29,6 +30,85 @@ class ChatStorage:
                  "$inc": {"total_visits": 1}}
             )
         return self.users.find_one({"email": email})
+    
+
+
+
+    def save_complete_user_data(self, user_data: Dict[str, Any]) -> bool:
+        """
+        Save or update complete user data from chatbot widget
+        This method handles ALL user fields: ip, location, device, vibe, etc.
+        """
+        email = user_data.get("email")
+        if not email:
+            print("❌ No email provided in user_data")
+            return False
+        
+        existing_user = self.users.find_one({"email": email})
+        
+        if existing_user:
+            # Update existing user with all new data
+            print(f"🔄 Updating existing user: {email}")
+            update_data = {
+                "name": user_data.get("name", existing_user.get("name", "Anonymous")),
+                "last_seen": user_data.get("lastSeen", datetime.utcnow().isoformat()),
+                "updated_at": datetime.utcnow().isoformat()
+            }
+            
+            # Add optional fields if provided
+            if "ip" in user_data:
+                update_data["ip"] = user_data["ip"]
+            if "location" in user_data:
+                update_data["location"] = user_data["location"]
+            if "device" in user_data:
+                update_data["device"] = user_data["device"]
+            if "vibe" in user_data:
+                update_data["vibe"] = user_data["vibe"]
+            if "visitDuration" in user_data:
+                update_data["visit_duration"] = user_data["visitDuration"]
+            if "chatId" in user_data:
+                update_data["chat_id"] = user_data["chatId"]
+            if "totalVisits" in user_data:
+                update_data["total_visits"] = user_data["totalVisits"]
+            if "timestamp" in user_data:
+                update_data["timestamp"] = user_data["timestamp"]
+            
+            result = self.users.update_one(
+                {"email": email},
+                {"$set": update_data}
+            )
+            print(f"✅ Updated user {email} - Matched: {result.matched_count}, Modified: {result.modified_count}")
+            return True
+        else:
+            # Create new user with all provided data
+            print(f"✨ Creating new user: {email}")
+            new_user = {
+                "email": email,
+                "name": user_data.get("name", "Anonymous"),
+                "created_at": user_data.get("timestamp", datetime.utcnow().isoformat()),
+                "last_seen": user_data.get("lastSeen", datetime.utcnow().isoformat()),
+                "total_visits": user_data.get("totalVisits", 1),
+            }
+            
+            # Add optional fields if provided
+            if "ip" in user_data:
+                new_user["ip"] = user_data["ip"]
+            if "location" in user_data:
+                new_user["location"] = user_data["location"]
+            if "device" in user_data:
+                new_user["device"] = user_data["device"]
+            if "vibe" in user_data:
+                new_user["vibe"] = user_data["vibe"]
+            if "visitDuration" in user_data:
+                new_user["visit_duration"] = user_data["visitDuration"]
+            if "chatId" in user_data:
+                new_user["chat_id"] = user_data["chatId"]
+            if "timestamp" in user_data:
+                new_user["timestamp"] = user_data["timestamp"]
+            
+            self.users.insert_one(new_user)
+            print(f"✅ Created new user: {email} with all fields")
+            return True
 
     # --- Chats ---
 
