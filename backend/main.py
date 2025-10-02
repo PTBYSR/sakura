@@ -60,10 +60,18 @@ app = FastAPI(title="Regirl Chat API", version="1.0.0")
 print("🌐 Setting up CORS for Next.js frontend...")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Next.js dev server
+    allow_origins=[
+        "http://localhost:3000", 
+        "http://127.0.0.1:3000",
+        "http://localhost:3001", 
+        "http://127.0.0.1:3001"
+        
+        ],  # Next.js dev server
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],  # Explicitly include OPTIONS
     allow_headers=["*"],
+    expose_headers=["*"],  # Add this
+    max_age=3600,  # Cache preflight requests for 1 hour
 )
 print("✅ CORS configured")
 
@@ -492,6 +500,48 @@ async def health_check():
         "timestamp": datetime.now().isoformat()
     }
 
+
+
+
+
+
+@app.options("/users")
+async def options_users():
+    """Handle OPTIONS preflight request for /users"""
+    return {"status": "ok"}
+
+@app.options("/users/{email}")
+async def options_user_by_email(email: str):
+    """Handle OPTIONS preflight request for /users/{email}"""
+    return {"status": "ok"}
+
+@app.options("/users/{email}/stats")
+async def options_user_stats(email: str):
+    """Handle OPTIONS preflight request for /users/{email}/stats"""
+    return {"status": "ok"}
+
+@app.options("/chats")
+async def options_chats():
+    """Handle OPTIONS preflight request for /chats"""
+    return {"status": "ok"}
+
+@app.options("/chats/{chat_id}")
+async def options_chat_by_id(chat_id: str):
+    """Handle OPTIONS preflight request for /chats/{chat_id}"""
+    return {"status": "ok"}
+
+@app.options("/chat")
+async def options_chat():
+    """Handle OPTIONS preflight request for /chat"""
+    return {"status": "ok"}
+
+
+
+
+
+
+
+
 @app.post("/users", response_model=UserDataResponse)
 async def save_user_endpoint(user_data: UserData):
     print(f"👤 User data endpoint called")
@@ -602,6 +652,135 @@ async def get_chats(email: str = Query(...)):
 
     chats = list(storage.chats.find({"user_id": str(user["_id"])}, {"_id": 0}))
     return {"chats": chats} 
+
+
+# Add these endpoints to your FastAPI app (main.py)
+
+@app.get("/users/{email}")
+async def get_user_by_email(email: str):
+    """
+    Get a specific user's data by email
+    """
+    print(f"🔍 Fetching user data for email: {email}")
+    try:
+        user = storage.users.find_one({"email": email})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Convert ObjectId to string for JSON serialization
+        user["_id"] = str(user["_id"])
+        
+        print(f"✅ User found: {user.get('name', 'Unknown')}")
+        return {"user": user}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error fetching user: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/users")
+async def get_all_users(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000)
+):
+    """
+    Get all users with pagination
+    """
+    print(f"📊 Fetching all users (skip={skip}, limit={limit})")
+    try:
+        users = list(storage.users.find({}, {"_id": 1, "name": 1, "email": 1, "created_at": 1, "last_seen": 1})
+                    .skip(skip)
+                    .limit(limit))
+        
+        # Convert ObjectId to string
+        for user in users:
+            user["_id"] = str(user["_id"])
+        
+        total_count = storage.users.count_documents({})
+        
+        print(f"✅ Found {len(users)} users (total: {total_count})")
+        return {
+            "users": users,
+            "total": total_count,
+            "skip": skip,
+            "limit": limit
+        }
+        
+    except Exception as e:
+        print(f"❌ Error fetching users: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/users/{email}/stats")
+async def get_user_stats(email: str):
+    """
+    Get user statistics including chat count and message count
+    """
+    print(f"📈 Fetching stats for user: {email}")
+    try:
+        user = storage.users.find_one({"email": email})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_id = str(user["_id"])
+        
+        # Get chat statistics
+        total_chats = storage.chats.count_documents({"user_id": user_id})
+        open_chats = storage.chats.count_documents({"user_id": user_id, "status": "open"})
+        closed_chats = storage.chats.count_documents({"user_id": user_id, "status": "closed"})
+        
+        # Get message count across all chats
+        pipeline = [
+            {"$match": {"user_id": user_id}},
+            {"$project": {"message_count": {"$size": "$messages"}}}
+        ]
+        message_stats = list(storage.chats.aggregate(pipeline))
+        total_messages = sum(chat.get("message_count", 0) for chat in message_stats)
+        
+        stats = {
+            "email": email,
+            "name": user.get("name", "Unknown"),
+            "total_chats": total_chats,
+            "open_chats": open_chats,
+            "closed_chats": closed_chats,
+            "total_messages": total_messages,
+            "created_at": user.get("created_at"),
+            "last_seen": user.get("last_seen")
+        }
+        
+        print(f"✅ Stats compiled for {email}")
+        return stats
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error fetching user stats: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/chats/{chat_id}")
+async def get_chat_by_id(chat_id: str):
+    """
+    Get a specific chat by ID with all messages
+    """
+    print(f"💬 Fetching chat: {chat_id}")
+    try:
+        chat = storage.chats.find_one({"chat_id": chat_id})
+        if not chat:
+            raise HTTPException(status_code=404, detail="Chat not found")
+        
+        chat["_id"] = str(chat["_id"])
+        
+        print(f"✅ Chat found with {len(chat.get('messages', []))} messages")
+        return {"chat": chat}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error fetching chat: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
     
     # try:
