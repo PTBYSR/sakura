@@ -2,15 +2,16 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
-// Types for chat system
+// Types
 export interface ChatMessage {
   id: string;
-  sender: "user" | "customer";
+  sender: "user" | "customer" | "assistant";
   content: string;
   timestamp: Date;
   status?: "sent" | "delivered" | "read";
   isLink?: boolean;
   linkUrl?: string;
+  tags?: string[];
 }
 
 export interface Customer {
@@ -40,6 +41,7 @@ interface ChatContextType {
   sendMessage: (chatId: string, content: string) => void;
   loading: boolean;
   error: string | null;
+  refreshCustomer: (customerId: string) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -60,10 +62,30 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedChat, setSelectedChat] = useState<Customer | null>(null);
   const [messages, setMessages] = useState<{ [chatId: string]: ChatMessage[] }>({});
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch all customers
+  // Compute user status based on last seen
+  const computeStatus = (lastSeen: string | Date): "online" | "away" | "offline" => {
+    const last = new Date(lastSeen).getTime();
+    const now = Date.now();
+    const diff = now - last;
+    if (diff < 5 * 60 * 1000) return "online";
+    if (diff < 30 * 60 * 1000) return "away";
+    return "offline";
+  };
+
+  // Aggregate chat categories per user
+  const getUserCategory = (chats: any[]): Customer["category"] => {
+    if (!chats || chats.length === 0) return "human-chats";
+    if (chats.some(c => c.category === "escalated")) return "escalated";
+    if (chats.some(c => c.category === "ai-active")) return "ai-active";
+    if (chats.every(c => c.category === "ai-resolved")) return "ai-resolved";
+    if (chats.every(c => c.status === "closed")) return "resolved";
+    return "human-chats";
+  };
+
+  // Fetch all users
   const fetchCustomers = async () => {
     setLoading(true);
     setError(null);
@@ -76,23 +98,30 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       });
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
-      // Map backend data to Customer interface
-      const mapped: Customer[] = data.users.map((u: any) => ({
-        _id: u._id,
-        name: u.name,
-        email: u.email,
-        location: u.location || "",
-        avatar: u.name.charAt(0),
-        status: u.last_seen ? computeStatus(u.last_seen) : "offline",
-        lastMessage: u.lastMessage || "",
-        lastMessageTime: u.lastMessageTime ? new Date(u.lastMessageTime) : undefined,
-        chatId: u.chat_id,
-        category: u.category,
-        chatDuration: u.chat_duration,
-        visitedPages: u.visitedPages,
-        totalMessages: u.totalMessages,
-        tags: u.tags || [],
-      }));
+
+      const mapped: Customer[] = data.users.map((u: any) => {
+        const chats = u.chats || [];
+        const latestChat = chats[chats.length - 1] || {};
+        const latestMsg = latestChat.messages?.[latestChat.messages.length - 1];
+
+        return {
+          _id: u._id,
+          name: u.name,
+          email: u.email,
+          location: u.location || "",
+          avatar: u.name.charAt(0),
+          status: u.last_seen ? computeStatus(u.last_seen) : "offline",
+          lastMessage: latestMsg?.text || "",
+          lastMessageTime: latestMsg?.timestamp ? new Date(latestMsg.timestamp) : undefined,
+          chatId: latestChat.chat_id,
+          category: getUserCategory(chats),
+          chatDuration: u.chat_duration,
+          visitedPages: u.visitedPages,
+          totalMessages: u.totalMessages,
+          tags: u.tags || [],
+        };
+      });
+
       setCustomers(mapped);
     } catch (err: any) {
       console.error(err);
@@ -102,7 +131,43 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     }
   };
 
-  // Fetch messages for a specific chat
+  // Refresh single customer
+  const refreshCustomer = async (customerId: string) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/users/${customerId}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        mode: "cors",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const u = await res.json();
+
+      const chats = u.chats || [];
+      const latestChat = chats[chats.length - 1] || {};
+      const latestMsg = latestChat.messages?.[latestChat.messages.length - 1];
+
+      setCustomers(prev =>
+        prev.map(c =>
+          c._id === u._id
+            ? {
+                ...c,
+                category: getUserCategory(chats),
+                tags: u.tags || [],
+                totalMessages: u.totalMessages,
+                lastMessage: latestMsg?.text || "",
+                lastMessageTime: latestMsg?.timestamp ? new Date(latestMsg.timestamp) : undefined,
+                chatId: latestChat.chat_id,
+              }
+            : c
+        )
+      );
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
+
+  // Fetch messages for a chat
   const fetchChatMessages = async (chatId: string) => {
     if (!chatId) return;
     setLoading(true);
@@ -116,6 +181,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       });
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
+
       const mapped: ChatMessage[] = data.messages.map((m: any) => ({
         id: m._id,
         sender: m.sender,
@@ -124,7 +190,9 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         status: m.status,
         isLink: m.isLink,
         linkUrl: m.linkUrl,
+        tags: m.tags || [],
       }));
+
       setMessages(prev => ({ ...prev, [chatId]: mapped }));
     } catch (err: any) {
       console.error(err);
@@ -156,7 +224,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         credentials: "include",
       });
       if (!res.ok) throw new Error(`Failed to send message: ${res.status}`);
-      // Optimistically add message to state
+
       const newMsg: ChatMessage = {
         id: Math.random().toString(36).substr(2, 9),
         sender: "user",
@@ -164,24 +232,18 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         timestamp: new Date(),
         status: "sent",
       };
+
       setMessages(prev => ({
         ...prev,
         [chatId]: [...(prev[chatId] || []), newMsg],
       }));
+
+      const customer = customers.find(c => c.chatId === chatId);
+      if (customer) refreshCustomer(customer._id);
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Failed to send message");
     }
-  };
-
-  // Utility: compute online/offline/away status based on last_seen
-  const computeStatus = (lastSeen: string | Date): "online" | "away" | "offline" => {
-    const last = new Date(lastSeen).getTime();
-    const now = Date.now();
-    const diff = now - last;
-    if (diff < 5 * 60 * 1000) return "online"; // last 5 min
-    if (diff < 30 * 60 * 1000) return "away"; // last 30 min
-    return "offline";
   };
 
   useEffect(() => {
@@ -199,6 +261,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         sendMessage,
         loading,
         error,
+        refreshCustomer,
       }}
     >
       {children}

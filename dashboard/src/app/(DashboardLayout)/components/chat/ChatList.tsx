@@ -17,9 +17,13 @@ const ChatList: React.FC<ChatListProps> = ({ customers, searchQuery }) => {
     customer.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const formatTime = (date: Date) => {
+  // Safe formatTime
+  const formatTime = (date?: Date | string) => {
+    if (!date) return '';
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return '';
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
+    const diff = now.getTime() - d.getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
@@ -43,15 +47,15 @@ const ChatList: React.FC<ChatListProps> = ({ customers, searchQuery }) => {
     <Box>
       {filteredCustomers.map((customer) => (
         <Box
-          key={customer.id}
+          key={customer._id} // updated from customer.id to _id
           onClick={() => setSelectedChat(customer)}
           sx={{
             p: 2,
             cursor: 'pointer',
-            backgroundColor: selectedChat?.id === customer.id ? '#3a3a3a' : 'transparent',
+            backgroundColor: selectedChat?._id === customer._id ? '#3a3a3a' : 'transparent',
             borderBottom: '1px solid #3a3a3a',
             '&:hover': {
-              backgroundColor: selectedChat?.id === customer.id ? '#3a3a3a' : '#2a2a2a',
+              backgroundColor: selectedChat?._id === customer._id ? '#3a3a3a' : '#2a2a2a',
             },
             transition: 'background-color 0.2s ease',
           }}
@@ -68,7 +72,7 @@ const ChatList: React.FC<ChatListProps> = ({ customers, searchQuery }) => {
                   fontWeight: 600,
                 }}
               >
-                {customer.avatar}
+                {customer.avatar || customer.name.charAt(0)}
               </Avatar>
               {customer.status === 'online' && (
                 <Box
@@ -123,12 +127,12 @@ const ChatList: React.FC<ChatListProps> = ({ customers, searchQuery }) => {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {customer.lastMessage}
+                {customer.lastMessage || 'No messages yet'}
               </Typography>
             </Box>
 
             {/* Unread Badge */}
-            {customer.unreadCount > 0 && (
+            {customer.unreadCount && customer.unreadCount > 0 && (
               <Badge
                 badgeContent={customer.unreadCount}
                 sx={{
@@ -158,4 +162,3 @@ const ChatList: React.FC<ChatListProps> = ({ customers, searchQuery }) => {
 };
 
 export default ChatList;
-

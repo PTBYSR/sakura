@@ -579,51 +579,62 @@ async def save_user_endpoint(user_data: UserData):
 async def chat_endpoint(request: ChatRequest):
     start_time = time.time()
     session_id = request.session_id or f"session_{int(time.time())}"
-    
-    logger.info(f"📞 Chat request received | Session: {session_id} | Email: {request.email}")
-    logger.info(f"📝 User message: '{request.message}'")
+
     try:
-        # Example: email should come from frontend/user context
-        user_email = request.email  
-        if not user_email:
+        if not request.email:
             raise HTTPException(status_code=400, detail="Email is required")
 
-        user = storage.get_or_create_user(user_email)
+        # 1. Get or create user
+        user = storage.get_or_create_user(request.email)
 
-        # Start new chat if none exists
+        # 2. Get or create chat for user
         chat_id = storage.get_or_create_open_chat(str(user["_id"]))
 
-
-        # Save user message
-        storage.add_message(chat_id, "user", request.message)
-
-
-        # 🔹 First, check if an AOP applies
+        # 3. Match AOP for categorization
         aop_name = match_aop(request.message)
-        if aop_name and aop_name.lower() != "none":
-            logger.info(f"🤖 AOP detected: {aop_name}")
+        aop_name = aop_name if aop_name.lower() != "none" else None
+
+        # 4. Save user message
+        storage.add_message(
+            chat_id,
+            "user",
+            request.message,
+            read=False,
+            tags=[],
+            timestamp=datetime.utcnow()
+        )
+
+        # 5. Run AOP or fallback to chatbot
+        if aop_name:
             aop = next((a for a in AOPS if a["aop_name"] == aop_name), None)
             if aop:
                 response_text = run_aop(aop, request.message, chat_id=chat_id, storage=storage)
             else:
-                logger.error(f"⚠️ AOP '{aop_name}' not found in definitions")
-                response_text = "I detected an AOP intent, but could not load it."
+                response_text = "Detected an AOP intent, but could not load it."
         else:
-            # Fallback to normal chatbot
-            logger.info("💬 No AOP triggered, falling back to normal chatbot")
             response_text = process_chat_message(request.message, session_id)
 
+        # 6. Save agent reply
+        storage.add_message(
+            chat_id,
+            "agent",
+            response_text,
+            read=True,                 # agent message is considered "read"
+            tags=[aop_name] if aop_name else [],
+            timestamp=datetime.utcnow()
+        )
 
-
-
-       
-        # Save agent reply
-        storage.add_message(chat_id, "agent", response_text)
+        # 7. Update chat metadata for dashboard
+        storage.update_chat_metadata(
+            chat_id,
+            aop_name=aop_name,
+            tags=[aop_name] if aop_name else [],
+            last_activity=datetime.utcnow(),
+            total_messages=storage.get_message_count(chat_id)
+        )
 
         processing_time = time.time() - start_time
-        timestamp = datetime.now().isoformat()
-
-        logger.info(f"✅ Chat handled successfully in {processing_time:.2f}s")
+        timestamp = datetime.utcnow().isoformat()
 
         return ChatResponse(
             response=response_text,
@@ -631,23 +642,44 @@ async def chat_endpoint(request: ChatRequest):
             timestamp=timestamp,
             processing_time=processing_time
         )
+
     except Exception as e:
         print(f"❌ Error in /chat: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
-    print(f"📨 Message: '{request.message}'")
 
 
 @app.get("/chats")
-async def get_chats(email: str = Query(...)):
+async def get_user_chats(email: str = Query(...)):
     """
-    Return all chats for a given user email.
+    Returns all chats for a given user email with minimal info for dashboard:
+    - chat_id
+    - last_message
+    - unread_count
+    - status
+    - total_messages
     """
     user = storage.users.find_one({"email": email})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-
-    chats = list(storage.chats.find({"user_id": str(user["_id"])}, {"_id": 0}))
-    return {"chats": chats} 
+    
+    user_id = str(user["_id"])
+    chats_cursor = storage.chats.find({"user_id": user_id})
+    
+    chats = []
+    for chat in chats_cursor:
+        messages = chat.get("messages", [])
+        chats.append({
+            "chat_id": chat["chat_id"],
+            "last_message": messages[-1]["content"] if messages else None,
+            "unread_count": sum(1 for m in messages if m.get("read") is False),
+            "status": chat.get("status", "open"),
+            "total_messages": len(messages),
+            "tags": chat.get("tags", []),
+            "avatar": chat.get("avatar"),
+            "visited_pages": chat.get("visited_pages", [])
+        })
+    
+    return {"chats": chats}
 
 
 # Add these endpoints to your FastAPI app (main.py)
@@ -677,21 +709,38 @@ async def get_user_by_email(email: str):
         print(f"❌ Error fetching user: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
-@app.get("/debug/users")
-async def debug_all_users():
+from fastapi import HTTPException
+
+@app.get("/debug/users-chats")
+async def debug_users_chats(limit: int = 10):
     """
-    Debug endpoint to see all users with all fields
+    Debug endpoint to see all users with their chats and messages.
     """
     try:
-        users = list(storage.users.find({}).limit(10))
+        # Fetch users
+        users = list(storage.users.find({}).limit(limit))
         for user in users:
             user["_id"] = str(user["_id"])
-        
+
+            # Fetch all chats for this user
+            chats = list(storage.chats.find({"user_id": user["_id"]}))
+            for chat in chats:
+                chat["_id"] = str(chat["_id"])
+                # Ensure timestamps are serializable
+                chat["created_at"] = str(chat.get("created_at"))
+                chat["last_activity"] = str(chat.get("last_activity"))
+                for msg in chat.get("messages", []):
+                    msg["timestamp"] = str(msg.get("timestamp"))
+            
+            user["chats"] = chats  # attach chats to user
+
         return {
             "count": len(users),
             "users": users,
-            "sample_fields": list(users[0].keys()) if users else []
+            "sample_user_fields": list(users[0].keys()) if users else [],
+            "sample_chat_fields": list(users[0]["chats"][0].keys()) if users and users[0]["chats"] else []
         }
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -822,6 +871,37 @@ async def get_chat_by_id(chat_id: str):
     # except Exception as e:
     #     print(f"❌ Unexpected error in chat endpoint: {e}")
     #     raise HTTPException(status_code=500, detail="Internal server error")
+
+
+
+
+
+
+@app.get("/chats/{email}/last")
+async def get_last_chat_message(email: str):
+    """
+    Returns the last message of the most recent chat for a user.
+    """
+    user = storage.users.find_one({"email": email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user_id = str(user["_id"])
+    last_chat = storage.chats.find({"user_id": user_id}).sort("created_at", -1).limit(1)
+    last_chat = list(last_chat)
+    
+    if not last_chat:
+        return {"last_message": None}
+    
+    messages = last_chat[0].get("messages", [])
+    last_message = messages[-1] if messages else None
+    return {"last_message": last_message}
+
+
+
+
+
+
 
 # Startup event
 @app.on_event("startup")

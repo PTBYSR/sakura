@@ -18,7 +18,7 @@ class ChatStorage:
         if not user:
             user = {
                 "email": email,
-                "name": name,
+                "name": name or "Anonymous",
                 "last_seen": datetime.utcnow(),
                 "total_visits": 1
             }
@@ -30,15 +30,8 @@ class ChatStorage:
                  "$inc": {"total_visits": 1}}
             )
         return self.users.find_one({"email": email})
-    
-
-
 
     def save_complete_user_data(self, user_data: Dict[str, Any]) -> bool:
-        """
-        Save or update complete user data from chatbot widget
-        This method handles ALL user fields: ip, location, device, vibe, etc.
-        """
         email = user_data.get("email")
         if not email:
             print("❌ No email provided in user_data")
@@ -47,40 +40,25 @@ class ChatStorage:
         existing_user = self.users.find_one({"email": email})
         
         if existing_user:
-            # Update existing user with all new data
             print(f"🔄 Updating existing user: {email}")
             update_data = {
                 "name": user_data.get("name", existing_user.get("name", "Anonymous")),
                 "last_seen": user_data.get("lastSeen", datetime.utcnow().isoformat()),
                 "updated_at": datetime.utcnow().isoformat()
             }
-            
-            # Add optional fields if provided
-            if "ip" in user_data:
-                update_data["ip"] = user_data["ip"]
-            if "location" in user_data:
-                update_data["location"] = user_data["location"]
-            if "device" in user_data:
-                update_data["device"] = user_data["device"]
-            if "vibe" in user_data:
-                update_data["vibe"] = user_data["vibe"]
-            if "visitDuration" in user_data:
-                update_data["visit_duration"] = user_data["visitDuration"]
-            if "chatId" in user_data:
-                update_data["chat_id"] = user_data["chatId"]
-            if "totalVisits" in user_data:
-                update_data["total_visits"] = user_data["totalVisits"]
-            if "timestamp" in user_data:
-                update_data["timestamp"] = user_data["timestamp"]
-            
-            result = self.users.update_one(
-                {"email": email},
-                {"$set": update_data}
-            )
+            optional_fields = ["ip", "location", "device", "vibe", "visitDuration", "chatId", "totalVisits", "timestamp"]
+            for field in optional_fields:
+                if field in user_data:
+                    update_data[field if field != "chatId" else "chat_id"] = user_data[field]
+                    if field == "visitDuration":
+                        update_data["visit_duration"] = user_data[field]
+                    if field == "totalVisits":
+                        update_data["total_visits"] = user_data[field]
+
+            result = self.users.update_one({"email": email}, {"$set": update_data})
             print(f"✅ Updated user {email} - Matched: {result.matched_count}, Modified: {result.modified_count}")
             return True
         else:
-            # Create new user with all provided data
             print(f"✨ Creating new user: {email}")
             new_user = {
                 "email": email,
@@ -89,138 +67,161 @@ class ChatStorage:
                 "last_seen": user_data.get("lastSeen", datetime.utcnow().isoformat()),
                 "total_visits": user_data.get("totalVisits", 1),
             }
-            
-            # Add optional fields if provided
-            if "ip" in user_data:
-                new_user["ip"] = user_data["ip"]
-            if "location" in user_data:
-                new_user["location"] = user_data["location"]
-            if "device" in user_data:
-                new_user["device"] = user_data["device"]
-            if "vibe" in user_data:
-                new_user["vibe"] = user_data["vibe"]
-            if "visitDuration" in user_data:
-                new_user["visit_duration"] = user_data["visitDuration"]
-            if "chatId" in user_data:
-                new_user["chat_id"] = user_data["chatId"]
-            if "timestamp" in user_data:
-                new_user["timestamp"] = user_data["timestamp"]
-            
+            optional_fields = ["ip", "location", "device", "vibe", "visitDuration", "chatId", "timestamp"]
+            for field in optional_fields:
+                if field in user_data:
+                    key = field if field != "chatId" else "chat_id"
+                    new_user[key] = user_data[field]
+                    if field == "visitDuration":
+                        new_user["visit_duration"] = user_data[field]
+
             self.users.insert_one(new_user)
             print(f"✅ Created new user: {email} with all fields")
             return True
 
     # --- Chats ---
-
-    def get_chat(self, chat_id: str):
-        """Return a chat document by ID or None"""
-        return self.chats.find_one({"chat_id": chat_id})
-
-
-    def update_state(self, chat_id, state_updates: dict):
-        """Merge new values into the current state for this chat"""
-        self.chats.update_one(
-            {"chat_id": chat_id},
-            {"$set": {f"state.{k}": v for k, v in state_updates.items()}}
-        )
-
-    def get_state(self, chat_id):
-        chat = self.chats.find_one({"chat_id": chat_id}, {"state": 1})
-        return chat.get("state", {}) if chat else {}
-
-
-    def set_chat_state(self, chat_id, state: dict):
-        self.chats.update_one(
-            {"chat_id": chat_id},
-            {"$set": {"state": state}}
-        )
-
-    def get_chat_state(self, chat_id):
-        chat = self.chats.find_one({"chat_id": chat_id})
-        return chat.get("state")
-
-    def start_chat(self, user_id):
-        chat_id = str(uuid.uuid4())
-        self.chats.insert_one({
-            "chat_id": chat_id,
-            "user_id": user_id,
-            "status": "open",  # ✅ important!
-            "session": {
-                "start_time": datetime.utcnow(),
-                "end_time": None,
-                "duration": None
-            },
-            "messages": []
-        })
-        print(f"💾 Inserting chat: {chat_id}")
-        return chat_id
-
-    def get_or_create_open_chat(self, user_id: str):
-        """Find an open chat for this user or create a new one"""
-        open_chat = self.chats.find_one({"user_id": user_id, "status": "open"})
-        if open_chat:
-            print(f"♻️ Reusing existing open ticket {open_chat['chat_id']} for user {user_id}")
-            return open_chat["chat_id"]
-
-        # No open chat, create a new one
-        return self.create_chat(user_id)
     def create_chat(self, user_id: str):
-        """Start a new support ticket for a user"""
         chat_id = str(uuid.uuid4())
         chat_doc = {
             "chat_id": chat_id,
             "user_id": user_id,
+            "aop_name": None,
+            "tags": [],
             "status": "open",
-            "created_at": datetime.utcnow(),
-            "messages": []
+            "priority": "normal",
+            "assigned_agent": None,
+            "last_activity": datetime.utcnow(),
+            "messages": [],
+            "avatar": None,
+            "visited_pages": [],
+            "total_messages": 0,
+            "created_at": datetime.utcnow()
         }
         self.chats.insert_one(chat_doc)
         print(f"🎫 New ticket created: {chat_id} for user {user_id}")
         return chat_id
 
+    def get_or_create_open_chat(self, user_id: str):
+        open_chat = self.chats.find_one({"user_id": user_id, "status": "open"})
+        if open_chat:
+            print(f"♻️ Reusing existing open ticket {open_chat['chat_id']} for user {user_id}")
+            return open_chat["chat_id"]
+        return self.create_chat(user_id)
 
-    def add_message(self, chat_id, role, text, msg_type="reply"):
-        """
-        Store a message in the chat.
-        msg_type = "reply" (user-visible) or "debug" (internal/logging)
-        """
-        print(f"💾 Adding message to {chat_id}: [{role}] ({msg_type}) {text}")
+    def add_message(self, chat_id, role, text, msg_type="reply", read=False, tags=None, timestamp=None):
+        tags = tags or []
+        ts = timestamp or datetime.utcnow()
         result = self.chats.update_one(
             {"chat_id": chat_id},
-            {"$push": {
-                "messages": {
-                    "role": role,
-                    "text": text,
-                    "type": msg_type,
-                    "timestamp": datetime.utcnow()
-                }
-            }}
+            {
+                "$push": {
+                    "messages": {
+                        "role": role,
+                        "text": text,
+                        "type": msg_type,
+                        "tags": tags,
+                        "read": read,
+                        "timestamp": ts
+                    }
+                },
+                "$set": {"last_activity": ts},
+                "$inc": {"total_messages": 1}
+            }
         )
         if result.modified_count == 0:
             print(f"⚠️ Chat {chat_id} not found!")
         else:
             print(f"💾 Added message to ticket {chat_id}: [{role}] ({msg_type}) {text}")
 
-        print(f"Matched: {result.matched_count}, Modified: {result.modified_count}")
 
-       
-    # def end_chat(self, chat_id):
-    #     chat = self.chats.find_one({"chat_id": chat_id})
-    #     if chat and chat["session"]["end_time"] is None:
-    #         end_time = datetime.utcnow()
-    #         duration = (end_time - chat["session"]["start_time"]).seconds
-    #         self.chats.update_one(
-    #             {"chat_id": chat_id},
-    #             {"$set": {
-    #                 "session.end_time": end_time,
-    #                 "session.duration": duration
-    #             }}
-    #         )
+        # --- 🔹 Auto-update category whenever a new message is added ---
+        self.auto_update_chat_category(chat_id)
+   
+   
+   
+    def update_chat_metadata(self, chat_id, aop_name=None, tags=None, last_activity=None, total_messages=None):
+        update_doc = {}
+        if aop_name is not None:
+            update_doc["aop_name"] = aop_name
+        if tags is not None:
+            update_doc["tags"] = tags
+        if last_activity is not None:
+            update_doc["last_activity"] = last_activity
+        if total_messages is not None:
+            update_doc["total_messages"] = total_messages
+        if update_doc:
+            self.chats.update_one({"chat_id": chat_id}, {"$set": update_doc})
+
+    def get_chat(self, chat_id: str):
+        return self.chats.find_one({"chat_id": chat_id})
+    
+
+    def get_message_count(self, chat_id: str) -> int:
+        chat = self.chats.find_one({"chat_id": chat_id}, {"total_messages": 1})
+        if chat:
+            return chat.get("total_messages", 0)
+        return 0
+
+
+
+    def get_state(self, chat_id: str):
+        chat = self.chats.find_one({"chat_id": chat_id}, {"state": 1})
+        return chat.get("state", {}) if chat else {}
+
+    def set_chat_state(self, chat_id, state: dict):
+        self.chats.update_one({"chat_id": chat_id}, {"$set": {"state": state}})
 
     def close_chat(self, chat_id: str):
-        """Close a ticket once resolved"""
-        self.chats.update_one(
-            {"chat_id": chat_id},
-            {"$set": {"status": "closed"}}
-        )
+        self.chats.update_one({"chat_id": chat_id}, {"$set": {"status": "closed"}})
         print(f"✅ Ticket {chat_id} closed.")
+
+
+    def auto_update_chat_category(self, chat_id: str):
+        """
+        Automatically categorize a chat based on its status and recent messages.
+        Categories:
+        - human-chats: ongoing chat with a human
+        - ai-active: recent user messages not yet replied by AI
+        - ai-resolved: AI finished interaction
+        - escalated: flagged for human intervention
+        - resolved: closed chats
+        """
+        chat = self.get_chat(chat_id)
+        if not chat:
+            print(f"⚠️ Chat {chat_id} not found for categorization")
+            return
+
+        messages = chat.get("messages", [])
+        category = "human-chats"  # default
+
+
+        # Rule 1: Escalation flag (optional field you can set in your chat doc)
+        if chat.get("escalated", False):
+            category = "escalated"
+
+        # Rule 2: Closed chat → resolved
+        elif chat.get("status") == "closed":
+            category = "resolved"
+        # Rule 3: Check for AI messages
+        elif any(msg.get("role") == "assistant" for msg in messages[-5:]):
+        # Ensure timestamps are datetime objects
+            last_user_msg = next((m for m in reversed(messages) if m["role"] == "user"), None)
+            last_assistant_msg = next((m for m in reversed(messages) if m["role"] == "assistant"), None)
+            if last_user_msg and last_assistant_msg:
+                user_ts = last_user_msg["timestamp"]
+                assistant_ts = last_assistant_msg["timestamp"]
+                if isinstance(user_ts, str):
+                    user_ts = datetime.fromisoformat(user_ts)
+                if isinstance(assistant_ts, str):
+                    assistant_ts = datetime.fromisoformat(assistant_ts)
+
+                if user_ts > assistant_ts:
+                    category = "ai-active"
+                else:
+                    category = "ai-resolved"
+            else:
+                category = "ai-active"
+        
+
+        self.chats.update_one({"chat_id": chat_id}, {"$set": {"category": category}})
+        print(f"🗂 Chat {chat_id} categorized as {category}")
