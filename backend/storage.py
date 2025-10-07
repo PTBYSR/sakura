@@ -1,4 +1,5 @@
 # storage.py
+import certifi
 from pymongo import MongoClient
 from datetime import datetime
 from typing import Optional, Dict, Any
@@ -7,7 +8,16 @@ import uuid
 class ChatStorage:
     def __init__(self, uri, db_name="sakura"):
         print(f"✅ Connected to DB: {db_name}, URI: {uri}")
-        self.client = MongoClient(uri)
+        self.client = MongoClient(
+             uri,
+                tlsCAFile=certifi.where(),  # ← ADD THIS
+                serverSelectionTimeoutMS=5000
+        )
+        self.client.admin.command('ping')
+        print("✅ SUCCESS! MongoDB connected")
+    
+        # List databases to confirm
+        print("📋 Available databases:", self.client.list_database_names())
         self.db = self.client[db_name]
         self.users = self.db["users"]
         self.chats = self.db["chats"]
@@ -30,6 +40,27 @@ class ChatStorage:
                  "$inc": {"total_visits": 1}}
             )
         return self.users.find_one({"email": email})
+
+    
+    def update_state(self, chat_id: str, updates: dict) -> bool:
+        """
+        Merge updates into the chat's `state` sub-document safely.
+        Example:
+            update_state(chat_id, {"aop_name": "Reschedule Flight", "step_id": "verify_identity"})
+        """
+        if not updates:
+            return True
+
+        try:
+            set_doc = {f"state.{k}": v for k, v in updates.items()}
+            result = self.chats.update_one({"chat_id": chat_id}, {"$set": set_doc})
+            if result.matched_count == 0:
+                print(f"⚠️ Chat {chat_id} not found while updating state.")
+            return True
+        except Exception as e:
+            print(f"❌ Error updating state for {chat_id}: {e}")
+            return False
+
 
     def save_complete_user_data(self, user_data: Dict[str, Any]) -> bool:
         email = user_data.get("email")
@@ -101,6 +132,21 @@ class ChatStorage:
         print(f"🎫 New ticket created: {chat_id} for user {user_id}")
         return chat_id
 
+
+    def save_state(self, chat_id: str, state: dict):
+        """Save or update the workflow state for a chat."""
+        try:
+            self.chats.update_one(
+                {"chat_id": chat_id},
+                {"$set": {"state": state}},
+                upsert=True
+            )
+            print(f"💾 State saved for chat {chat_id}: {state}")
+            return True
+        except Exception as e:
+            print(f"❌ Error saving state for {chat_id}: {e}")
+            return False
+
     def get_or_create_open_chat(self, user_id: str):
         open_chat = self.chats.find_one({"user_id": user_id, "status": "open"})
         if open_chat:
@@ -165,15 +211,37 @@ class ChatStorage:
 
 
     def get_state(self, chat_id: str):
-        chat = self.chats.find_one({"chat_id": chat_id}, {"state": 1})
-        return chat.get("state", {}) if chat else {}
+        """Retrieve the workflow state for a chat."""
+        chat = self.chats.find_one({"chat_id": chat_id})
+        if chat and "state" in chat:
+            return chat["state"]
+        return {}
 
-    def set_chat_state(self, chat_id, state: dict):
-        self.chats.update_one({"chat_id": chat_id}, {"$set": {"state": state}})
+    def set_chat_state(self, chat_id: str, state: dict):
+        """Sets or updates the AOP workflow state for a chat session."""
+        try:
+            self.chats.update_one(
+                {"chat_id": chat_id},
+                {"$set": {"state": state}},
+                upsert=True
+            )
+            print(f"💾 Updated chat state for {chat_id}: {state}")
+        except Exception as e:
+            print(f"❌ Error updating chat state for {chat_id}: {e}")
 
     def close_chat(self, chat_id: str):
         self.chats.update_one({"chat_id": chat_id}, {"$set": {"status": "closed"}})
         print(f"✅ Ticket {chat_id} closed.")
+
+    def clear_state(self, chat_id: str):
+        """Remove the `state` subdocument for a chat (used when an AOP completes or is cancelled)."""
+        try:
+            self.chats.update_one({"chat_id": chat_id}, {"$unset": {"state": ""}})
+            print(f"🧹 Cleared state for chat {chat_id}")
+            return True
+        except Exception as e:
+            print(f"❌ Error clearing state for {chat_id}: {e}")
+            return False
 
 
     def auto_update_chat_category(self, chat_id: str):

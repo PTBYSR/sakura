@@ -11,19 +11,20 @@
         "id": "verify_identity",
         "type": "action",
         "action": "verify_customer_identity",
-        "params": ["full_name", "booking_reference", "email_or_phone"],
+        "params": ["booking_reference"],
         "requires_response": true,
+        "expected_input": "valid booking reference (6–8 alphanumeric characters)",
         "success_next": "check_booking_status",
         "failure_next": "escalate_to_human",
         "notes": "Ensure the person requesting the change is the ticket owner",
-        "user_prompt": "Sure, I can help with that. Could you please provide your full name, booking reference, or the email/phone number used for the booking so I can verify your identity?"
+        "user_prompt": "Sure, I can help with that. Could you please provide your booking reference number so I can verify your identity?"
       },
       {
         "id": "check_booking_status",
         "type": "decision",
         "decision_logic": [
           { "condition": "booking_status == 'confirmed'", "next": "check_fare_rules" },
-          { "condition": "booking_status == 'flown' || booking_status == 'expired'", "next": "inform_ineligible" }
+          { "condition": "booking_status == 'flown' or booking_status == 'expired'", "next": "inform_ineligible" }
         ],
         "user_prompt": "Thanks, let me check the current status of your booking..."
       },
@@ -45,7 +46,9 @@
         "success_next": "confirm_customer_choice",
         "failure_next": "escalate_to_human",
         "notes": "Show customer the feasible flights and fees",
-        "user_prompt": "Here are the available new flight options along with any fare differences. Please choose the option that works best for you."
+        "user_prompt": "Here are the available new flight options along with any fare differences. Please choose the option that works best for you.",
+        "requires_response": true,
+        "expected_input": "selection of one available flight option"
       },
       {
         "id": "confirm_customer_choice",
@@ -55,13 +58,16 @@
           { "condition": "customer_declines", "next": "cancel_reschedule_process" }
         ],
         "requires_response": true,
+        "expected_input": "yes or no response confirming acceptance of new flight option",
         "user_prompt": "Would you like to confirm one of these options, or would you prefer to cancel the reschedule process?"
       },
       {
         "id": "process_payment_if_required",
         "type": "action",
         "action": "process_payment",
-        "params": ["fare_difference", "change_fee", "payment_method"],
+        "params": ["payment_method"],
+        "requires_response": true,
+        "expected_input": "payment method (e.g., card, PayPal, or wallet)",
         "success_next": "update_booking",
         "failure_next": "escalate_to_human",
         "notes": "Handle payment securely if required",
@@ -80,7 +86,7 @@
         "id": "send_confirmation",
         "type": "action",
         "action": "send_customer_confirmation",
-        "params": ["new_itinerary", "e_ticket", "fare_paid"],
+        "params": ["new_itinerary", "e_ticket"],
         "success_next": "close_case",
         "user_prompt": "Your booking has been successfully rescheduled. You will receive a confirmation email with your new itinerary and e-ticket."
       },
@@ -104,7 +110,7 @@
         "id": "close_case",
         "type": "action",
         "action": "log_case_closure",
-        "params": ["customer_id", "ticket_id", "resolution"],
+        "params": ["ticket_id", "resolution"],
         "success_next": null,
         "user_prompt": "This case has been closed. Thank you for contacting us."
       }
@@ -123,19 +129,20 @@
         "id": "verify_identity",
         "type": "action",
         "action": "verify_customer_identity",
-        "params": ["full_name", "booking_reference", "email_or_phone"],
+        "params": ["booking_reference"],
         "requires_response": true,
+        "expected_input": "valid booking reference (6–8 alphanumeric characters)",
         "success_next": "check_booking_status",
         "failure_next": "escalate_to_human",
         "notes": "Ensure only the ticket owner can cancel",
-        "user_prompt": "I can help you cancel your booking. Please provide your booking reference or registered email/phone so I can verify your identity."
+        "user_prompt": "I can help you cancel your booking. Please provide your booking reference number so I can verify your identity."
       },
       {
         "id": "check_booking_status",
         "type": "decision",
         "decision_logic": [
           { "condition": "booking_status == 'confirmed'", "next": "check_cancellation_policy" },
-          { "condition": "booking_status == 'flown' || booking_status == 'expired'", "next": "inform_ineligible" }
+          { "condition": "booking_status == 'flown' or booking_status == 'expired'", "next": "inform_ineligible" }
         ],
         "user_prompt": "Let me check the current status of your booking..."
       },
@@ -166,16 +173,19 @@
           { "condition": "customer_declines", "next": "close_case" }
         ],
         "requires_response": true,
+        "expected_input": "yes or no response confirming cancellation",
         "user_prompt": "Do you want to confirm this cancellation and proceed with the refund?"
       },
       {
         "id": "process_refund",
         "type": "action",
         "action": "initiate_refund",
-        "params": ["payment_method", "refund_amount"],
+        "params": ["payment_method"],
+        "requires_response": true,
+        "expected_input": "payment method (e.g., card, PayPal, or wallet)",
         "success_next": "send_cancellation_confirmation",
         "failure_next": "escalate_to_human",
-        "user_prompt": "I’m processing your refund now. Please hold on for a moment."
+        "user_prompt": "I’m processing your refund now. Please provide your preferred refund method."
       },
       {
         "id": "send_cancellation_confirmation",
@@ -205,7 +215,7 @@
         "id": "close_case",
         "type": "action",
         "action": "log_case_closure",
-        "params": ["customer_id", "ticket_id", "resolution"],
+        "params": ["ticket_id", "resolution"],
         "success_next": null,
         "user_prompt": "This case has been closed. Thank you for contacting us."
       }

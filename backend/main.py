@@ -34,6 +34,7 @@ from storage import ChatStorage
 # Load AOPS data
 with open("aops.json", "r", encoding="utf-8") as f:
     AOPS = json.load(f)
+    print(f"📂 Loaded {len(AOPS)} AOPs")
 
 
 # Configure logging
@@ -51,6 +52,23 @@ print(f"🔗 Connecting to MongoDB Atlas: {uri}")
 
 # Initialize storage
 storage = ChatStorage(uri)
+
+
+# --- Compatibility helper: merge chat state (use when ChatStorage lacks update_state) ---
+def merge_chat_state(chat_id: str, new_state: dict):
+    """
+    Merge `new_state` into the stored chat-state for chat_id.
+    This is a shim for ChatStorage implementations that don't expose `update_state`.
+    """
+    try:
+        existing = storage.get_state(chat_id) or {}
+    except Exception:
+        existing = {}
+    # shallow merge
+    existing.update(new_state or {})
+    # persist merged state back
+    storage.set_chat_state(chat_id, existing)
+
 
 
 # FastAPI app initialization
@@ -109,6 +127,13 @@ class UserDataResponse(BaseModel):
 class State(TypedDict):
     messages: Annotated[list, add_messages]
 
+#llm wwrapper for run_aop
+def llm(prompt: str) -> str:
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": prompt}]
+    )
+    return response.choices[0].message.content
 
 
 # AOP Execution
@@ -124,117 +149,217 @@ def run_aop(
     user_message: str,
     user_inputs: dict = None,
     chat_id: str = None,
-    storage=None
+    storage=None,
+    llm=None,
+    max_retries: int = 3
 ) -> str:
     """
-    Executes any AOP step by step, pausing if input is required.
-    - Saves debug logs with msg_type="debug"
-    - Saves user-facing replies with msg_type="reply"
-    - Returns only the latest reply for frontend
+    Executes an AOP with proper state transitions and step handling.
     """
     logger.info(f"🚀 Running AOP: {aop['aop_name']} for message: '{user_message}'")
-
     user_inputs = user_inputs or {}
-    steps = {step["id"]: step for step in aop["steps"]}
 
-    # Load state from DB
-    state = storage.get_state(chat_id) if chat_id and storage else {}
+    # Build step map
+    steps = {s["id"]: s for s in aop.get("steps", [])}
+    if not steps:
+        return "⚠️ No steps found in this AOP."
 
-    # Resume from last step if saved, otherwise start fresh
+    # Load persistent state for chat
+    state = storage.get_state(chat_id) if (chat_id and storage) else {}
+    logger.info(f"📄 Current state: {state}")
+
     current_step_id = state.get("step_id", aop["steps"][0]["id"])
-    current_step = steps[current_step_id]
+    retry_count = state.get("retry_count", 0)
+    awaiting_input = state.get("awaiting_input", False)
 
-    last_user_reply = None  # <-- what we’ll return to frontend
+    current_step = steps.get(current_step_id)
+    if not current_step:
+        return "⚠️ Invalid step reference in AOP."
 
-    # 🔹 Debug log (start)
-    if chat_id:
-        storage.add_message(chat_id, "agent", f"▶ Starting AOP: {aop['aop_name']}", msg_type="debug")
-
-    while current_step:
-        step_id = current_step["id"]
-        step_type = current_step["type"]
-
-        # 🔹 Debug log (step info)
+    # PHASE 1: Send prompt if step requires response and we're not awaiting input
+    if current_step.get("requires_response") and not awaiting_input:
+        prompt = current_step.get("user_prompt", "Please provide the required input.")
         if chat_id:
-            storage.add_message(chat_id, "agent", f"➡️ Step {step_id} ({step_type})", msg_type="debug")
-
-        # Format user-facing message
-        user_message_out = format_step_for_user(current_step)
-
-        # 🔹 Save agent reply (user sees this)
-        if chat_id:
-            storage.add_message(chat_id, "agent", user_message_out, msg_type="reply")
-        last_user_reply = user_message_out
-
-        # If input required but not yet provided → pause
-        if current_step.get("requires_response") and step_id not in user_inputs:
-            logger.info(f"⏸ Pausing at step '{step_id}' (waiting for input)")
-            if chat_id:
-                storage.set_chat_state(chat_id, {
-                    "aop_name": aop["aop_name"],
-                    "step_id": step_id
-                })
-            return last_user_reply
-
-        # If input provided → store in state
-        if step_id in user_inputs:
-            state[step_id] = user_inputs[step_id]
-            if chat_id and storage:
-                storage.update_state(chat_id, {step_id: user_inputs[step_id]})
-
-        # --- Decision step ---
-        if step_type == "decision":
-            matched_next = None
-            for rule in current_step.get("decision_logic", []):
-                condition = rule["condition"]
-                try:
-                    if eval(condition, {}, state):
-                        matched_next = rule["next"]
-                        if chat_id:
-                            storage.add_message(chat_id, "agent",
-                                f"🔀 Condition matched: {condition} → {matched_next}",
-                                msg_type="debug"
-                            )
-                        break
-                except Exception as e:
-                    logger.error(f"❌ Error evaluating condition '{condition}': {e}")
-
-            if not matched_next:
-                if chat_id:
-                    storage.add_message(chat_id, "agent",
-                        f"⚠️ No matching condition at {step_id}",
-                        msg_type="debug"
-                    )
-                break
-            current_step_id = matched_next
-
-        # --- Action step ---
-        elif step_type == "action":
-            action = current_step.get("action")
-            if chat_id:
-                storage.add_message(chat_id, "agent", f"⚙️ Executing action: {action}", msg_type="debug")
-            current_step_id = current_step.get("success_next")
-
-        else:
-            if chat_id:
-                storage.add_message(chat_id, "agent", f"❓ Unknown step type: {step_type}", msg_type="debug")
-            break
-
-        # Persist step before moving forward
-        if chat_id and storage:
+            storage.add_message(chat_id, "agent", prompt, msg_type="reply")
             storage.set_chat_state(chat_id, {
                 "aop_name": aop["aop_name"],
-                "step_id": current_step_id
+                "step_id": current_step_id,
+                "retry_count": retry_count,
+                "awaiting_input": True
             })
+            logger.info(f"🕒 Awaiting user input for step: {current_step_id}")
+        return prompt
 
-        current_step = steps.get(current_step_id) if current_step_id else None
+    # PHASE 2: Validate input if we're awaiting it
+    if current_step.get("requires_response") and awaiting_input:
+        provided = user_inputs.get(current_step_id, user_message)
 
-    # 🔹 Debug log (end)
-    if chat_id:
-        storage.add_message(chat_id, "agent", f"🏁 Finished AOP: {aop['aop_name']}", msg_type="debug")
+        # Validate input with LLM
+        validation_prompt = f"""
+You are validating a user's response in a customer support workflow.
 
-    return last_user_reply or f"✅ Finished {aop['aop_name']}"
+Workflow name: '{aop['aop_name']}'
+Current step: '{current_step_id}'
+Expected input type: {current_step.get('expected_input', 'any')}
+System asked: "{current_step.get('user_prompt', '')}"
+User replied: "{provided}"
 
+Determine if the user provided valid input or wants to cancel.
+Respond strictly in JSON:
+{{
+  "status": "valid" | "invalid" | "cancel",
+  "reason": "short explanation"
+}}
+""".strip()
+
+        try:
+            logger.info("🧠 Validating user input with LLM...")
+            llm_raw = llm.invoke(validation_prompt)
+            llm_text = getattr(llm_raw, "content", str(llm_raw)).strip()
+            llm_text = re.sub(r"^```[a-zA-Z]*\n?", "", llm_text)
+            llm_text = re.sub(r"```$", "", llm_text).strip()
+            llm_response = json.loads(llm_text)
+            logger.info(f"🧠 LLM validation: {llm_response}")
+        except:
+            llm_response = {"status": "invalid", "reason": "Validation error"}
+
+        status = llm_response.get("status", "invalid")
+        reason = llm_response.get("reason", "")
+
+        # Handle cancellation
+        if status == "cancel":
+            storage.clear_state(chat_id)
+            return f"✅ Okay, I've cancelled the {aop['aop_name']} process."
+
+        # Handle invalid input
+        if status == "invalid":
+            retry_count += 1
+            storage.set_chat_state(chat_id, {
+                "aop_name": aop["aop_name"],
+                "step_id": current_step_id,
+                "retry_count": retry_count,
+                "awaiting_input": True
+            })
+            if retry_count >= max_retries:
+                storage.clear_state(chat_id)
+                return f"⚠️ Too many failed attempts. The {aop['aop_name']} process has been cancelled."
+            return f"❌ {reason}. Please try again. ({retry_count}/{max_retries})"
+
+        # Valid input - store it and advance
+        state[current_step_id] = provided
+        next_step_id = current_step.get("success_next")
+
+        if not next_step_id:
+            storage.clear_state(chat_id)
+            return f"🎉 {aop['aop_name']} completed successfully!"
+
+        # Process the next step
+        return process_next_step(
+            aop, steps, next_step_id, state, chat_id, storage, user_message, llm
+        )
+
+    # PHASE 3: Handle non-interactive steps (actions/decisions)
+    if not current_step.get("requires_response"):
+        # Execute the step logic (mock for now)
+        logger.info(f"🔧 Executing non-interactive step: {current_step_id}")
+        
+        # For decision steps, evaluate conditions
+        if current_step.get("type") == "decision":
+            decision_logic = current_step.get("decision_logic", [])
+            # Mock evaluation - in production, evaluate actual conditions
+            next_step_id = decision_logic[0].get("next") if decision_logic else None
+        else:
+            # For action steps, proceed to next
+            next_step_id = current_step.get("success_next")
+
+        if not next_step_id:
+            storage.clear_state(chat_id)
+            return f"🎉 {aop['aop_name']} completed!"
+
+        # Process the next step
+        return process_next_step(
+            aop, steps, next_step_id, state, chat_id, storage, user_message, llm
+        )
+
+    # Default fallback
+    return f"🎉 Finished {aop['aop_name']}"
+
+
+def process_next_step(aop, steps, next_step_id, state, chat_id, storage, user_message, llm):
+    """
+    Helper function to process the next step in an AOP workflow.
+    Recursively handles non-interactive steps until we hit one that needs user input.
+    """
+    next_step = steps.get(next_step_id)
+    if not next_step:
+        storage.clear_state(chat_id)
+        return f"⚠️ Next step '{next_step_id}' not found. Ending AOP."
+
+    logger.info(f"📍 Moving to step: {next_step_id} (type: {next_step.get('type')})")
+
+    # If next step requires user input, send prompt and wait
+    if next_step.get("requires_response"):
+        prompt = next_step.get("user_prompt", f"Proceeding to {next_step_id}")
+        storage.set_chat_state(chat_id, {
+            "aop_name": aop["aop_name"],
+            "step_id": next_step_id,
+            "retry_count": 0,
+            "awaiting_input": True,
+            **state
+        })
+        storage.add_message(chat_id, "agent", prompt, msg_type="reply")
+        return prompt
+
+    # Non-interactive step - execute it immediately
+    logger.info(f"🔧 Auto-executing non-interactive step: {next_step_id}")
+    
+    # Update state to this step
+    storage.set_chat_state(chat_id, {
+        "aop_name": aop["aop_name"],
+        "step_id": next_step_id,
+        "retry_count": 0,
+        "awaiting_input": False,
+        **state
+    })
+
+    # Execute step logic
+    if next_step.get("type") == "decision":
+        # Evaluate decision logic
+        decision_logic = next_step.get("decision_logic", [])
+        
+        # For check_booking_status, we mock the evaluation
+        if next_step_id == "check_booking_status":
+            # Assume booking is confirmed for demo
+            state["booking_status"] = "confirmed"
+            next_next_step_id = "check_fare_rules"
+        else:
+            # Default to first condition's next step
+            next_next_step_id = decision_logic[0].get("next") if decision_logic else None
+            
+    elif next_step.get("type") == "action":
+        # Execute action and get next step
+        next_next_step_id = next_step.get("success_next")
+        
+        # Mock some actions
+        if next_step_id == "check_fare_rules":
+            state["fare_rules_checked"] = True
+            state["change_fee"] = 50
+    else:
+        next_next_step_id = next_step.get("success_next")
+
+    # If there's a user_prompt for this step, show it
+    if next_step.get("user_prompt"):
+        prompt = next_step["user_prompt"]
+        storage.add_message(chat_id, "agent", prompt, msg_type="reply")
+
+    # Continue to next step if exists
+    if next_next_step_id:
+        return process_next_step(
+            aop, steps, next_next_step_id, state, chat_id, storage, user_message, llm
+        )
+    else:
+        storage.clear_state(chat_id)
+        return f"🎉 {aop['aop_name']} process completed!"
 
 # Tools
 @tool
@@ -584,17 +709,65 @@ async def chat_endpoint(request: ChatRequest):
         if not request.email:
             raise HTTPException(status_code=400, detail="Email is required")
 
-        # 1. Get or create user
+        # 1️⃣ Get or create user
         user = storage.get_or_create_user(request.email)
 
-        # 2. Get or create chat for user
+        # 2️⃣ Get or create chat for user
         chat_id = storage.get_or_create_open_chat(str(user["_id"]))
 
-        # 3. Match AOP for categorization
-        aop_name = match_aop(request.message)
-        aop_name = aop_name if aop_name.lower() != "none" else None
+        # 🧠 3️⃣ Check if chat is mid-AOP (resume if needed)
+        # In the /chat endpoint, replace the AOP resume section with:
 
-        # 4. Save user message
+# 🧠 3️⃣ Check if chat is mid-AOP (resume if needed)
+        state = storage.get_state(chat_id)
+        if state and "aop_name" in state and "step_id" in state:
+            if state["step_id"] == "close_case":
+                storage.clear_state(chat_id)
+            else:
+                ongoing_aop = next((a for a in AOPS if a["aop_name"] == state["aop_name"]), None)
+                if ongoing_aop:
+                    print(f"🔄 Resuming AOP {state['aop_name']} at step {state['step_id']}")
+
+                    # Pass the current user message as input to resume step
+                    user_inputs = {state["step_id"]: request.message}
+
+                    response_text = run_aop(
+                        ongoing_aop,
+                        request.message,
+                        user_inputs=user_inputs,
+                        chat_id=chat_id,
+                        storage=storage,
+                        llm=llm  # ADD THIS - pass the llm instance
+                    )
+
+                    # Don't duplicate the message if run_aop already added it
+                    # Only add if it's not already in the chat
+                    chat = storage.get_chat(chat_id)
+                    last_msg = chat["messages"][-1] if chat and chat.get("messages") else None
+                    if not (last_msg and last_msg.get("text") == response_text):
+                        storage.add_message(
+                            chat_id,
+                            "agent",
+                            response_text,
+                            read=True,
+                            timestamp=datetime.utcnow()
+                        )
+
+                    processing_time = time.time() - start_time
+                    return ChatResponse(
+                        response=response_text,
+                        session_id=chat_id,
+                        timestamp=datetime.utcnow().isoformat(),
+                        processing_time=processing_time
+                    )
+
+        print(f"💀 chat message before it enters MATCH AOP ")
+
+        # 4️⃣ Match AOP for categorization (new AOP detection)
+        aop_name = match_aop(request.message)
+        aop_name = aop_name if aop_name and aop_name.lower() != "none" else None
+
+        # 5️⃣ Save user message
         storage.add_message(
             chat_id,
             "user",
@@ -604,27 +777,49 @@ async def chat_endpoint(request: ChatRequest):
             timestamp=datetime.utcnow()
         )
 
-        # 5. Run AOP or fallback to chatbot
+        # 6️⃣ Run AOP or fallback to chatbot
+                # 6️⃣ Run or start AOP
+        response_text = None
+
         if aop_name:
             aop = next((a for a in AOPS if a["aop_name"] == aop_name), None)
             if aop:
-                response_text = run_aop(aop, request.message, chat_id=chat_id, storage=storage)
+                print(f"⚙️ Detected new AOP trigger: {aop_name}")
+
+                # 🧠 Get the first step of the AOP
+                first_step = aop["steps"][0]
+                first_step_id = first_step["id"]
+                user_prompt = first_step.get("user_prompt", "Let's get started.")
+
+               # 💾 Save AOP state (mark we are waiting for this step's user input)
+                storage.set_chat_state(chat_id, {
+                    "aop_name": aop_name,
+                    "step_id": first_step_id,
+                    "retry_count": 0,     # ✅ use correct key
+                    "awaiting_input": True  # ✅ crucial for Phase-2 handling
+                })
+
+                # 🗣️ Send the first step prompt (don’t validate yet)
+                response_text = user_prompt
+
             else:
                 response_text = "Detected an AOP intent, but could not load it."
+
         else:
+            # No AOP matched — default chatbot handling
             response_text = process_chat_message(request.message, session_id)
 
-        # 6. Save agent reply
+        # 7️⃣ Save agent reply
         storage.add_message(
             chat_id,
             "agent",
             response_text,
-            read=True,                 # agent message is considered "read"
+            read=True,
             tags=[aop_name] if aop_name else [],
             timestamp=datetime.utcnow()
         )
 
-        # 7. Update chat metadata for dashboard
+        # 8️⃣ Update chat metadata
         storage.update_chat_metadata(
             chat_id,
             aop_name=aop_name,
@@ -633,6 +828,7 @@ async def chat_endpoint(request: ChatRequest):
             total_messages=storage.get_message_count(chat_id)
         )
 
+        # 9️⃣ Return structured response
         processing_time = time.time() - start_time
         timestamp = datetime.utcnow().isoformat()
 
