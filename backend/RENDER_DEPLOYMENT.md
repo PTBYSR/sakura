@@ -36,7 +36,8 @@ Set these in your Render.com dashboard:
 5. **LANGCHAIN_PROJECT** - Your LangChain project name (optional)
 
 ### Python Version
-- **Python 3.11.7** (specified in runtime.txt)
+- **Python 3.11.9** (specified in runtime.txt)
+- **Note**: Python 3.13+ may have compatibility issues with some packages
 
 ### Instance Configuration
 - **Instance Type**: Starter (free tier) or higher
