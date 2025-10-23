@@ -12,6 +12,11 @@ pip install -r requirements.txt
 python main.py
 ```
 
+**Alternative Configuration:**
+- **Root Directory**: Set to project root (not backend folder)
+- **Build Command**: `pip install -r requirements.txt`
+- **Start Command**: `python main.py`
+
 **Alternative Production Start Commands:**
 - Using Gunicorn (recommended for production): `gunicorn main:app --bind 0.0.0.0:$PORT --workers 4 --worker-class uvicorn.workers.UvicornWorker --timeout 120 --keep-alive 2 --max-requests 1000 --max-requests-jitter 100 --preload`
 - Using the startup script: `chmod +x start.sh && ./start.sh`
