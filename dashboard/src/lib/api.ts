@@ -1,6 +1,11 @@
 // lib/api.ts - API service for your Next.js frontend
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Dynamically switch between local and production backend URLs
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  (process.env.NODE_ENV === "development"
+    ? "http://localhost:8000"
+    : "https://sakura-backend.onrender.com");
 
 // Type definitions
 export interface User {

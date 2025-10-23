@@ -28,7 +28,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ customer }) => {
   const [newMessage, setNewMessage] = useState('');
   const [messageType, setMessageType] = useState('Message');
 
-  const messages = getChatMessages(customer.chatId);
+  const messages = customer.chatId ? getChatMessages(customer.chatId) : [];
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', { 
@@ -48,7 +48,7 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ customer }) => {
   };
 
   const handleSendMessage = () => {
-    if (newMessage.trim()) {
+    if (newMessage.trim() && customer.chatId) {
       sendMessage(customer.chatId, newMessage);
       setNewMessage('');
     }

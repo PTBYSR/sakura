@@ -79,7 +79,12 @@ export default function DataInspectorPage() {
   const [expandedUsers, setExpandedUsers] = useState<string[]>([]);
   const [expandedChats, setExpandedChats] = useState<string[]>([]);
 
-  const API_BASE_URL = "http://localhost:8000";
+  // Dynamically switch between local and production backend URLs
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    (process.env.NODE_ENV === "development"
+      ? "http://localhost:8000"
+      : "https://sakura-backend.onrender.com");
 
   useEffect(() => {
     const fetchData = async () => {
