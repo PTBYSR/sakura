@@ -48,7 +48,12 @@ interface UserDataResponse {
   message: string;
 }
 
-const API_BASE_URL = 'http://localhost:8000';
+// Dynamically switch between local and production backend URLs
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  (process.env.NODE_ENV === "development"
+    ? "http://localhost:8000"
+    : "https://sakura-backend.onrender.com");
 
 export default function ChatPage() {
   const [stage, setStage] = useState<'form' | 'chat'>('form');
