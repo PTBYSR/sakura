@@ -297,7 +297,7 @@ useEffect(() => {
       
       const assistantMessage: Message = {
         id: `assistant_${Date.now()}`,
-        content: chatResponse.response,
+        content: cleanResponse,
         role: 'assistant',
         timestamp: chatResponse.timestamp,
         processingTime: chatResponse.processing_time,
