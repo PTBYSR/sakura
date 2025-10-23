@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { dummyChatInstances } from "../data/dummyChatInstances";
+import { sectionedDummyChatInstances } from "../data/sectionedDummyChatInstances";
 
 // Types
 interface Message {
@@ -72,7 +72,7 @@ export const useChatData = ({ inboxType, userEmail }: UseChatDataProps) => {
 
     try {
       // Use dummy data instead of API calls
-      const initialChats: Chat[] = dummyChatInstances.map(instance => instance.chat);
+      const initialChats: Chat[] = sectionedDummyChatInstances.map(instance => instance.chat);
       setChats(initialChats);
 
       // Select the first chat by default if none is selected
@@ -90,7 +90,7 @@ export const useChatData = ({ inboxType, userEmail }: UseChatDataProps) => {
   // Update messages and contact info when chat is selected
   useEffect(() => {
     if (selectedChatId) {
-      const selectedInstance = dummyChatInstances.find(
+      const selectedInstance = sectionedDummyChatInstances.find(
         (instance) => instance.chat.id === selectedChatId
       );
 
@@ -165,7 +165,7 @@ export const useChatData = ({ inboxType, userEmail }: UseChatDataProps) => {
     handleChatSelect,
     refreshChats: () => {
       // Refresh with dummy data
-      const initialChats: Chat[] = dummyChatInstances.map(instance => instance.chat);
+      const initialChats: Chat[] = sectionedDummyChatInstances.map(instance => instance.chat);
       setChats(initialChats);
     },
   };

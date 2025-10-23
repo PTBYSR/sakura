@@ -101,7 +101,7 @@ const ChatDetails: React.FC<ChatDetailsProps> = ({ customer }) => {
           <Typography 
             variant="body2" 
             sx={{ 
-              color: getStatusColor(customer.status),
+              color: getStatusColor(customer.status || 'offline'),
               textTransform: 'capitalize'
             }}
           >
@@ -130,9 +130,7 @@ const ChatDetails: React.FC<ChatDetailsProps> = ({ customer }) => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
           <IconMapPin size={16} color="#8a8a8a" />
           <Typography variant="body2" sx={{ color: '#8a8a8a' }}>
-            {customer.location
-              ? `${customer.location.city || ''}${customer.location.region ? ', ' + customer.location.region : ''}${customer.location.country ? ', ' + customer.location.country : ''}`
-              : 'Unknown location'}
+            {customer.location || 'Unknown location'}
           </Typography>
         </Box>
       </Box>
@@ -226,7 +224,7 @@ const ChatDetails: React.FC<ChatDetailsProps> = ({ customer }) => {
         <Collapse in={expandedSections.chatTags}>
           <Box sx={{ pl: 2, py: 1 }}>
             <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-              {customer.tags.map((tag, index) => (
+              {customer.tags?.map((tag, index) => (
                 <Box
                   key={index}
                   sx={{
