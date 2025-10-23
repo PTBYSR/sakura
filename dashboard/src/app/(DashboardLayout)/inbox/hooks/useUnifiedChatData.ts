@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { dummyData } from '../data/dummyData';
 
-const API_BASE_URL = 'http://localhost:8000';
+// Dynamically switch between local and production backend URLs
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  (process.env.NODE_ENV === "development"
+    ? "http://localhost:8000"
+    : "https://sakura-backend.onrender.com");
 
 export interface ChatMessage {
   id: string;

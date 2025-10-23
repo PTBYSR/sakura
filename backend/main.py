@@ -76,15 +76,16 @@ app = FastAPI(title="Regirl Chat API", version="1.0.0")
 
 # CORS configuration for Next.js frontend
 print("🌐 Setting up CORS for Next.js frontend...")
+
+# Get frontend URLs from environment variable
+frontend_urls = os.getenv("FRONTEND_URLS", "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001")
+allowed_origins = [url.strip() for url in frontend_urls.split(",")]
+
+print(f"🔗 Allowed origins: {allowed_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000", 
-        "http://127.0.0.1:3000",
-        "http://localhost:3001", 
-        "http://127.0.0.1:3001"
-        
-        ],  # Next.js dev server
+    allow_origins=allowed_origins,  # Dynamic frontend URLs
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],  # Explicitly include OPTIONS
     allow_headers=["*"],
