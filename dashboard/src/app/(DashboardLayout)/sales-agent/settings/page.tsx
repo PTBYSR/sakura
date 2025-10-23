@@ -1,8 +1,7 @@
 "use client";
 import React from "react";
-import { Box, Typography, Container, Grid2 as Grid } from "@mui/material";
+import { Box, Typography, Container, Grid } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
-import ARPCustomization from "@/app/(DashboardLayout)/components/agent/ARPCustomization";
 
 const SalesAgentSettingsPage = () => {
   return (
@@ -18,7 +17,6 @@ const SalesAgentSettingsPage = () => {
 
           <Grid container spacing={3}>
             <Grid size={12}>
-              <ARPCustomization agentId="sales-agent" />
             </Grid>
           </Grid>
         </Box>
