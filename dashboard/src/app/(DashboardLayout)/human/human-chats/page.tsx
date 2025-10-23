@@ -1,9 +1,20 @@
 "use client";
 import React from "react";
-import ChatLayout from "@/app/(DashboardLayout)/components/chat/ChatLayout";
+import ExactChatInterface from "../../inbox/components/ExactChatInterface";
 
 const HumanChatsPage = () => {
-  return <ChatLayout category="human-chats" title="All chats" />;
+  return (
+    <ExactChatInterface
+      inboxType="human"
+      userEmail="agent@heirs.com"
+      section="my-inbox-chats"
+      suggestedReplies={[
+        "Hi there! 👋",
+        "How can I help you today?",
+        "Let me assist you with that...",
+      ]}
+    />
+  );
 };
 
 export default HumanChatsPage;
