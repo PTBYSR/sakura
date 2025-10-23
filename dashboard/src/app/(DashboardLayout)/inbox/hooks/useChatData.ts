@@ -127,7 +127,7 @@ export const useChatData = ({ inboxType, userEmail }: UseChatDataProps) => {
       const responses = [
         "I understand your concern. Let me help you with that.",
         "That's a great question! Here's what I can tell you...",
-        "I'll look into this for you right away.",
+        "I&apos;ll look into this for you right away.",
         "Thank you for bringing this to my attention.",
         "I can definitely help you with that. Let me check...",
       ];

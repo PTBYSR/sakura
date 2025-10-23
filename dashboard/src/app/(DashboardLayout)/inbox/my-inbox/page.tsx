@@ -11,7 +11,7 @@ const MyInboxPage = () => {
       suggestedReplies={[
         "I can help you with that! 📋",
         "Let me check your policy details...",
-        "I'll need some additional information...",
+        "I&apos;ll need some additional information...",
       ]}
     />
   );

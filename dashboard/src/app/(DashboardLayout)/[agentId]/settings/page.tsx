@@ -21,7 +21,7 @@ const AgentSettingsPage = () => {
               Agent Not Found
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              The agent you're looking for doesn't exist.
+              The agent you&apos;re looking for doesn&apos;t exist.
             </Typography>
           </Box>
         </Container>

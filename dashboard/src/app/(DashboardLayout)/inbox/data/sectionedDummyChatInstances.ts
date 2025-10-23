@@ -126,7 +126,7 @@ export const sectionedDummyChatInstances: SectionedChatInstance[] = [
     chat: {
       id: "my-chat-2",
       name: "Alice Johnson",
-      lastMessage: "Okay, I'll try that. Thanks!",
+      lastMessage: "Okay, I&apos;ll try that. Thanks!",
       timestamp: getRandomChatTime(8),
       unreadCount: 0,
       avatar: getAvatarInitial("Alice Johnson"),
@@ -134,8 +134,8 @@ export const sectionedDummyChatInstances: SectionedChatInstance[] = [
       section: "my-inbox-chats"
     },
     messages: [
-      { id: uuidv4(), content: "Hi, I can't log into my account.", sender: "Alice Johnson", timestamp: getRandomMessageTime(7), isRead: true, avatar: getAvatarInitial("Alice Johnson") },
-      { id: uuidv4(), content: "I apologize for the inconvenience, Alice. Can you describe the error message you're seeing?", sender: "You", timestamp: getRandomMessageTime(6), isRead: true, avatar: getAvatarInitial("You") },
+      { id: uuidv4(), content: "Hi, I can&apos;t log into my account.", sender: "Alice Johnson", timestamp: getRandomMessageTime(7), isRead: true, avatar: getAvatarInitial("Alice Johnson") },
+      { id: uuidv4(), content: "I apologize for the inconvenience, Alice. Can you describe the error message you&apos;re seeing?", sender: "You", timestamp: getRandomMessageTime(6), isRead: true, avatar: getAvatarInitial("You") },
       { id: uuidv4(), content: "It says 'Invalid credentials' even though I'm sure my password is correct.", sender: "Alice Johnson", timestamp: getRandomMessageTime(5), isRead: true, avatar: getAvatarInitial("Alice Johnson") },
       { id: uuidv4(), content: "Please try resetting your password using the 'Forgot Password' link. I've sent a reset link to your email.", sender: "You", timestamp: getRandomMessageTime(4), isRead: true, avatar: getAvatarInitial("You") },
       { id: uuidv4(), content: "Okay, I'll try that. Thanks!", sender: "Alice Johnson", timestamp: getRandomMessageTime(3), isRead: true, avatar: getAvatarInitial("Alice Johnson") },
@@ -181,7 +181,7 @@ export const sectionedDummyChatInstances: SectionedChatInstance[] = [
       section: "my-inbox-chats"
     },
     messages: [
-      { id: uuidv4(), content: "Hello, I see a charge on my statement I don't recognize.", sender: "Bob Smith", timestamp: getRandomMessageTime(11), isRead: true, avatar: getAvatarInitial("Bob Smith") },
+      { id: uuidv4(), content: "Hello, I see a charge on my statement I don&apos;t recognize.", sender: "Bob Smith", timestamp: getRandomMessageTime(11), isRead: true, avatar: getAvatarInitial("Bob Smith") },
       { id: uuidv4(), content: "Could you please provide the transaction ID or the date of the charge, Bob?", sender: "You", timestamp: getRandomMessageTime(10), isRead: true, avatar: getAvatarInitial("You") },
       { id: uuidv4(), content: "It was on Oct 26th, for $49.99.", sender: "Bob Smith", timestamp: getRandomMessageTime(9), isRead: true, avatar: getAvatarInitial("Bob Smith") },
       { id: uuidv4(), content: "Let me check that for you. It appears to be for your monthly premium subscription. Would you like a detailed breakdown?", sender: "You", timestamp: getRandomMessageTime(8), isRead: true, avatar: getAvatarInitial("You") },

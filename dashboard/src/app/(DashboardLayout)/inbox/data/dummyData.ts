@@ -77,7 +77,7 @@ export const dummyData: DummyUserData[] = [
     "chat": {
       "messages": [
         { "id": "msg-1", "content": "Hi, I have a question about my billing.", "sender": "Alice Johnson", "timestamp": "10:15 AM" },
-        { "id": "msg-2", "content": "Hello! I'd be happy to help with your billing question.", "sender": "Agent", "timestamp": "10:16 AM" },
+        { "id": "msg-2", "content": "Hello! I&apos;d be happy to help with your billing question.", "sender": "Agent", "timestamp": "10:16 AM" },
         { "id": "msg-3", "content": "Can you explain the charges on my last invoice?", "sender": "Alice Johnson", "timestamp": "10:17 AM" }
       ],
       "duration": "6m 22s",
@@ -123,7 +123,7 @@ export const dummyData: DummyUserData[] = [
         { "id": "msg-1", "content": "There's a critical bug on your dashboard! When I click the reports button, it crashes.", "sender": "Bob Smith", "timestamp": "9:45 AM" },
         { "id": "msg-2", "content": "I apologize for that, Bob. Could you please provide more details?", "sender": "Agent", "timestamp": "9:46 AM" },
         { "id": "msg-3", "content": "Chrome, latest version. I go to 'Reports', click 'Generate', and then it freezes.", "sender": "Bob Smith", "timestamp": "9:47 AM" },
-        { "id": "msg-4", "content": "Thank you for the detailed report. I've escalated this to our technical team.", "sender": "Agent", "timestamp": "9:48 AM" },
+        { "id": "msg-4", "content": "Thank you for the detailed report. I&apos;ve escalated this to our technical team.", "sender": "Agent", "timestamp": "9:48 AM" },
         { "id": "msg-5", "content": "This is urgent! The system is completely down!", "sender": "Bob Smith", "timestamp": "9:50 AM" }
       ],
       "duration": "8m 15s",
@@ -169,7 +169,7 @@ export const dummyData: DummyUserData[] = [
         { "id": "msg-1", "content": "We're loving the Pro plan and want to upgrade to Business.", "sender": "Carol White", "timestamp": "8:30 AM" },
         { "id": "msg-2", "content": "Fantastic news, Carol! I can help you with that. Are you looking to upgrade immediately or at the end of your current billing cycle?", "sender": "Agent", "timestamp": "8:31 AM" },
         { "id": "msg-3", "content": "Immediately, please. We need the extra features now.", "sender": "Carol White", "timestamp": "8:32 AM" },
-        { "id": "msg-4", "content": "Understood. I've initiated the upgrade process. You'll receive a confirmation email shortly.", "sender": "Agent", "timestamp": "8:33 AM" },
+        { "id": "msg-4", "content": "Understood. I&apos;ve initiated the upgrade process. You&apos;ll receive a confirmation email shortly.", "sender": "Agent", "timestamp": "8:33 AM" },
         { "id": "msg-5", "content": "Perfect, thank you!", "sender": "Carol White", "timestamp": "8:34 AM" }
       ],
       "duration": "4m 30s",
@@ -212,8 +212,8 @@ export const dummyData: DummyUserData[] = [
     },
     "chat": {
       "messages": [
-        { "id": "msg-1", "content": "Hello, I'm looking for information about your services.", "sender": "David Green", "timestamp": "11:20 AM" },
-        { "id": "msg-2", "content": "Hello! I'm an AI assistant. I'd be happy to provide information about our services. What specific area are you interested in?", "sender": "AI Agent", "timestamp": "11:21 AM" },
+        { "id": "msg-1", "content": "Hello, I&apos;m looking for information about your services.", "sender": "David Green", "timestamp": "11:20 AM" },
+        { "id": "msg-2", "content": "Hello! I&apos;m an AI assistant. I&apos;d be happy to provide information about our services. What specific area are you interested in?", "sender": "AI Agent", "timestamp": "11:21 AM" },
         { "id": "msg-3", "content": "I need help with pricing information.", "sender": "David Green", "timestamp": "11:22 AM" }
       ],
       "duration": "3m 45s",
@@ -257,8 +257,8 @@ export const dummyData: DummyUserData[] = [
     "chat": {
       "messages": [
         { "id": "msg-1", "content": "Hi, I need help with my account.", "sender": "Eva Brown", "timestamp": "10:00 AM" },
-        { "id": "msg-2", "content": "Hello! I'm an AI assistant. I can help you with your account. What specific issue are you experiencing?", "sender": "AI Agent", "timestamp": "10:01 AM" },
-        { "id": "msg-3", "content": "I can't log in to my dashboard.", "sender": "Eva Brown", "timestamp": "10:02 AM" },
+        { "id": "msg-2", "content": "Hello! I&apos;m an AI assistant. I can help you with your account. What specific issue are you experiencing?", "sender": "AI Agent", "timestamp": "10:01 AM" },
+        { "id": "msg-3", "content": "I can&apos;t log in to my dashboard.", "sender": "Eva Brown", "timestamp": "10:02 AM" },
         { "id": "msg-4", "content": "I can help you with that. Let me guide you through the login process. First, please try clearing your browser cache.", "sender": "AI Agent", "timestamp": "10:03 AM" },
         { "id": "msg-5", "content": "That worked! Thank you so much.", "sender": "Eva Brown", "timestamp": "10:04 AM" },
         { "id": "msg-6", "content": "You're welcome! Is there anything else I can help you with today?", "sender": "AI Agent", "timestamp": "10:05 AM" },
@@ -280,7 +280,7 @@ export const dummyData: DummyUserData[] = [
     "avatar": "https://api.dicebear.com/7.x/initials/svg?seed=Frank%20Black",
     "section": "my-inbox",
     "status": "active",
-    "lastMessage": "I'm having trouble with the setup process.",
+    "lastMessage": "I&apos;m having trouble with the setup process.",
     "unreadCount": 2,
     "timestamp": "7m ago",
     "location": {
@@ -305,7 +305,7 @@ export const dummyData: DummyUserData[] = [
     "chat": {
       "messages": [
         { "id": "msg-1", "content": "I'm trying to integrate your chat with our custom CRM. I'm having trouble with the API key.", "sender": "Frank Black", "timestamp": "11:10 AM" },
-        { "id": "msg-2", "content": "Hi Frank. Can you confirm you're using the correct API endpoint and that your key has the necessary permissions?", "sender": "Agent", "timestamp": "11:11 AM" },
+        { "id": "msg-2", "content": "Hi Frank. Can you confirm you&apos;re using the correct API endpoint and that your key has the necessary permissions?", "sender": "Agent", "timestamp": "11:11 AM" },
         { "id": "msg-3", "content": "Yes, I've checked both. I'm getting a 401 Unauthorized error.", "sender": "Frank Black", "timestamp": "11:12 AM" },
         { "id": "msg-4", "content": "It sounds like an authentication issue. Let's double-check your API key generation process. I can guide you through it.", "sender": "Agent", "timestamp": "11:13 AM" },
         { "id": "msg-5", "content": "I'm having trouble with the setup process.", "sender": "Frank Black", "timestamp": "11:15 AM" }
@@ -579,7 +579,7 @@ export const dummyData: DummyUserData[] = [
     "chat": {
       "messages": [
         { "id": "msg-1", "content": "I'm trying to integrate your chat with our custom CRM. I'm having trouble with the API key.", "sender": "Liam Hall", "timestamp": "10:30 AM" },
-        { "id": "msg-2", "content": "Hi Liam. Can you confirm you're using the correct API endpoint and that your key has the necessary permissions?", "sender": "Agent", "timestamp": "10:31 AM" },
+        { "id": "msg-2", "content": "Hi Liam. Can you confirm you&apos;re using the correct API endpoint and that your key has the necessary permissions?", "sender": "Agent", "timestamp": "10:31 AM" },
         { "id": "msg-3", "content": "Yes, I've checked both. I'm getting a 401 Unauthorized error.", "sender": "Liam Hall", "timestamp": "10:32 AM" },
         { "id": "msg-4", "content": "It sounds like an authentication issue. Let's double-check your API key generation process. I can guide you through it.", "sender": "Agent", "timestamp": "10:33 AM" },
         { "id": "msg-5", "content": "That would be great.", "sender": "Liam Hall", "timestamp": "10:34 AM" }
@@ -670,7 +670,7 @@ export const dummyData: DummyUserData[] = [
     },
     "chat": {
       "messages": [
-        { "id": "msg-1", "content": "Is your service down? I can't access anything.", "sender": "Noah Lewis", "timestamp": "3:15 PM" },
+        { "id": "msg-1", "content": "Is your service down? I can&apos;t access anything.", "sender": "Noah Lewis", "timestamp": "3:15 PM" },
         { "id": "msg-2", "content": "I apologize for the inconvenience, Noah. We are currently experiencing a minor service interruption. Our team is actively working on a fix.", "sender": "Agent", "timestamp": "3:16 PM" },
         { "id": "msg-3", "content": "Any ETA?", "sender": "Noah Lewis", "timestamp": "3:17 PM" }
       ],

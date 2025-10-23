@@ -13,7 +13,7 @@ const SalesAgentSettingsPage = () => {
             Sales Agent Settings
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-            Configure your Sales Agent's behavior, responses, and capabilities
+            Configure your Sales Agent&apos;s behavior, responses, and capabilities
           </Typography>
 
           <Grid container spacing={3}>
