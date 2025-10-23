@@ -117,6 +117,8 @@ class UserData(BaseModel):
     chatId: str
     vibe: str
     visitDuration: int
+    category: str
+    status: str
 
 
 class UserDataResponse(BaseModel):
@@ -715,6 +717,8 @@ async def save_user_endpoint(user_data: UserData):
     print(f"📱 Device: {user_data.device}")
     print(f"🎭 Vibe: {user_data.vibe}")
     print(f"🌐 IP: {user_data.ip}")
+    print(f"📂 Category: {user_data.category}")
+    print(f"📊 Status: {user_data.status}")
     
     try:
         # Convert Pydantic model to dict

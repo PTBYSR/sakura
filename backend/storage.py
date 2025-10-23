@@ -4,17 +4,44 @@ from pymongo import MongoClient
 from datetime import datetime
 from typing import Optional, Dict, Any
 import uuid
+import time
 
 class ChatStorage:
     def __init__(self, uri, db_name="sakura"):
         print(f"✅ Connected to DB: {db_name}, URI: {uri}")
-        self.client = MongoClient(
-             uri,
-                tlsCAFile=certifi.where(),  # ← ADD THIS
-                serverSelectionTimeoutMS=5000
-        )
-        self.client.admin.command('ping')
-        print("✅ SUCCESS! MongoDB connected")
+        
+        # Retry connection logic
+        max_retries = 3
+        retry_delay = 5  # seconds
+        
+        for attempt in range(max_retries):
+            try:
+                print(f"🔄 Connection attempt {attempt + 1}/{max_retries}")
+                self.client = MongoClient(
+                     uri,
+                        tlsCAFile=certifi.where(),  # ← ADD THIS
+                        serverSelectionTimeoutMS=30000,  # Increased to 30 seconds
+                        connectTimeoutMS=30000,  # Connection timeout
+                        socketTimeoutMS=30000,   # Socket timeout
+                        maxPoolSize=10,          # Connection pool size
+                        retryWrites=True         # Enable retry writes
+                )
+                self.client.admin.command('ping')
+                print("✅ SUCCESS! MongoDB connected")
+                break
+            except Exception as e:
+                print(f"❌ MongoDB connection failed (attempt {attempt + 1}): {e}")
+                if attempt < max_retries - 1:
+                    print(f"⏳ Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+                else:
+                    print("🔧 Troubleshooting tips:")
+                    print("   1. Check your internet connection")
+                    print("   2. Verify MongoDB Atlas cluster is running")
+                    print("   3. Check IP whitelist in MongoDB Atlas")
+                    print("   4. Verify connection string is correct")
+                    print("   5. Try connecting from MongoDB Compass first")
+                    raise
     
         # List databases to confirm
         print("📋 Available databases:", self.client.list_database_names())
@@ -77,7 +104,7 @@ class ChatStorage:
                 "last_seen": user_data.get("lastSeen", datetime.utcnow().isoformat()),
                 "updated_at": datetime.utcnow().isoformat()
             }
-            optional_fields = ["ip", "location", "device", "vibe", "visitDuration", "chatId", "totalVisits", "timestamp"]
+            optional_fields = ["ip", "location", "device", "vibe", "visitDuration", "chatId", "totalVisits", "timestamp", "category", "status"]
             for field in optional_fields:
                 if field in user_data:
                     update_data[field if field != "chatId" else "chat_id"] = user_data[field]
@@ -98,7 +125,7 @@ class ChatStorage:
                 "last_seen": user_data.get("lastSeen", datetime.utcnow().isoformat()),
                 "total_visits": user_data.get("totalVisits", 1),
             }
-            optional_fields = ["ip", "location", "device", "vibe", "visitDuration", "chatId", "timestamp"]
+            optional_fields = ["ip", "location", "device", "vibe", "visitDuration", "chatId", "timestamp", "category", "status"]
             for field in optional_fields:
                 if field in user_data:
                     key = field if field != "chatId" else "chat_id"

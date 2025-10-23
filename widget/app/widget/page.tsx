@@ -39,6 +39,8 @@ interface UserData {
   chatId: string;
   vibe: string;
   visitDuration: number;
+  category: string;
+  status: string;
 }
 
 interface UserDataResponse {
@@ -171,7 +173,9 @@ useEffect(() => {
         totalVisits,
         chatId: `chat_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
         vibe: "neutral",
-        visitDuration
+        visitDuration,
+        category: "agent-inbox",
+        status: "active"
       };
     } catch (error) {
       console.error('Error collecting metadata:', error);
@@ -186,7 +190,9 @@ useEffect(() => {
         totalVisits: parseInt(localStorage.getItem('totalVisits') || '1', 10),
         chatId: `chat_${Date.now()}`,
         vibe: "neutral",
-        visitDuration: Math.floor((Date.now() - visitStartTime.current) / 1000)
+        visitDuration: Math.floor((Date.now() - visitStartTime.current) / 1000),
+        category: "agent-inbox",
+        status: "active"
       };
     }
   };

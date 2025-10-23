@@ -58,7 +58,7 @@ const baseDarkTheme = createTheme({
       600: "#2A3547",
     },
     text: {
-      primary: "#f6f6f7",
+      // primary: "#f6f6f7",
       secondary: "#5A6A85",
     },
     action: {
