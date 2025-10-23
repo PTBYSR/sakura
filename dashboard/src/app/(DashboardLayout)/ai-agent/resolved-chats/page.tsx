@@ -1,9 +1,20 @@
 "use client";
 import React from "react";
-import ChatLayout from "@/app/(DashboardLayout)/components/chat/ChatLayout";
+import ExactChatInterface from "../../inbox/components/ExactChatInterface";
 
-const ResolvedAgentChatsPage = () => {
-  return <ChatLayout category="ai-resolved" title="Resolved chats" />;
+const ResolvedChatsPage = () => {
+  return (
+    <ExactChatInterface
+      inboxType="agent"
+      userEmail="admin@heirs.com"
+      section="agent-inbox-resolved"
+      suggestedReplies={[
+        "Thank you for using our AI assistant!",
+        "Is there anything else I can help with?",
+        "Have a great day!",
+      ]}
+    />
+  );
 };
 
-export default ResolvedAgentChatsPage;
+export default ResolvedChatsPage;

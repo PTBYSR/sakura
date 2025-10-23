@@ -1,0 +1,225 @@
+[
+  {
+    "aop_name": "Reschedule Flight Ticket",
+    "description": "Handles customer requests to reschedule an existing confirmed flight booking.",
+    "triggers": [
+      "Customer requests flight reschedule via chat",
+      "Customer requests reschedule via email support"
+    ],
+    "steps": [
+      {
+        "id": "verify_identity",
+        "type": "action",
+        "action": "verify_customer_identity",
+        "params": ["booking_reference"],
+        "requires_response": true,
+        "expected_input": "valid booking reference (6–8 alphanumeric characters)",
+        "success_next": "check_booking_status",
+        "failure_next": "escalate_to_human",
+        "notes": "Ensure the person requesting the change is the ticket owner",
+        "user_prompt": "Sure, I can help with that. Could you please provide your booking reference number so I can verify your identity?"
+      },
+      {
+        "id": "check_booking_status",
+        "type": "decision",
+        "decision_logic": [
+          { "condition": "booking_status == 'confirmed'", "next": "check_fare_rules" },
+          { "condition": "booking_status == 'flown' or booking_status == 'expired'", "next": "inform_ineligible" }
+        ],
+        "user_prompt": "Thanks, let me check the current status of your booking..."
+      },
+      {
+        "id": "check_fare_rules",
+        "type": "action",
+        "action": "fetch_fare_rules",
+        "params": ["ticket_class", "promo_or_flex"],
+        "success_next": "show_available_options",
+        "failure_next": "escalate_to_human",
+        "notes": "Determine if rescheduling is allowed and whether fees apply",
+        "user_prompt": "I’m reviewing the fare rules for your ticket to confirm if rescheduling is allowed and whether any change fees apply."
+      },
+      {
+        "id": "show_available_options",
+        "type": "action",
+        "action": "present_flight_options",
+        "params": ["available_dates", "available_times", "fare_difference"],
+        "success_next": "confirm_customer_choice",
+        "failure_next": "escalate_to_human",
+        "notes": "Show customer the feasible flights and fees",
+        "user_prompt": "Here are the available new flight options along with any fare differences. Please choose the option that works best for you.",
+        "requires_response": true,
+        "expected_input": "selection of one available flight option"
+      },
+      {
+        "id": "confirm_customer_choice",
+        "type": "decision",
+        "decision_logic": [
+          { "condition": "customer_accepts_new_flight", "next": "process_payment_if_required" },
+          { "condition": "customer_declines", "next": "cancel_reschedule_process" }
+        ],
+        "requires_response": true,
+        "expected_input": "yes or no response confirming acceptance of new flight option",
+        "user_prompt": "Would you like to confirm one of these options, or would you prefer to cancel the reschedule process?"
+      },
+      {
+        "id": "process_payment_if_required",
+        "type": "action",
+        "action": "process_payment",
+        "params": ["payment_method"],
+        "requires_response": true,
+        "expected_input": "payment method (e.g., card, PayPal, or wallet)",
+        "success_next": "update_booking",
+        "failure_next": "escalate_to_human",
+        "notes": "Handle payment securely if required",
+        "user_prompt": "To proceed, I’ll need to process the fare difference or change fee. Could you please provide your preferred payment method?"
+      },
+      {
+        "id": "update_booking",
+        "type": "action",
+        "action": "update_flight_itinerary",
+        "params": ["new_date", "new_time"],
+        "success_next": "send_confirmation",
+        "failure_next": "escalate_to_human",
+        "user_prompt": "Great, I’m updating your booking with the new flight details..."
+      },
+      {
+        "id": "send_confirmation",
+        "type": "action",
+        "action": "send_customer_confirmation",
+        "params": ["new_itinerary", "e_ticket"],
+        "success_next": "close_case",
+        "user_prompt": "Your booking has been successfully rescheduled. You will receive a confirmation email with your new itinerary and e-ticket."
+      },
+      {
+        "id": "inform_ineligible",
+        "type": "action",
+        "action": "send_ineligible_message",
+        "params": ["reason"],
+        "success_next": "close_case",
+        "user_prompt": "Unfortunately, this booking is not eligible for rescheduling due to its current status."
+      },
+      {
+        "id": "escalate_to_human",
+        "type": "action",
+        "action": "escalate_ticket_to_agent",
+        "params": ["case_id", "reason"],
+        "success_next": "close_case",
+        "user_prompt": "I’m escalating this case to a human support agent who will assist you further."
+      },
+      {
+        "id": "close_case",
+        "type": "action",
+        "action": "log_case_closure",
+        "params": ["ticket_id", "resolution"],
+        "success_next": null,
+        "user_prompt": "This case has been closed. Thank you for contacting us."
+      }
+    ],
+    "notes": "All steps must log actions for audit purposes. Payment handling must comply with PCI-DSS standards."
+  },
+  {
+    "aop_name": "Cancel Flight Ticket",
+    "description": "Handles customer requests to cancel an existing flight booking and issue refunds if eligible.",
+    "triggers": [
+      "Customer requests flight cancellation via chat",
+      "Customer requests cancellation via email support"
+    ],
+    "steps": [
+      {
+        "id": "verify_identity",
+        "type": "action",
+        "action": "verify_customer_identity",
+        "params": ["booking_reference"],
+        "requires_response": true,
+        "expected_input": "valid booking reference (6–8 alphanumeric characters)",
+        "success_next": "check_booking_status",
+        "failure_next": "escalate_to_human",
+        "notes": "Ensure only the ticket owner can cancel",
+        "user_prompt": "I can help you cancel your booking. Please provide your booking reference number so I can verify your identity."
+      },
+      {
+        "id": "check_booking_status",
+        "type": "decision",
+        "decision_logic": [
+          { "condition": "booking_status == 'confirmed'", "next": "check_cancellation_policy" },
+          { "condition": "booking_status == 'flown' or booking_status == 'expired'", "next": "inform_ineligible" }
+        ],
+        "user_prompt": "Let me check the current status of your booking..."
+      },
+      {
+        "id": "check_cancellation_policy",
+        "type": "action",
+        "action": "fetch_cancellation_policy",
+        "params": ["ticket_class", "promo_or_flex"],
+        "success_next": "calculate_refund",
+        "failure_next": "escalate_to_human",
+        "notes": "Check if cancellation is allowed and refund eligibility",
+        "user_prompt": "I’m checking your ticket’s cancellation policy to see if you are eligible for a refund."
+      },
+      {
+        "id": "calculate_refund",
+        "type": "action",
+        "action": "calculate_refund_amount",
+        "params": ["fare_paid", "cancellation_fee"],
+        "success_next": "confirm_cancellation_with_customer",
+        "failure_next": "escalate_to_human",
+        "user_prompt": "Based on the policy, here is the refund amount after applicable fees."
+      },
+      {
+        "id": "confirm_cancellation_with_customer",
+        "type": "decision",
+        "decision_logic": [
+          { "condition": "customer_confirms_cancellation", "next": "process_refund" },
+          { "condition": "customer_declines", "next": "close_case" }
+        ],
+        "requires_response": true,
+        "expected_input": "yes or no response confirming cancellation",
+        "user_prompt": "Do you want to confirm this cancellation and proceed with the refund?"
+      },
+      {
+        "id": "process_refund",
+        "type": "action",
+        "action": "initiate_refund",
+        "params": ["payment_method"],
+        "requires_response": true,
+        "expected_input": "payment method (e.g., card, PayPal, or wallet)",
+        "success_next": "send_cancellation_confirmation",
+        "failure_next": "escalate_to_human",
+        "user_prompt": "I’m processing your refund now. Please provide your preferred refund method."
+      },
+      {
+        "id": "send_cancellation_confirmation",
+        "type": "action",
+        "action": "send_customer_confirmation",
+        "params": ["cancellation_details", "refund_amount"],
+        "success_next": "close_case",
+        "user_prompt": "Your flight has been cancelled successfully. A confirmation email and refund details have been sent to you."
+      },
+      {
+        "id": "inform_ineligible",
+        "type": "action",
+        "action": "send_ineligible_message",
+        "params": ["reason"],
+        "success_next": "close_case",
+        "user_prompt": "Unfortunately, this booking is not eligible for cancellation due to its current status."
+      },
+      {
+        "id": "escalate_to_human",
+        "type": "action",
+        "action": "escalate_ticket_to_agent",
+        "params": ["case_id", "reason"],
+        "success_next": "close_case",
+        "user_prompt": "I’m escalating this case to a human support agent for further assistance."
+      },
+      {
+        "id": "close_case",
+        "type": "action",
+        "action": "log_case_closure",
+        "params": ["ticket_id", "resolution"],
+        "success_next": null,
+        "user_prompt": "This case has been closed. Thank you for contacting us."
+      }
+    ],
+    "notes": "Refund processing must follow finance compliance. Audit logs are required for cancellation and refund steps."
+  }
+]
