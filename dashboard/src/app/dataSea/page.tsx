@@ -11,7 +11,7 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  Grid,
+  Grid2 as Grid,
   Card,
   CardContent,
   Alert,
@@ -153,7 +153,7 @@ const UserDashboard: React.FC = () => {
 
         <Grid container spacing={3}>
           {/* Users List */}
-          <Grid item xs={12} lg={4}>
+          <Grid size={12} lg={4}>
             <Paper elevation={2} sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <PersonIcon sx={{ mr: 1, color: 'primary.main' }} />
@@ -198,7 +198,7 @@ const UserDashboard: React.FC = () => {
           </Grid>
 
           {/* User Details */}
-          <Grid item xs={12} lg={8}>
+          <Grid size={12} lg={8}>
             <Paper elevation={2} sx={{ p: 3 }}>
               {!selectedUser ? (
                 <Box sx={{ textAlign: 'center', py: 12, color: 'text.secondary' }}>
@@ -254,7 +254,7 @@ const UserDashboard: React.FC = () => {
                       }
                       
                       return (
-                        <Grid item xs={12} md={6} key={key}>
+                        <Grid size={12} md={6} key={key}>
                           <Typography variant="overline" color="text.secondary">
                             {displayKey}
                           </Typography>
@@ -292,7 +292,7 @@ const UserDashboard: React.FC = () => {
                         Statistics
                       </Typography>
                       <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6} md={3}>
+                        <Grid size={12} sm={6} md={3}>
                           <Card sx={{ bgcolor: 'primary.light', height: '100%' }}>
                             <CardContent>
                               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
@@ -307,7 +307,7 @@ const UserDashboard: React.FC = () => {
                             </CardContent>
                           </Card>
                         </Grid>
-                        <Grid item xs={12} sm={6} md={3}>
+                        <Grid size={12} sm={6} md={3}>
                           <Card sx={{ bgcolor: 'success.light', height: '100%' }}>
                             <CardContent>
                               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
@@ -322,7 +322,7 @@ const UserDashboard: React.FC = () => {
                             </CardContent>
                           </Card>
                         </Grid>
-                        <Grid item xs={12} sm={6} md={3}>
+                        <Grid size={12} sm={6} md={3}>
                           <Card sx={{ bgcolor: 'warning.light', height: '100%' }}>
                             <CardContent>
                               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
@@ -337,7 +337,7 @@ const UserDashboard: React.FC = () => {
                             </CardContent>
                           </Card>
                         </Grid>
-                        <Grid item xs={12} sm={6} md={3}>
+                        <Grid size={12} sm={6} md={3}>
                           <Card sx={{ bgcolor: 'secondary.light', height: '100%' }}>
                             <CardContent>
                               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>

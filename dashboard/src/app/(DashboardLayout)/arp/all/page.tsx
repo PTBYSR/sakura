@@ -16,7 +16,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Grid,
+  Grid2 as Grid,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -103,7 +103,7 @@ const AllARPsPage = () => {
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                   <TextField
                     fullWidth
                     placeholder="Search ARPs..."
@@ -118,7 +118,7 @@ const AllARPsPage = () => {
                     }}
                   />
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <FormControl fullWidth>
                     <InputLabel>Category</InputLabel>
                     <Select
@@ -135,7 +135,7 @@ const AllARPsPage = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <FormControl fullWidth>
                     <InputLabel>Status</InputLabel>
                     <Select
@@ -150,7 +150,7 @@ const AllARPsPage = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-                <Grid item xs={12} md={2}>
+                <Grid size={{ xs: 12, md: 2 }}>
                   <Typography variant="body2" color="text.secondary" align="center">
                     {filteredARPs.length} ARPs
                   </Typography>
@@ -162,7 +162,7 @@ const AllARPsPage = () => {
           {/* ARP Cards */}
           <Grid container spacing={3}>
             {filteredARPs.map((arp) => (
-              <Grid item xs={12} md={6} lg={4} key={arp.id}>
+              <Grid size={{ xs: 12, md: 6, lg: 4 }} key={arp.id}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>

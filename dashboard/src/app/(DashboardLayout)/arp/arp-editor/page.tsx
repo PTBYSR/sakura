@@ -17,7 +17,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Grid,
+  Grid2 as Grid,
 } from "@mui/material";
 import {
   IconPlus,
@@ -138,13 +138,13 @@ const ARPEditorPage = () => {
             <CardContent>
               <Grid container spacing={3}>
                 {/* Basic Information */}
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Typography variant="h6" gutterBottom>
                     Basic Information
                   </Typography>
                 </Grid>
                 
-                <Grid item xs={12} md={6}>
+                <Grid size={12} md={6}>
                   <TextField
                     fullWidth
                     label="ARP Name"
@@ -154,7 +154,7 @@ const ARPEditorPage = () => {
                   />
                 </Grid>
                 
-                <Grid item xs={12} md={6}>
+                <Grid size={12} md={6}>
                   <FormControl fullWidth>
                     <InputLabel>Category</InputLabel>
                     <Select
@@ -171,7 +171,7 @@ const ARPEditorPage = () => {
                   </FormControl>
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <TextField
                     fullWidth
                     multiline
@@ -183,7 +183,7 @@ const ARPEditorPage = () => {
                   />
                 </Grid>
 
-                <Grid item xs={12} md={6}>
+                <Grid size={12} md={6}>
                   <FormControl fullWidth>
                     <InputLabel>Status</InputLabel>
                     <Select
@@ -198,7 +198,7 @@ const ARPEditorPage = () => {
                   </FormControl>
                 </Grid>
                 
-                <Grid item xs={12} md={6}>
+                <Grid size={12} md={6}>
                   <TextField
                     fullWidth
                     type="number"
@@ -210,7 +210,7 @@ const ARPEditorPage = () => {
                 </Grid>
 
                 {/* Triggers Section */}
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Accordion>
                     <AccordionSummary expandIcon={<IconChevronDown />}>
                       <Typography variant="h6">
@@ -220,7 +220,7 @@ const ARPEditorPage = () => {
                     <AccordionDetails>
                       <Box sx={{ mb: 2 }}>
                         <Grid container spacing={2} alignItems="center">
-                          <Grid item xs={12} md={3}>
+                          <Grid size={12} md={3}>
                             <FormControl fullWidth size="small">
                               <InputLabel>Type</InputLabel>
                               <Select
@@ -235,7 +235,7 @@ const ARPEditorPage = () => {
                               </Select>
                             </FormControl>
                           </Grid>
-                          <Grid item xs={12} md={4}>
+                          <Grid size={12} md={4}>
                             <TextField
                               fullWidth
                               size="small"
@@ -245,7 +245,7 @@ const ARPEditorPage = () => {
                               placeholder="e.g., refund, money back"
                             />
                           </Grid>
-                          <Grid item xs={12} md={4}>
+                          <Grid size={12} md={4}>
                             <TextField
                               fullWidth
                               size="small"
@@ -255,7 +255,7 @@ const ARPEditorPage = () => {
                               placeholder="Description of this trigger"
                             />
                           </Grid>
-                          <Grid item xs={12} md={1}>
+                          <Grid size={12} md={1}>
                             <IconButton onClick={addTrigger} color="primary">
                               <IconPlus />
                             </IconButton>
@@ -279,7 +279,7 @@ const ARPEditorPage = () => {
                 </Grid>
 
                 {/* Responses Section */}
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Accordion>
                     <AccordionSummary expandIcon={<IconChevronDown />}>
                       <Typography variant="h6">
@@ -289,7 +289,7 @@ const ARPEditorPage = () => {
                     <AccordionDetails>
                       <Box sx={{ mb: 2 }}>
                         <Grid container spacing={2} alignItems="center">
-                          <Grid item xs={12} md={3}>
+                          <Grid size={12} md={3}>
                             <FormControl fullWidth size="small">
                               <InputLabel>Type</InputLabel>
                               <Select
@@ -304,7 +304,7 @@ const ARPEditorPage = () => {
                               </Select>
                             </FormControl>
                           </Grid>
-                          <Grid item xs={12} md={8}>
+                          <Grid size={12} md={8}>
                             <TextField
                               fullWidth
                               size="small"
@@ -314,7 +314,7 @@ const ARPEditorPage = () => {
                               placeholder="Response content or action description"
                             />
                           </Grid>
-                          <Grid item xs={12} md={1}>
+                          <Grid size={12} md={1}>
                             <IconButton onClick={addResponse} color="primary">
                               <IconPlus />
                             </IconButton>
@@ -354,7 +354,7 @@ const ARPEditorPage = () => {
                 </Grid>
 
                 {/* Actions */}
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
                     <Button
                       variant="outlined"

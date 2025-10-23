@@ -1,8 +1,12 @@
+# Core FastAPI dependencies
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pydantic==2.5.0
 python-multipart==0.0.6
 python-dotenv==1.0.0
+
+# Database
+pymongo[srv]==4.6.0
 
 # LangChain and LangGraph
 langchain==0.2.16
@@ -20,7 +24,11 @@ torch==2.1.1
 
 # Data processing
 jsonlines==4.0.0
+tqdm==4.66.1
 
 # Google Generative AI (if using Gemini)
 langchain-google-genai==1.0.10
 google-generativeai==0.3.2
+
+# Additional dependencies for production
+gunicorn==21.2.0

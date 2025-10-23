@@ -1160,5 +1160,21 @@ async def shutdown_event():
 
 if __name__ == "__main__":
     import uvicorn
+    import os
+    
+    # Get port from environment variable (Render.com sets this)
+    port = int(os.environ.get("PORT", 8000))
+    
+    # Check if we're in production (Render.com sets RENDER=true)
+    is_production = os.environ.get("RENDER") == "true"
+    
     print("🌟 Starting FastAPI server...")
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    print(f"🌐 Port: {port}")
+    print(f"🏭 Production mode: {is_production}")
+    
+    if is_production:
+        # Production mode - no reload
+        uvicorn.run(app, host="0.0.0.0", port=port, reload=False)
+    else:
+        # Development mode - with reload
+        uvicorn.run(app, host="0.0.0.0", port=port, reload=True)

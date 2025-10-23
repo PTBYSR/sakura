@@ -19,7 +19,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Divider,
-  Grid,
+  Grid2 as Grid,
 } from '@mui/material';
 import {
   IconSearch,
@@ -143,7 +143,7 @@ const ARPCustomization: React.FC<ARPCustomizationProps> = ({ agentId }) => {
         {/* Filters */}
         <Box sx={{ mb: 3 }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -159,7 +159,7 @@ const ARPCustomization: React.FC<ARPCustomizationProps> = ({ agentId }) => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>Category</InputLabel>
                 <Select
