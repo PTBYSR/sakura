@@ -1,7 +1,7 @@
 // Example of how the dummy chat data would be sent to the backend
 // This demonstrates the data flow from widget to backend
 
-import { dummyChatInstances } from './dummyChatInstances';
+import { sectionedDummyChatInstances } from './sectionedDummyChatInstances';
 
 // Simulate sending user data to backend (as would happen from the widget)
 async function simulateWidgetToBackendDataFlow() {
@@ -9,7 +9,7 @@ async function simulateWidgetToBackendDataFlow() {
   console.log("=" .repeat(50));
 
   // Take the first dummy instance as an example
-  const exampleInstance = dummyChatInstances[0];
+  const exampleInstance = sectionedDummyChatInstances[0];
   
   console.log("📤 Data sent from Widget to Backend:");
   console.log("1. User Registration Data:");
@@ -28,11 +28,11 @@ async function simulateWidgetToBackendDataFlow() {
   console.log(JSON.stringify(exampleInstance.contactInfo, null, 2));
 
   console.log("\n📊 Summary:");
-  console.log(`- Total chats: ${dummyChatInstances.length}`);
-  console.log(`- Total messages across all chats: ${dummyChatInstances.reduce((sum, chat) => sum + chat.messages.length, 0)}`);
-  console.log(`- Countries represented: ${new Set(dummyChatInstances.map(chat => chat.backendUserData.location.country)).size}`);
-  console.log(`- Device types: ${new Set(dummyChatInstances.map(chat => chat.backendUserData.device.type)).size}`);
-  console.log(`- Traffic sources: ${new Set(dummyChatInstances.map(chat => chat.backendUserData.utm.source)).size}`);
+  console.log(`- Total chats: ${sectionedDummyChatInstances.length}`);
+  console.log(`- Total messages across all chats: ${sectionedDummyChatInstances.reduce((sum, chat) => sum + chat.messages.length, 0)}`);
+  console.log(`- Countries represented: ${new Set(sectionedDummyChatInstances.map(chat => chat.backendUserData.location.country)).size}`);
+  console.log(`- Device types: ${new Set(sectionedDummyChatInstances.map(chat => chat.backendUserData.device.type)).size}`);
+  console.log(`- Traffic sources: ${new Set(sectionedDummyChatInstances.map(chat => chat.backendUserData.utm.source)).size}`);
 }
 
 // Simulate API endpoints that would receive this data
@@ -41,7 +41,7 @@ const API_ENDPOINTS = {
   '/users': {
     method: 'POST',
     description: 'Receives user registration data from widget',
-    data: 'backendUserData from dummyChatInstances'
+    data: 'backendUserData from sectionedDummyChatInstances'
   },
   
   // Chat message endpoint

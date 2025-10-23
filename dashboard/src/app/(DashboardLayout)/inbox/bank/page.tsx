@@ -103,7 +103,7 @@ export default function DataInspectorPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [API_BASE_URL]);
 
   useEffect(() => {
     const lower = search.toLowerCase();
