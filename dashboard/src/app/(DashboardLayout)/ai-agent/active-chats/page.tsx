@@ -1,9 +1,20 @@
 "use client";
 import React from "react";
-import ChatLayout from "@/app/(DashboardLayout)/components/chat/ChatLayout";
+import ExactChatInterface from "../../inbox/components/ExactChatInterface";
 
 const ActiveChatsPage = () => {
-  return <ChatLayout category="ai-active" title="Active chats" />;
+  return (
+    <ExactChatInterface
+      inboxType="agent"
+      userEmail="admin@heirs.com"
+      section="agent-inbox-active"
+      suggestedReplies={[
+        "Hello! I'm an AI assistant. How can I help you?",
+        "I can assist you with that right away.",
+        "Let me process your request...",
+      ]}
+    />
+  );
 };
 
 export default ActiveChatsPage;

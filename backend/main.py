@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from actions import ACTION_HANDLERS
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi import Query
 from typing import Optional
@@ -13,12 +14,11 @@ from langgraph.graph import StateGraph, START
 from langgraph.graph.message import add_messages
 from langchain_core.tools import tool
 from langgraph.prebuilt import ToolNode, tools_condition
-from langchain.schema import Document
+from langchain_core.documents import Document
 from typing import Annotated
 from typing_extensions import TypedDict
 from pathlib import Path
 import jsonlines
-from langchain.docstore.document import Document
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from dotenv import load_dotenv
@@ -328,10 +328,38 @@ def process_next_step(aop, steps, next_step_id, state, chat_id, storage, user_me
         decision_logic = next_step.get("decision_logic", [])
         
         # For check_booking_status, we mock the evaluation
-        if next_step_id == "check_booking_status":
-            # Assume booking is confirmed for demo
-            state["booking_status"] = "confirmed"
-            next_next_step_id = "check_fare_rules"
+        if next_step.get("type") == "decision":
+            # Fetch all conditions from the JSON step
+            decision_logic = next_step.get("decision_logic", [])
+            next_next_step_id = None
+
+            # Evaluate conditions dynamically based on current state
+            for condition in decision_logic:
+                expr = condition.get("condition")
+                next_id = condition.get("next")
+
+                try:
+                    # Evaluate safely (only against the state dict)
+                    if eval(expr, {}, state):
+                        next_next_step_id = next_id
+                        break
+                except Exception as e:
+                    print(f"⚠️ Decision evaluation failed for {expr}: {e}")
+
+            # Fallback to first next if no condition matched
+            if not next_next_step_id and decision_logic:
+                next_next_step_id = decision_logic[0].get("next")
+
+        elif next_step.get("type") == "action":
+            # Handle action step generically
+            action_id = next_step.get("action")
+            next_next_step_id = next_step.get("success_next")
+
+            # Optional: call modular handler if available
+            handler = ACTION_HANDLERS.get(action_id)
+            if handler:
+                state = handler(state)
+
         else:
             # Default to first condition's next step
             next_next_step_id = decision_logic[0].get("next") if decision_logic else None
@@ -382,10 +410,17 @@ def match_aop(user_message: str) -> str:
     Respond with the exact AOP name or 'none' if none apply.
     """
 
-    result = llm.invoke(prompt)  # use your initialized LLM
-    chosen = result.content.strip()
-    logger.info(f"✅ LLM decided: {chosen}")
-    return chosen
+    try:
+        if llm is None:
+            logger.error("❌ LLM not initialized")
+            return "none"
+        result = llm.invoke(prompt)  # use your initialized LLM
+        chosen = result.content.strip()
+        logger.info(f"✅ LLM decided: {chosen}")
+        return chosen
+    except Exception as e:
+        logger.error(f"❌ Error in match_aop: {e}")
+        return "none"
 
 
 @tool
@@ -496,6 +531,8 @@ def retrieve_from_kb(query: str, top_k: int = 3) -> str:
 print("🧠 Initializing LangGraph...")
 tools = [get_stock_price, retrieve_from_kb]
 
+# Initialize LLM globally
+llm = None
 try:
     print("🤖 Connecting to Gemini model...")
     llm = init_chat_model("google_genai:gemini-2.0-flash")
@@ -764,7 +801,11 @@ async def chat_endpoint(request: ChatRequest):
         print(f"💀 chat message before it enters MATCH AOP ")
 
         # 4️⃣ Match AOP for categorization (new AOP detection)
-        aop_name = match_aop(request.message)
+        try:
+            aop_name = match_aop.invoke({"user_message": request.message})
+        except Exception as e:
+            print(f"❌ Error matching AOP: {e}")
+            aop_name = None
         aop_name = aop_name if aop_name and aop_name.lower() != "none" else None
 
         # 5️⃣ Save user message

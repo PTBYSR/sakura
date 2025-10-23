@@ -198,6 +198,9 @@ useEffect(() => {
     try {
       const userData = await collectUserMetadata();
 
+      console.log("🧠 Sending user data to backend:", userData);
+
+
       const response = await fetch(`${API_BASE_URL}/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -237,7 +240,18 @@ useEffect(() => {
     setIsLoading(true);
     setError('');
 
+
+
     try {
+
+      const payload = {
+        message: userMessage.content,
+        session_id: sessionId,
+        name,
+        email,
+      };
+      
+      console.log("💬 Sending chat payload to backend:", payload);
       const response = await fetch(`${API_BASE_URL}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -252,6 +266,8 @@ useEffect(() => {
       if (!response.ok) throw new Error(`API error: ${response.status}`);
 
       const chatResponse: ChatResponse = await response.json();
+      console.log("✅ Response from backend:", chatResponse);
+
 
       let cleanResponse = chatResponse.response;
 
