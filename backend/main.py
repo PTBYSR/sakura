@@ -20,7 +20,11 @@ from typing_extensions import TypedDict
 from pathlib import Path
 import jsonlines
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
+
+
+from langchain_huggingface import HuggingFaceEmbeddings, HuggingFaceEndpointEmbeddings
+
+
 from dotenv import load_dotenv
 from langsmith import traceable
 from tqdm import tqdm
@@ -52,6 +56,26 @@ print(f"🔗 Connecting to MongoDB Atlas: {uri}")
 
 # Initialize storage
 storage = ChatStorage(uri)
+
+
+def get_embeddings():
+    """
+    Dynamically choose between local and API-based embeddings.
+    Uses Hugging Face Inference API on Render or when an API token is present.
+    """
+    api_token = os.getenv("HUGGINGFACE_API_TOKEN")
+
+    if os.getenv("RENDER") or api_token:
+        print("⚡ Using Hugging Face Inference API embeddings")
+        # Set the API token as environment variable for HuggingFaceEmbeddings
+        if api_token:
+            os.environ["HUGGINGFACEHUB_API_TOKEN"] = api_token
+        return HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-mpnet-base-v2"
+        )
+    else:
+        print("💻 Using local embeddings (sentence-transformers/all-MiniLM-L6-v2)")
+        return HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 
 # --- Compatibility helper: merge chat state (use when ChatStorage lacks update_state) ---
@@ -125,6 +149,7 @@ class UserData(BaseModel):
 class UserDataResponse(BaseModel):
     success: bool
     message: str
+
 
 # LangGraph State
 class State(TypedDict):
@@ -444,7 +469,8 @@ def get_stock_price(symbol: str) -> float:
 
 # Initialize embeddings and vector store
 print("🤖 Initializing embeddings...")
-embeddings = HuggingFaceEmbeddings()
+embeddings = get_embeddings()
+
 vector_store = None
 
 def initialize_vector_store():
@@ -1138,6 +1164,7 @@ async def get_last_chat_message(email: str):
     messages = last_chat[0].get("messages", [])
     last_message = messages[-1] if messages else None
     return {"last_message": last_message}
+
 
 
 
