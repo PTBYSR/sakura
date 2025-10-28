@@ -3,16 +3,16 @@ import React from "react";
 import { Box, Typography, Container } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 
-const ARPLibraryPage = () => {
+const AllSOPsPage = () => {
   return (
-    <PageContainer title="ARP Library" description="Manage your Automated Response Protocols">
+    <PageContainer title="All SOPs" description="View all Standard Operating Procedures">
       <Container maxWidth="lg">
         <Box sx={{ py: 4 }}>
           <Typography variant="h4" gutterBottom>
-            ARP Library
+            All SOPs
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            This is the ARP Library page at /arp
+            This is the All SOPs page at /sops/all
           </Typography>
         </Box>
       </Container>
@@ -20,5 +20,4 @@ const ARPLibraryPage = () => {
   );
 };
 
-export default ARPLibraryPage;
-
+export default AllSOPsPage;

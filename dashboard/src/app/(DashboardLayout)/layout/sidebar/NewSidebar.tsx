@@ -27,7 +27,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navigationConfig, NavigationModule, NavigationItem } from "@/config/navigation";
 import { useAgents } from "@/contexts/AgentsContext";
-import CreateAgentModal from "@/app/(DashboardLayout)/components/modals/CreateAgentModal";
 
 interface NewSidebarProps {
   isMobileSidebarOpen: boolean;
@@ -44,8 +43,6 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
   const lgUp = useMediaQuery((theme: any) => theme.breakpoints.up("lg"));
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [activeModule, setActiveModule] = useState<string>("inbox");
-  const [createAgentModalOpen, setCreateAgentModalOpen] = useState(false);
-  const { getAgentNavigationItems } = useAgents();
 
   const sidebarWidth = "270px";
   const iconBarWidth = "60px";
@@ -327,9 +324,7 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
     const activeModuleConfig = navigationConfig.find(m => m.id === activeModule);
     if (!activeModuleConfig) return null;
 
-    // Get dynamic agents for AI Agent module
-    const dynamicAgents = activeModule === 'ai-agent' ? getAgentNavigationItems() : [];
-    const allChildren = [...activeModuleConfig.children, ...dynamicAgents];
+    const allChildren = activeModuleConfig.children;
 
     return (
       <Box sx={{ 
@@ -368,10 +363,7 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
                 },
               }}
               onClick={() => {
-                if (activeModule === 'ai-agent') {
-                  setCreateAgentModalOpen(true);
-                }
-                // Add other module-specific actions here
+                // Add module-specific actions here
               }}
             >
               <Typography sx={{ color: "#000", fontSize: "14px", fontWeight: 600 }}>+</Typography>
@@ -391,10 +383,6 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
     <Box sx={{ display: "flex", height: "100%" }}>
       {renderIconBar()}
       {renderSecondaryNavigation()}
-      <CreateAgentModal 
-        open={createAgentModalOpen} 
-        onClose={() => setCreateAgentModalOpen(false)} 
-      />
     </Box>
   );
 

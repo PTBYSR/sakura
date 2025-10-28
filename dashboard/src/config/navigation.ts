@@ -18,6 +18,14 @@ import {
   IconTrash,
   IconCode,
   IconList,
+  IconPlug,
+  IconApi,
+  IconBrandSlack,
+  IconBrandDiscord,
+  IconBrandWhatsapp,
+  IconBrandTelegram,
+  IconBrandFacebook,
+  IconBrandInstagram,
 } from '@tabler/icons-react';
 
 export interface NavigationItem {
@@ -56,6 +64,12 @@ export const navigationConfig: NavigationModule[] = [
         icon: IconMessageCircle,
         collapsible: true,
         children: [
+          {
+            id: 'unified-inbox',
+            title: 'Unified Inbox',
+            href: '/inbox/unified',
+            icon: IconMessageCircle,
+          },
           {
             id: 'human-chats',
             title: 'Chats',
@@ -106,7 +120,24 @@ export const navigationConfig: NavigationModule[] = [
     icon: IconSparkles,
     tooltip: 'AI Agent',
     children: [
-      // Dynamic agents will be added here via the AgentsContext
+      {
+        id: 'overview',
+        title: 'Overview',
+        href: '/ai-agent/overview',
+        icon: IconEye,
+      },
+      {
+        id: 'performance',
+        title: 'Performance',
+        href: '/ai-agent/performance',
+        icon: IconTrendingUp,
+      },
+      {
+        id: 'settings',
+        title: 'Settings',
+        href: '/ai-agent/settings',
+        icon: IconSettings,
+      },
     ],
   },
   {
@@ -152,23 +183,44 @@ export const navigationConfig: NavigationModule[] = [
     ],
   },
   {
-    id: 'arp',
-    title: 'ARP Library',
-    href: '/arp',
+    id: 'sops',
+    title: 'SOPs Library',
+    href: '/sops',
     icon: IconCode,
-    tooltip: 'ARP Library',
+    tooltip: 'SOPs Library',
     children: [
       {
-        id: 'arp-editor',
-        title: 'ARP Editor',
-        href: '/arp/arp-editor',
+        id: 'sops-editor',
+        title: 'SOPs Editor',
+        href: '/sops/sops-editor',
         icon: IconCode,
       },
       {
-        id: 'all-arps',
-        title: 'All ARPs',
-        href: '/arp/all',
+        id: 'all-sops',
+        title: 'All SOPs',
+        href: '/sops/all',
         icon: IconList,
+      },
+    ],
+  },
+  {
+    id: 'integrations',
+    title: 'Integrations',
+    href: '/integrations',
+    icon: IconPlug,
+    tooltip: 'Third Party Integrations',
+    children: [
+      {
+        id: 'contact-channels',
+        title: 'Contact Channels',
+        href: '/integrations/contact-channels',
+        icon: IconMessageCircle,
+      },
+      {
+        id: 'crms',
+        title: 'CRMs',
+        href: '/integrations/crms',
+        icon: IconTrendingUp,
       },
     ],
   },

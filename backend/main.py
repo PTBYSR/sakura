@@ -1,5 +1,4 @@
 from fastapi.middleware.cors import CORSMiddleware
-from actions import ACTION_HANDLERS
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi import Query
@@ -894,7 +893,6 @@ async def chat_endpoint(request: ChatRequest):
         # 8️⃣ Update chat metadata
         storage.update_chat_metadata(
             chat_id,
-            aop_name=aop_name,
             tags=[aop_name] if aop_name else [],
             last_activity=datetime.utcnow(),
             total_messages=storage.get_message_count(chat_id)
@@ -1164,6 +1162,8 @@ async def get_last_chat_message(email: str):
     messages = last_chat[0].get("messages", [])
     last_message = messages[-1] if messages else None
     return {"last_message": last_message}
+
+
 
 
 
