@@ -326,7 +326,7 @@ export default function ChatPage() {
    */
   const checkApiHealth = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/health`);
+      const response = await fetch(`${API_BASE_URL}/api/health`);
       setApiStatus(response.ok ? 'online' : 'offline');
     } catch {
       setApiStatus('offline');
@@ -430,7 +430,7 @@ export default function ChatPage() {
       console.log("🧠 Sending user data to backend:", userData);
 
       // Send user data to backend
-      const response = await fetch(`${API_BASE_URL}/users`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/data`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
@@ -482,14 +482,12 @@ export default function ChatPage() {
       const payload = {
         message: userMessage.content,
         session_id: sessionId,
-        name,
-        email,
       };
       
       console.log("💬 Sending chat payload to backend:", payload);
 
       // Send message to backend
-      const response = await fetch(`${API_BASE_URL}/chat`, {
+      const response = await fetch(`${API_BASE_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

@@ -95,7 +95,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/users?skip=0&limit=100`, {
+      const res = await fetch(`${API_BASE_URL}/api/users?skip=0&limit=100`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         mode: "cors",
@@ -139,7 +139,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   // Refresh single customer
   const refreshCustomer = async (customerId: string) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/users/${customerId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/users/${customerId}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         mode: "cors",
@@ -178,7 +178,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/chats/${chatId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/chats/${chatId}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         mode: "cors",
@@ -221,7 +221,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
 
   const sendMessage = async (chatId: string, content: string) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/chats/${chatId}/send`, {
+      const res = await fetch(`${API_BASE_URL}/api/chats/${chatId}/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),

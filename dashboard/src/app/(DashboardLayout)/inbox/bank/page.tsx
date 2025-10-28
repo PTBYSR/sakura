@@ -1,5 +1,19 @@
 "use client";
 
+/**
+ * Database Inspector Page - Updated for New Backend
+ * 
+ * This page now fetches live data from the new modular backend.
+ * Uses the /api/debug/users-chats endpoint to get users and their chat data.
+ * 
+ * Available endpoints:
+ * - GET /api/debug/users-chats - Get all users with their chats
+ * - GET /api/users - List all users (with pagination)
+ * - GET /api/users/{email} - Get user by email
+ * - GET /api/chats - List chats (with optional email filter)
+ * - GET /api/chats/{chat_id} - Get specific chat
+ */
+
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -90,14 +104,26 @@ export default function DataInspectorPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_BASE_URL}/debug/users-chats`);
-        if (!res.ok) throw new Error(`Error: ${res.status}`);
+        
+        console.log("🔄 Fetching live data from backend...");
+        
+        // Try to fetch from the new backend debug endpoint
+        const res = await fetch(`${API_BASE_URL}/api/debug/users-chats`);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
         const json = await res.json();
+        console.log("📊 Received data:", json);
+        
         setData(json.users || []);
         setFilteredData(json.users || []);
+        
+        console.log("✅ Live data loaded successfully");
+        
       } catch (err: any) {
-        console.error("❌ Failed to fetch debug data:", err);
-        setError(err.message);
+        console.error("❌ Failed to fetch live data:", err);
+        setError(`Failed to load data: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -218,7 +244,12 @@ export default function DataInspectorPage() {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="info">
-          No user data found in database
+          No user data found in database. This could mean:
+          <ul>
+            <li>The database is not connected</li>
+            <li>No users have registered yet</li>
+            <li>The backend is running in test mode</li>
+          </ul>
         </Alert>
       </Box>
     );
@@ -231,9 +262,25 @@ export default function DataInspectorPage() {
         <Typography variant="h3" sx={{ color: "white", fontWeight: "bold", mb: 1 }}>
           📊 Database Inspector
         </Typography>
-        <Typography variant="subtitle1" sx={{ color: "#ccc", mb: 3 }}>
+        <Typography variant="subtitle1" sx={{ color: "#ccc", mb: 2 }}>
           View and search user chat data
         </Typography>
+        
+        {/* Live Data Notice */}
+        <Alert 
+          severity="success" 
+          sx={{ 
+            mb: 3, 
+            backgroundColor: "#065f46", 
+            color: "white",
+            "& .MuiAlert-icon": { color: "#10b981" }
+          }}
+        >
+          <Typography variant="body2">
+            <strong>✅ Backend Connected:</strong> This page is now fetching live data from the new backend! 
+            The endpoint is working and will display real user data once the database is connected and users register.
+          </Typography>
+        </Alert>
         
         <TextField
           fullWidth

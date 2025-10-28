@@ -1,0 +1,23 @@
+# Minimal dependencies for testing
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+pydantic-settings>=2.0.0
+python-multipart>=0.0.6
+python-dotenv>=1.0.0
+pymongo>=4.6.0
+certifi>=2023.7.22
+
+# For production, add these:
+# langchain>=0.2.16
+# langgraph>=0.2.28
+# langchain-core>=0.2.39
+# langchain-community>=0.2.16
+# langchain-huggingface>=0.0.3
+# faiss-cpu>=1.12.0
+# sentence-transformers>=2.2.2
+# jsonlines>=4.0.0
+# tqdm>=4.66.1
+# langchain-google-genai>=1.0.10
+# google-generativeai>=0.3.2
+
