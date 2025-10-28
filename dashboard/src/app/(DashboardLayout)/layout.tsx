@@ -5,7 +5,7 @@ import Header from "@/app/(DashboardLayout)/layout/header/Header";
 import NewSidebar from "@/app/(DashboardLayout)/layout/sidebar/NewSidebar";
 import { AgentsProvider } from "@/contexts/AgentsContext";
 import { ChatProvider } from "@/contexts/ChatContext";
-import { ARPProvider } from "@/contexts/ARPContext";
+import { SOPsProvider } from "@/contexts/SOPsContext";
 
 
 const MainWrapper = styled("div")(() => ({
@@ -39,7 +39,7 @@ export default function RootLayout({
   return (
     <AgentsProvider>
       <ChatProvider>
-        <ARPProvider>
+        <SOPsProvider>
           <MainWrapper className="mainwrapper">
             {/* ------------------------------------------- */}
             {/* Sidebar */}
@@ -76,7 +76,7 @@ export default function RootLayout({
               </Container>
             </PageWrapper>
           </MainWrapper>
-        </ARPProvider>
+        </SOPsProvider>
       </ChatProvider>
     </AgentsProvider>
   );

@@ -73,7 +73,7 @@ class ChatStorage:
         """
         Merge updates into the chat's `state` sub-document safely.
         Example:
-            update_state(chat_id, {"aop_name": "Reschedule Flight", "step_id": "verify_identity"})
+            update_state(chat_id, {"step_id": "verify_identity"})
         """
         if not updates:
             return True
@@ -143,7 +143,6 @@ class ChatStorage:
         chat_doc = {
             "chat_id": chat_id,
             "user_id": user_id,
-            "aop_name": None,
             "tags": [],
             "status": "open",
             "priority": "normal",
@@ -153,7 +152,8 @@ class ChatStorage:
             "avatar": None,
             "visited_pages": [],
             "total_messages": 0,
-            "created_at": datetime.utcnow()
+            "created_at": datetime.utcnow(),
+            "category": "ai-active"
         }
         self.chats.insert_one(chat_doc)
         print(f"🎫 New ticket created: {chat_id} for user {user_id}")
@@ -212,10 +212,8 @@ class ChatStorage:
    
    
    
-    def update_chat_metadata(self, chat_id, aop_name=None, tags=None, last_activity=None, total_messages=None):
+    def update_chat_metadata(self, chat_id, tags=None, last_activity=None, total_messages=None):
         update_doc = {}
-        if aop_name is not None:
-            update_doc["aop_name"] = aop_name
         if tags is not None:
             update_doc["tags"] = tags
         if last_activity is not None:
@@ -245,7 +243,7 @@ class ChatStorage:
         return {}
 
     def set_chat_state(self, chat_id: str, state: dict):
-        """Sets or updates the AOP workflow state for a chat session."""
+        """Sets or updates the workflow state for a chat session."""
         try:
             self.chats.update_one(
                 {"chat_id": chat_id},
@@ -261,7 +259,7 @@ class ChatStorage:
         print(f"✅ Ticket {chat_id} closed.")
 
     def clear_state(self, chat_id: str):
-        """Remove the `state` subdocument for a chat (used when an AOP completes or is cancelled)."""
+        """Remove the `state` subdocument for a chat (used when a workflow completes or is cancelled)."""
         try:
             self.chats.update_one({"chat_id": chat_id}, {"$unset": {"state": ""}})
             print(f"🧹 Cleared state for chat {chat_id}")
@@ -320,3 +318,7 @@ class ChatStorage:
 
         self.chats.update_one({"chat_id": chat_id}, {"$set": {"category": category}})
         print(f"🗂 Chat {chat_id} categorized as {category}")
+
+    def get_chat(self, chat_id: str):
+        """Get a specific chat by ID"""
+        return self.chats.find_one({"chat_id": chat_id})

@@ -1,60 +1,60 @@
 "use client";
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-export interface ARPTrigger {
+export interface SOPTrigger {
   id: string;
   type: 'keyword' | 'intent' | 'pattern' | 'context';
   value: string;
   description: string;
 }
 
-export interface ARPResponse {
+export interface SOPResponse {
   id: string;
   type: 'text' | 'action' | 'redirect' | 'escalate';
   content: string;
   conditions?: string[];
 }
 
-export interface ARP {
+export interface SOP {
   id: string;
   name: string;
   description: string;
   category: 'support' | 'sales' | 'billing' | 'technical' | 'general';
   status: 'active' | 'draft' | 'archived';
-  triggers: ARPTrigger[];
-  responses: ARPResponse[];
+  triggers: SOPTrigger[];
+  responses: SOPResponse[];
   priority: number;
   createdAt: Date;
   updatedAt: Date;
-  assignedAgents: string[]; // Agent IDs that use this ARP
+  assignedAgents: string[]; // Agent IDs that use this SOP
 }
 
-interface ARPContextType {
-  arps: ARP[];
-  addARP: (arp: Omit<ARP, 'id' | 'createdAt' | 'updatedAt' | 'assignedAgents'>) => void;
-  updateARP: (id: string, updates: Partial<ARP>) => void;
-  deleteARP: (id: string) => void;
-  getARPsByCategory: (category: string) => ARP[];
-  getARPsForAgent: (agentId: string) => ARP[];
-  assignARPToAgent: (arpId: string, agentId: string) => void;
-  unassignARPFromAgent: (arpId: string, agentId: string) => void;
+interface SOPsContextType {
+  sops: SOP[];
+  addSOP: (sop: Omit<SOP, 'id' | 'createdAt' | 'updatedAt' | 'assignedAgents'>) => void;
+  updateSOP: (id: string, updates: Partial<SOP>) => void;
+  deleteSOP: (id: string) => void;
+  getSOPsByCategory: (category: string) => SOP[];
+  getSOPsForAgent: (agentId: string) => SOP[];
+  assignSOPToAgent: (sopId: string, agentId: string) => void;
+  unassignSOPFromAgent: (sopId: string, agentId: string) => void;
 }
 
-const ARPContext = createContext<ARPContextType | undefined>(undefined);
+const SOPsContext = createContext<SOPsContextType | undefined>(undefined);
 
-export const useARP = () => {
-  const context = useContext(ARPContext);
+export const useSOPs = () => {
+  const context = useContext(SOPsContext);
   if (!context) {
-    throw new Error('useARP must be used within an ARPProvider');
+    throw new Error('useSOPs must be used within an SOPsProvider');
   }
   return context;
 };
 
-// Generate dummy ARPs
-const generateDummyARPs = (): ARP[] => {
+// Generate dummy SOPs
+const generateDummySOPs = (): SOP[] => {
   return [
     {
-      id: 'arp-1',
+      id: 'sop-1',
       name: 'Refund Processing',
       description: 'Handles customer refund requests and processing',
       category: 'billing',
@@ -91,7 +91,7 @@ const generateDummyARPs = (): ARP[] => {
       ]
     },
     {
-      id: 'arp-2',
+      id: 'sop-2',
       name: 'Product Information',
       description: 'Provides detailed product information and specifications',
       category: 'sales',
@@ -128,7 +128,7 @@ const generateDummyARPs = (): ARP[] => {
       ]
     },
     {
-      id: 'arp-3',
+      id: 'sop-3',
       name: 'Technical Support',
       description: 'Handles technical issues and troubleshooting',
       category: 'technical',
@@ -147,25 +147,30 @@ const generateDummyARPs = (): ARP[] => {
         {
           id: 'trigger-6',
           type: 'keyword',
-          value: 'not working',
-          description: 'Customer says something is not working'
+          value: 'bug',
+          description: 'Customer reports a bug'
         }
       ],
       responses: [
         {
           id: 'response-5',
           type: 'text',
-          content: 'I\'m here to help you resolve this technical issue.'
+          content: 'I\'m sorry to hear you\'re experiencing technical issues. Let me help you troubleshoot this.'
         },
         {
           id: 'response-6',
+          type: 'action',
+          content: 'Gather system information and error details'
+        },
+        {
+          id: 'response-7',
           type: 'escalate',
-          content: 'Escalate to technical support team'
+          content: 'Escalate to technical support team if issue persists'
         }
       ]
     },
     {
-      id: 'arp-4',
+      id: 'sop-4',
       name: 'Order Status Inquiry',
       description: 'Provides order status and tracking information',
       category: 'support',
@@ -173,7 +178,7 @@ const generateDummyARPs = (): ARP[] => {
       priority: 2,
       createdAt: new Date('2024-01-08'),
       updatedAt: new Date('2024-01-16'),
-      assignedAgents: [],
+      assignedAgents: ['sales-agent'],
       triggers: [
         {
           id: 'trigger-7',
@@ -190,121 +195,131 @@ const generateDummyARPs = (): ARP[] => {
       ],
       responses: [
         {
-          id: 'response-7',
+          id: 'response-8',
           type: 'text',
-          content: 'Let me check your order status for you.'
+          content: 'I\'ll help you check the status of your order.'
         },
         {
-          id: 'response-8',
+          id: 'response-9',
           type: 'action',
-          content: 'Retrieve order information and tracking details'
+          content: 'Look up order by order number or email'
         }
       ]
     },
     {
-      id: 'arp-5',
-      name: 'Greeting Protocol',
-      description: 'Standard greeting and initial customer interaction',
+      id: 'sop-5',
+      name: 'Account Setup',
+      description: 'Guides new customers through account creation',
       category: 'general',
-      status: 'active',
+      status: 'draft',
       priority: 3,
       createdAt: new Date('2024-01-05'),
       updatedAt: new Date('2024-01-14'),
-      assignedAgents: ['sales-agent'],
+      assignedAgents: [],
       triggers: [
         {
           id: 'trigger-9',
-          type: 'context',
-          value: 'conversation_start',
-          description: 'Beginning of conversation'
+          type: 'keyword',
+          value: 'create account',
+          description: 'Customer wants to create an account'
+        },
+        {
+          id: 'trigger-10',
+          type: 'keyword',
+          value: 'sign up',
+          description: 'Customer wants to sign up'
         }
       ],
       responses: [
         {
-          id: 'response-9',
+          id: 'response-10',
           type: 'text',
-          content: 'Hello! How can I help you today?'
+          content: 'I\'d be happy to help you create an account. Let me guide you through the process.'
+        },
+        {
+          id: 'response-11',
+          type: 'action',
+          content: 'Provide account creation link and instructions'
         }
       ]
     }
   ];
 };
 
-interface ARPProviderProps {
+interface SOPsProviderProps {
   children: ReactNode;
 }
 
-export const ARPProvider: React.FC<ARPProviderProps> = ({ children }) => {
-  const [arps, setARPs] = useState<ARP[]>(generateDummyARPs());
+export const SOPsProvider: React.FC<SOPsProviderProps> = ({ children }) => {
+  const [sops, setSOPs] = useState<SOP[]>(generateDummySOPs());
 
-  const addARP = (arpData: Omit<ARP, 'id' | 'createdAt' | 'updatedAt' | 'assignedAgents'>) => {
-    const newARP: ARP = {
-      ...arpData,
-      id: `arp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+  const addSOP = (sopData: Omit<SOP, 'id' | 'createdAt' | 'updatedAt' | 'assignedAgents'>) => {
+    const newSOP: SOP = {
+      ...sopData,
+      id: `sop-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       createdAt: new Date(),
       updatedAt: new Date(),
       assignedAgents: [],
     };
-    setARPs(prev => [...prev, newARP]);
+    setSOPs(prev => [...prev, newSOP]);
   };
 
-  const updateARP = (id: string, updates: Partial<ARP>) => {
-    setARPs(prev => prev.map(arp => 
-      arp.id === id 
-        ? { ...arp, ...updates, updatedAt: new Date() }
-        : arp
+  const updateSOP = (id: string, updates: Partial<SOP>) => {
+    setSOPs(prev => prev.map(sop => 
+      sop.id === id 
+        ? { ...sop, ...updates, updatedAt: new Date() }
+        : sop
     ));
   };
 
-  const deleteARP = (id: string) => {
-    setARPs(prev => prev.filter(arp => arp.id !== id));
+  const deleteSOP = (id: string) => {
+    setSOPs(prev => prev.filter(sop => sop.id !== id));
   };
 
-  const getARPsByCategory = (category: string): ARP[] => {
-    return arps.filter(arp => arp.category === category);
+  const getSOPsByCategory = (category: string): SOP[] => {
+    return sops.filter(sop => sop.category === category);
   };
 
-  const getARPsForAgent = (agentId: string): ARP[] => {
-    return arps.filter(arp => arp.assignedAgents.includes(agentId));
+  const getSOPsForAgent = (agentId: string): SOP[] => {
+    return sops.filter(sop => sop.assignedAgents.includes(agentId));
   };
 
-  const assignARPToAgent = (arpId: string, agentId: string) => {
-    setARPs(prev => prev.map(arp => 
-      arp.id === arpId 
+  const assignSOPToAgent = (sopId: string, agentId: string) => {
+    setSOPs(prev => prev.map(sop => 
+      sop.id === sopId 
         ? { 
-            ...arp, 
-            assignedAgents: [...arp.assignedAgents, agentId],
+            ...sop, 
+            assignedAgents: [...sop.assignedAgents, agentId],
             updatedAt: new Date()
           }
-        : arp
+        : sop
     ));
   };
 
-  const unassignARPFromAgent = (arpId: string, agentId: string) => {
-    setARPs(prev => prev.map(arp => 
-      arp.id === arpId 
+  const unassignSOPFromAgent = (sopId: string, agentId: string) => {
+    setSOPs(prev => prev.map(sop => 
+      sop.id === sopId 
         ? { 
-            ...arp, 
-            assignedAgents: arp.assignedAgents.filter(id => id !== agentId),
+            ...sop, 
+            assignedAgents: sop.assignedAgents.filter(id => id !== agentId),
             updatedAt: new Date()
           }
-        : arp
+        : sop
     ));
   };
 
   return (
-    <ARPContext.Provider value={{
-      arps,
-      addARP,
-      updateARP,
-      deleteARP,
-      getARPsByCategory,
-      getARPsForAgent,
-      assignARPToAgent,
-      unassignARPFromAgent,
+    <SOPsContext.Provider value={{
+      sops,
+      addSOP,
+      updateSOP,
+      deleteSOP,
+      getSOPsByCategory,
+      getSOPsForAgent,
+      assignSOPToAgent,
+      unassignSOPFromAgent,
     }}>
       {children}
-    </ARPContext.Provider>
+    </SOPsContext.Provider>
   );
 };
-
