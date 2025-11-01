@@ -67,6 +67,24 @@ class VectorStoreService:
             print(f"❌ Error during similarity search: {e}")
             return []
     
+    def similarity_search_with_score(self, query: str, top_k: int = 3) -> List[tuple]:
+        """
+        Perform similarity search with scores.
+        
+        Returns:
+            List of tuples (Document, score) where score is the distance
+        """
+        if self.vector_store is None:
+            print("❌ Vector store not initialized")
+            return []
+        
+        try:
+            results = self.vector_store.similarity_search_with_score(query, k=top_k)
+            return results
+        except Exception as e:
+            print(f"❌ Error during similarity search with score: {e}")
+            return []
+    
     def get_vector_store(self) -> Optional[FAISS]:
         """Get the vector store instance."""
         return self.vector_store

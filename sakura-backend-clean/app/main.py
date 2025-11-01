@@ -10,8 +10,10 @@ from app.core.settings import get_settings, Settings
 from app.core.database import init_database, get_db_manager
 from app.services.embeddings_service import init_embeddings_service
 from app.services.vector_store_service import init_vector_store_service
+from app.services.faq_embedding_service import init_faq_embedding_service
 from app.services.langgraph_service import init_langgraph_service
-from app.routes import ai, users, dashboard
+from app.routes import ai, users, dashboard, knowledge_base
+from app.services.website_crawler_service import init_website_crawler_service
 
 
 # Configure logging
@@ -43,9 +45,17 @@ async def lifespan(app: FastAPI):
         print("📚 Initializing vector store service...")
         vector_store_service = init_vector_store_service(settings, embeddings_service)
         
+        # Initialize FAQ embedding service
+        print("💬 Initializing FAQ embedding service...")
+        init_faq_embedding_service(vector_store_service, embeddings_service, settings)
+        
         # Initialize LangGraph service
         print("🧠 Initializing LangGraph service...")
         init_langgraph_service(settings, vector_store_service)
+        
+        # Initialize website crawler service
+        print("🕷️  Initializing website crawler service...")
+        init_website_crawler_service(settings)
         
         print("✅ Startup complete - API ready to serve requests!")
         
@@ -89,6 +99,7 @@ def create_app() -> FastAPI:
     app.include_router(ai.router)
     app.include_router(users.router)
     app.include_router(dashboard.router)
+    app.include_router(knowledge_base.router)
     
     # Root endpoint
     @app.get("/")

@@ -32,6 +32,8 @@ import {
 } from "@mui/icons-material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+
 interface WebsiteSource {
   id: string;
   url: string;
@@ -47,29 +49,40 @@ interface WebsiteSource {
 const KnowledgeBaseWebsitesPage = () => {
   const [newUrl, setNewUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [websites, setWebsites] = useState<WebsiteSource[]>([
-    {
-      id: "1",
-      url: "https://heirsinsurancegroup.com",
-      title: "Heirs Insurance Group",
-      status: "completed",
-      pagesExtracted: 45,
-      totalChunks: 1200,
-      createdAt: "2024-01-15",
-      lastUpdated: "2024-01-15",
-    },
-    {
-      id: "2", 
-      url: "https://example.com",
-      title: "Example Website",
-      status: "processing",
-      pagesExtracted: 12,
-      totalChunks: 0,
-      createdAt: "2024-01-16",
-      lastUpdated: "2024-01-16",
-    }
-  ]);
+  const [websites, setWebsites] = useState<WebsiteSource[]>([]);
   const [deleteDialog, setDeleteDialog] = useState<string | null>(null);
+  const [deletingWebsiteId, setDeletingWebsiteId] = useState<string | null>(null);
+
+  const refreshList = async () => {
+    try {
+      const resp = await fetch(`${API_BASE}/api/knowledge-base/websites`);
+      if (resp.ok) {
+        const list = await resp.json();
+        setWebsites(list);
+      }
+    } catch {}
+  };
+
+  React.useEffect(() => {
+    refreshList();
+  }, []);
+
+  const pollWebsite = (id: string) => {
+    const iv = setInterval(async () => {
+      try {
+        const resp = await fetch(`${API_BASE}/api/knowledge-base/websites/${id}`);
+        if (!resp.ok) return;
+        const item: WebsiteSource = await resp.json();
+        setWebsites(prev => {
+          const others = prev.filter(w => w.id !== id);
+          return [item, ...others];
+        });
+        if (item.status === 'completed' || item.status === 'error') {
+          clearInterval(iv);
+        }
+      } catch {}
+    }, 2000);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,8 +91,7 @@ const KnowledgeBaseWebsitesPage = () => {
     setIsSubmitting(true);
     
     try {
-      // TODO: Call backend API to start website processing
-      const response = await fetch('/api/knowledge-base/websites', {
+      const response = await fetch(`${API_BASE}/api/knowledge-base/websites`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: newUrl })
@@ -89,26 +101,40 @@ const KnowledgeBaseWebsitesPage = () => {
         const newWebsite = await response.json();
         setWebsites(prev => [newWebsite, ...prev]);
         setNewUrl("");
+        pollWebsite(newWebsite.id);
       } else {
-        throw new Error('Failed to process website');
+        let detail = '';
+        try { const data = await response.json(); detail = data?.detail || ''; } catch {}
+        throw new Error(`Failed to process website${detail ? `: ${detail}` : ''}`);
       }
     } catch (error) {
       console.error('Error processing website:', error);
+      alert((error as Error).message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (id: string) => {
+    setDeletingWebsiteId(id);
     try {
-      await fetch(`/api/knowledge-base/websites/${id}`, {
+      const resp = await fetch(`${API_BASE}/api/knowledge-base/websites/${id}`, {
         method: 'DELETE'
       });
+      if (!resp.ok) {
+        let detail = '';
+        try { const data = await resp.json(); detail = data?.detail || ''; } catch {}
+        throw new Error(`Failed to delete website${detail ? `: ${detail}` : ''}`);
+      }
       setWebsites(prev => prev.filter(w => w.id !== id));
+      refreshList();
     } catch (error) {
       console.error('Error deleting website:', error);
+      alert((error as Error).message);
+    } finally {
+      setDeletingWebsiteId(null);
+      setDeleteDialog(null);
     }
-    setDeleteDialog(null);
   };
 
   const getStatusIcon = (status: string) => {
@@ -209,27 +235,19 @@ const KnowledgeBaseWebsitesPage = () => {
                           </Box>
                         }
                         secondary={
-                          <Box>
-                            <Typography variant="body2" color="text.secondary">
+                          <>
+                            <Typography variant="body2" color="text.secondary" component="span" display="block">
                               {website.url}
                             </Typography>
-                            <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                              <Typography variant="caption">
-                                Pages: {website.pagesExtracted}
-                              </Typography>
-                              <Typography variant="caption">
-                                Chunks: {website.totalChunks}
-                              </Typography>
-                              <Typography variant="caption">
-                                Updated: {website.lastUpdated}
-                              </Typography>
-                            </Box>
+                            <Typography variant="caption" component="span" sx={{ display: 'block', mt: 1 }}>
+                              Pages: {website.pagesExtracted} • Chunks: {website.totalChunks} • Updated: {website.lastUpdated}
+                            </Typography>
                             {website.error && (
-                              <Alert severity="error" sx={{ mt: 1 }}>
+                              <Typography variant="caption" component="span" color="error" sx={{ display: 'block', mt: 1 }}>
                                 {website.error}
-                              </Alert>
+                              </Typography>
                             )}
-                          </Box>
+                          </>
                         }
                       />
                       <ListItemSecondaryAction>
@@ -237,6 +255,7 @@ const KnowledgeBaseWebsitesPage = () => {
                           edge="end" 
                           onClick={() => setDeleteDialog(website.id)}
                           color="error"
+                          disabled={deletingWebsiteId === website.id}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -250,21 +269,35 @@ const KnowledgeBaseWebsitesPage = () => {
         </Box>
 
         {/* Delete Confirmation Dialog */}
-        <Dialog open={!!deleteDialog} onClose={() => setDeleteDialog(null)}>
+        <Dialog open={!!deleteDialog} onClose={() => !deletingWebsiteId && setDeleteDialog(null)}>
           <DialogTitle>Delete Website Source</DialogTitle>
           <DialogContent>
             <Typography>
-              Are you sure you want to delete this website source? This will remove all associated content from your knowledge base.
+              Are you sure you want to delete this website source? This will remove all associated content from your knowledge base, including all indexed chunks from the vector store.
             </Typography>
+            {deletingWebsiteId && (
+              <Box sx={{ mt: 2 }}>
+                <LinearProgress />
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Deleting website and removing chunks from index...
+                </Typography>
+              </Box>
+            )}
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDeleteDialog(null)}>Cancel</Button>
+            <Button 
+              onClick={() => setDeleteDialog(null)} 
+              disabled={!!deletingWebsiteId}
+            >
+              Cancel
+            </Button>
             <Button 
               onClick={() => deleteDialog && handleDelete(deleteDialog)} 
               color="error"
               variant="contained"
+              disabled={!!deletingWebsiteId}
             >
-              Delete
+              {deletingWebsiteId ? 'Deleting...' : 'Delete'}
             </Button>
           </DialogActions>
         </Dialog>

@@ -58,15 +58,17 @@ const baseDarkTheme = createTheme({
       600: "#2A3547",
     },
     text: {
-      // primary: "#f6f6f7",
-      secondary: "#5A6A85",
+      primary: "#ffffff",
+      secondary: "#B0BEC5",
+      disabled: "rgba(255, 255, 255, 0.5)",
     },
     action: {
-      disabledBackground: "rgba(73, 82, 88, 0.12)",
-      hoverOpacity: 0.02,
-      hover: "#f6f9fc",
+      disabledBackground: "rgba(255, 255, 255, 0.12)",
+      hoverOpacity: 0.08,
+      hover: "rgba(255, 255, 255, 0.08)",
+      selected: "rgba(255, 255, 255, 0.16)",
     },
-    divider: "#e5eaef",
+    divider: "rgba(255, 255, 255, 0.12)",
   },
   typography: {
     fontFamily: plus.style.fontFamily,
@@ -134,17 +136,90 @@ const baseDarkTheme = createTheme({
           boxShadow:
             "rgb(145 158 171 / 30%) 0px 0px 2px 0px, rgb(145 158 171 / 12%) 0px 12px 24px -4px !important",
         },
-
+        body: {
+          color: "#ffffff",
+        },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
           borderRadius: "7px",
+          "& .MuiTypography-root": {
+            color: "inherit",
+          },
         },
       },
     },
-MuiButton: {
+    MuiTypography: {
+      defaultProps: {
+        color: "text.primary",
+      },
+      styleOverrides: {
+        root: ({ theme }) => ({
+          color: theme.palette.text.primary,
+        }),
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          "& .MuiTypography-root": {
+            color: "inherit",
+          },
+        },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: "#202024",
+          "& .MuiDialogTitle-root": {
+            color: "#ffffff",
+          },
+          "& .MuiDialogContentText-root": {
+            color: "#B0BEC5",
+          },
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          "& .MuiInputBase-input": {
+            color: "#ffffff",
+          },
+          "& .MuiInputLabel-root": {
+            color: "#B0BEC5",
+            "&.Mui-focused": {
+              color: "#49BEFF",
+            },
+          },
+          "& .MuiOutlinedInput-root": {
+            "& fieldset": {
+              borderColor: "rgba(255, 255, 255, 0.23)",
+            },
+            "&:hover fieldset": {
+              borderColor: "rgba(255, 255, 255, 0.4)",
+            },
+            "&.Mui-focused fieldset": {
+              borderColor: "#49BEFF",
+            },
+          },
+        },
+      },
+    },
+    MuiInputBase: {
+      styleOverrides: {
+        root: {
+          color: "#ffffff",
+          "& input": {
+            color: "#ffffff",
+          },
+        },
+      },
+    },
+    MuiButton: {
   styleOverrides: {
     root: {
       borderRadius: "10px",
@@ -155,10 +230,10 @@ MuiButton: {
       fontSize: "0.7rem",
     },
     contained: {
-      backgroundColor: "#f6f6f7",
-      color: "#131317",
+      backgroundColor: "#49BEFF",
+      color: "#ffffff",
       "&:hover": {
-        backgroundColor: "#ffffffff",
+        backgroundColor: "#23afdb",
       },
     },
     outlined: {

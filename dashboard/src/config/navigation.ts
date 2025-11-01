@@ -180,6 +180,12 @@ export const navigationConfig: NavigationModule[] = [
         href: '/knowledge-base/files',
         icon: IconFileText,
       },
+      {
+        id: 'faqs',
+        title: 'FAQs',
+        href: '/knowledge-base/faqs',
+        icon: IconUserQuestion,
+      },
     ],
   },
   {

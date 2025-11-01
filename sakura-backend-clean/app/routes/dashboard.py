@@ -3,13 +3,34 @@ Dashboard-specific API routes for user and chat management.
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Union
 from pymongo.database import Database
 from bson import ObjectId
 from app.core.database import get_database, get_db_manager
 from app.models.chat_model import UserDataRequest, UserDataResponse
 
 router = APIRouter(prefix="/api", tags=["Dashboard"])
+
+
+def to_iso_string(value: Union[datetime, str, None], default: Optional[datetime] = None) -> str:
+    """Safely convert a datetime value to ISO format string."""
+    if value is None:
+        if default is None:
+            default = datetime.now()
+        return default.isoformat()
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, str):
+        # If it's already a string, try to parse and return ISO format
+        try:
+            # Try parsing common formats and returning ISO
+            dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            return dt.isoformat()
+        except:
+            # If parsing fails, return as-is
+            return value
+    # Fallback: convert to string
+    return str(value)
 
 
 @router.get("/users")
@@ -43,8 +64,8 @@ async def get_all_users(
                 chat = {
                     "chat_id": chat_doc.get("chat_id", "unknown"),
                     "status": chat_doc.get("status", "active"),
-                    "created_at": chat_doc.get("created_at", datetime.now()).isoformat(),
-                    "last_activity": chat_doc.get("last_activity", datetime.now()).isoformat(),
+                    "created_at": to_iso_string(chat_doc.get("created_at")),
+                    "last_activity": to_iso_string(chat_doc.get("last_activity")),
                     "total_messages": chat_doc.get("total_messages", len(chat_doc.get("messages", []))),
                     "messages": []
                 }
@@ -55,7 +76,7 @@ async def get_all_users(
                     message = {
                         "role": msg.get("role", "user"),
                         "text": msg.get("content", msg.get("text", "")),
-                        "timestamp": msg.get("timestamp", datetime.now()).isoformat(),
+                        "timestamp": to_iso_string(msg.get("timestamp")),
                         "read": msg.get("read", True)
                     }
                     chat["messages"].append(message)
@@ -72,7 +93,7 @@ async def get_all_users(
                 "status": doc.get("status", "active"),
                 "location": doc.get("location", {}),
                 "device": doc.get("device", {}),
-                "last_seen": doc.get("last_seen", doc.get("created_at", datetime.now().isoformat())),
+                "last_seen": to_iso_string(doc.get("last_seen") or doc.get("created_at")),
                 "chats": chats
             }
             users.append(user)
@@ -84,7 +105,12 @@ async def get_all_users(
             "limit": limit
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
+        import traceback
+        error_detail = f"Error fetching users: {str(e)}\n{traceback.format_exc()}"
+        print(f"❌ {error_detail}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -166,8 +192,8 @@ async def get_user_stats(
             "open_chats": open_chats,
             "closed_chats": closed_chats,
             "total_messages": total_messages,
-            "created_at": doc.get("updated_at", datetime.now()).isoformat(),
-            "last_seen": user_data.get("lastSeen", datetime.now().isoformat())
+            "created_at": to_iso_string(doc.get("updated_at")),
+            "last_seen": to_iso_string(user_data.get("lastSeen"))
         }
         
         return stats
@@ -209,8 +235,8 @@ async def get_chats(
                 "chat_id": doc.get("chat_id", "unknown"),
                 "user_id": doc.get("user_email", "unknown"),
                 "status": doc.get("status", "active"),
-                "created_at": doc.get("created_at", datetime.now()).isoformat(),
-                "updated_at": doc.get("updated_at", datetime.now()).isoformat(),
+                "created_at": to_iso_string(doc.get("created_at")),
+                "updated_at": to_iso_string(doc.get("updated_at")),
                 "messages": doc.get("messages", []),
                 "state": doc.get("state", {})
             }
@@ -283,8 +309,8 @@ async def get_debug_users_chats(db: Database = Depends(get_database)):
                 chat = {
                     "chat_id": chat_doc.get("chat_id", "unknown"),
                     "status": chat_doc.get("status", "active"),
-                    "created_at": chat_doc.get("created_at", datetime.now()).isoformat(),
-                    "last_activity": chat_doc.get("last_activity", datetime.now()).isoformat(),
+                    "created_at": to_iso_string(chat_doc.get("created_at")),
+                    "last_activity": to_iso_string(chat_doc.get("last_activity")),
                     "total_messages": chat_doc.get("total_messages", len(chat_doc.get("messages", []))),
                     "messages": []
                 }
@@ -295,7 +321,7 @@ async def get_debug_users_chats(db: Database = Depends(get_database)):
                     message = {
                         "role": msg.get("role", "user"),
                         "text": msg.get("content", msg.get("text", "")),
-                        "timestamp": msg.get("timestamp", datetime.now()).isoformat(),
+                        "timestamp": to_iso_string(msg.get("timestamp")),
                         "read": msg.get("read", True)
                     }
                     chat["messages"].append(message)
@@ -382,7 +408,7 @@ async def get_user_by_id(user_id: str, db: Database = Depends(get_database)):
             "status": user_doc.get("status", "active"),
             "location": user_doc.get("location", {}),
             "device": user_doc.get("device", {}),
-            "last_seen": user_doc.get("last_seen", user_doc.get("created_at", datetime.now().isoformat())),
+            "last_seen": to_iso_string(user_doc.get("last_seen") or user_doc.get("created_at")),
             "chats": chats
         }
         
@@ -459,7 +485,7 @@ async def send_message_to_chat(chat_id: str, request: dict, db: Database = Depen
             "_id": f"msg_{int(datetime.now().timestamp())}",
             "role": "user",
             "content": content,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": to_iso_string(datetime.now()),
             "status": "sent"
         }
         

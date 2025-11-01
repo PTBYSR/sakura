@@ -366,7 +366,7 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
                 // Add module-specific actions here
               }}
             >
-              <Typography sx={{ color: "#000", fontSize: "14px", fontWeight: 600 }}>+</Typography>
+              <Typography sx={{ color: "#ffffff", fontSize: "14px", fontWeight: 600 }}>+</Typography>
             </Box>
           </Box>
 
