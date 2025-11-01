@@ -540,6 +540,9 @@ pids
 # Ignore folder (as specified in original)
 ignore/
 
+# MCP Client directory
+mcp-client/
+
 # Environment files
 .env
 .env.local
