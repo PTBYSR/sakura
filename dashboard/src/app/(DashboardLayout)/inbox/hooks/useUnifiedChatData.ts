@@ -79,25 +79,40 @@ export interface UseUnifiedChatDataProps {
   section: string;
 }
 
-// Chat categorization mapping
-const CHAT_CATEGORIZATION = {
+// Chat categorization mapping - maps section names to category/status filters
+const CHAT_CATEGORIZATION: Record<string, { category?: string; status?: string }> = {
+  "unified-inbox": {}, // Show all chats regardless of category/status
   "agent-inbox-active": { category: "agent-inbox", status: "active" },
   "agent-inbox-resolved": { category: "agent-inbox", status: "resolved" },
-  "my-inbox-chats": { category: "my-inbox", status: "pending-human" },
-  "my-inbox-escalated": { category: "my-inbox", status: "escalated" },
-  "my-inbox-resolved": { category: "my-inbox", status: "resolved" },
+  "my-inbox-chats": { category: "human-chats", status: "active" }, // Active human chats
+  "my-inbox-escalated": { category: "human-chats", status: "escalated" },
+  "my-inbox-resolved": { category: "human-chats", status: "resolved" },
 } as const;
 
 // Helper function to check if a chat matches the categorization criteria
-const matchesCategorization = (user: any, chat: any, categorization: { category: string; status: string }) => {
-  // Check user-level category and status
-  const userMatches = user.category === categorization.category && user.status === categorization.status;
+const matchesCategorization = (user: any, chat: any, categorization: { category?: string; status?: string }) => {
+  // If no filters specified (unified inbox), show all
+  if (!categorization.category && !categorization.status) {
+    return true;
+  }
+
+  // Category is stored on the user document
+  const categoryMatch = !categorization.category || user.category === categorization.category;
   
-  // Check chat-level category and status (if they exist)
-  const chatMatches = chat.category === categorization.category && chat.status === categorization.status;
+  // Status: Use USER status for chat status (user.status determines the chat's status)
+  // This means if user.status === "active", the chat is considered "active"
+  let statusMatch = true;
+  if (categorization.status) {
+    // Use user.status as the chat's status
+    if (user.status) {
+      statusMatch = user.status.toLowerCase() === categorization.status.toLowerCase();
+    } else {
+      statusMatch = false;
+    }
+  }
   
-  // Return true if either user or chat matches (for flexibility)
-  return userMatches || chatMatches;
+  // Both category and status must match
+  return categoryMatch && statusMatch;
 };
 
 export const useUnifiedChatData = ({ inboxType, userEmail, section }: UseUnifiedChatDataProps) => {
@@ -106,15 +121,43 @@ export const useUnifiedChatData = ({ inboxType, userEmail, section }: UseUnified
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch real data from backend
+  // Fetch real data from backend (same endpoint as bank page)
   const fetchBackendData = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/debug/users-chats`);
-      if (!response.ok) throw new Error(`Backend error: ${response.status}`);
+      console.log("🔄 Fetching live data from backend...");
+      console.log(`📍 API URL: ${API_BASE_URL}/api/debug/users-chats`);
+      
+      // Add timeout to prevent infinite loading
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(`${API_BASE_URL}/api/debug/users-chats`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`Backend error: ${response.status} ${response.statusText}`);
+      }
       const data = await response.json();
+      console.log("📊 Received backend data:", {
+        usersCount: data.users?.length || 0,
+        firstUser: data.users?.[0] ? {
+          name: data.users[0].name,
+          email: data.users[0].email,
+          category: data.users[0].category,
+          status: data.users[0].status,
+          chatsCount: data.users[0].chats?.length || 0
+        } : null
+      });
       return data.users || [];
-    } catch (error) {
-      console.warn('Failed to fetch backend data, using dummy data:', error);
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.warn('⚠️ Request timed out, using dummy data');
+      } else {
+        console.warn('⚠️ Failed to fetch backend data, using dummy data:', error);
+      }
       return null;
     }
   };
@@ -125,28 +168,67 @@ export const useUnifiedChatData = ({ inboxType, userEmail, section }: UseUnified
         setLoading(true);
         setError(null);
 
-        // Get categorization criteria for this section
-        const categorization = CHAT_CATEGORIZATION[section as keyof typeof CHAT_CATEGORIZATION];
-        if (!categorization) {
-          console.warn(`Unknown section: ${section}`);
+        if (!section) {
+          console.warn('⚠️ No section provided, cannot load chats');
           setChats([]);
+          setSelectedChat(null);
           setLoading(false);
           return;
         }
 
+        // Get categorization criteria for this section
+        const categorization = CHAT_CATEGORIZATION[section as keyof typeof CHAT_CATEGORIZATION] || {};
+        console.log(`📋 Filtering chats for section: ${section}`, categorization);
+        console.log(`🌐 API Base URL: ${API_BASE_URL}`);
+
         // Try to fetch real backend data first
         const backendUsers = await fetchBackendData();
         let sourceData = backendUsers || dummyData;
+        
+        if (!backendUsers) {
+          console.log('📦 Using dummy data as fallback');
+        }
+
+        console.log(`📦 Source data: ${sourceData.length} users`);
+        if (sourceData.length > 0) {
+          console.log(`📝 First user sample:`, {
+            name: sourceData[0].name,
+            email: sourceData[0].email,
+            category: sourceData[0].category,
+            status: sourceData[0].status,
+            chatsCount: sourceData[0].chats?.length || 0
+          });
+        }
 
         // Filter users based on category and status
         const filteredUsers = sourceData.filter((user: any) => {
           // Check if user has chats that match the categorization criteria
-          const hasMatchingChats = user.chats && user.chats.some((chat: any) => {
-            return matchesCategorization(user, chat, categorization);
+          if (!user.chats || user.chats.length === 0) {
+            console.log(`⏭️  Skipping user ${user.email} - no chats`);
+            return false;
+          }
+          
+          const hasMatchingChats = user.chats.some((chat: any) => {
+            const matches = matchesCategorization(user, chat, categorization);
+            if (!matches) {
+              console.log(`❌ User ${user.email} chat ${chat.chat_id} doesn't match:`, {
+                userCategory: user.category,
+                userStatus: user.status,
+                requiredCategory: categorization.category,
+                requiredStatus: categorization.status
+              });
+            }
+            return matches;
           });
+
+          if (hasMatchingChats) {
+            console.log(`✅ User ${user.email} matches criteria`);
+          }
 
           return hasMatchingChats;
         });
+
+        console.log(`✅ Filtered ${filteredUsers.length} users matching criteria`);
 
         // Transform the filtered data to ChatInstance format
         const transformedChats: ChatInstance[] = [];
@@ -161,21 +243,23 @@ export const useUnifiedChatData = ({ inboxType, userEmail, section }: UseUnified
                     id: chat.chat_id || chat.id,
                     name: user.name || "Unknown User",
                     lastMessage: chat.messages && chat.messages.length > 0 
-                      ? chat.messages[chat.messages.length - 1].text || "No messages"
+                      ? (chat.messages[chat.messages.length - 1].text || 
+                         chat.messages[chat.messages.length - 1].content || 
+                         "No messages")
                       : "No messages",
                     timestamp: chat.last_activity || chat.created_at || new Date().toISOString(),
-                    unreadCount: chat.total_messages || 0,
+                    unreadCount: chat.messages?.filter((m: any) => !m.read).length || 0,
                     avatar: user.avatar || user.name?.charAt(0).toUpperCase() || "U",
                     status: chat.status === "active" ? "online" : "offline",
                     section: section,
                   },
                   messages: (chat.messages || []).map((msg: any, index: number) => ({
-                    id: msg.id || `msg-${index}`,
+                    id: msg._id || msg.id || `msg-${index}`,
                     content: msg.text || msg.content || "",
-                    sender: msg.role === "assistant" ? "Agent" : user.name || "User",
+                    sender: msg.role === "assistant" || msg.role === "agent" ? "Agent" : user.name || "User",
                     timestamp: msg.timestamp || new Date().toISOString(),
-                    isRead: true,
-                    avatar: msg.role === "assistant" ? "A" : user.name?.charAt(0).toUpperCase() || "U",
+                    isRead: msg.read !== undefined ? msg.read : true,
+                    avatar: msg.role === "assistant" || msg.role === "agent" ? "A" : user.name?.charAt(0).toUpperCase() || "U",
                   })),
                   contactInfo: {
                     name: user.name || "Unknown User",
@@ -199,8 +283,17 @@ export const useUnifiedChatData = ({ inboxType, userEmail, section }: UseUnified
                     name: user.name || "Unknown User",
                     email: user.email || "",
                     ip: user.ip || "Unknown",
-                    location: user.location || { city: "Unknown", region: "Unknown", country: "Unknown", timezone: "Unknown" },
-                    device: user.device || { type: "Unknown", os: "Unknown", browser: "Unknown" },
+                    location: user.location || { 
+                      city: "Unknown", 
+                      region: "Unknown", 
+                      country: "Unknown", 
+                      timezone: "Unknown" 
+                    },
+                    device: user.device || { 
+                      type: user.device?.type || user.device?.platform || "Unknown", 
+                      os: user.device?.os || user.device?.platform || "Unknown", 
+                      browser: user.device?.browser || user.device?.userAgent || "Unknown" 
+                    },
                     referrer: user.referrer || "https://example.com",
                     utm: user.utm || { source: "", medium: "", campaign: "", term: "", content: "" },
                   },
@@ -217,16 +310,40 @@ export const useUnifiedChatData = ({ inboxType, userEmail, section }: UseUnified
         // Set the first chat as selected by default
         if (transformedChats.length > 0) {
           setSelectedChat(transformedChats[0]);
+        } else {
+          setSelectedChat(null);
         }
+
+        console.log(`🎉 Loaded ${transformedChats.length} chat instance(s)`);
       } catch (err) {
+        console.error('❌ Error loading chats:', err);
         setError(err instanceof Error ? err.message : 'Failed to load chats');
+        setChats([]);
+        setSelectedChat(null);
       } finally {
         setLoading(false);
+        console.log('✅ Loading complete');
       }
     };
 
     loadChats();
+
+    // Set up polling for real-time updates (every 10 seconds)
+    const pollingInterval = setInterval(() => {
+      console.log('🔄 Polling for new chat updates...');
+      loadChats();
+    }, 10000); // 10 seconds
+
+    // Cleanup interval on unmount or when dependencies change
+    return () => {
+      clearInterval(pollingInterval);
+    };
   }, [inboxType, userEmail, section]);
+
+  // Debug: Log when loading state changes
+  useEffect(() => {
+    console.log(`🔄 Loading state changed: ${loading}, Error: ${error}, Chats: ${chats.length}`);
+  }, [loading, error, chats.length]);
 
   const sendMessage = async (message: string) => {
     if (!selectedChat) return;

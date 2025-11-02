@@ -270,16 +270,17 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
                 </ListItemIcon>
                 <ListItemText
                   primary={
-                    <Typography sx={{ color: "white", fontSize: "0.95rem", fontWeight: "bold" }}>
+                    <Typography component="div" sx={{ color: "white", fontSize: "0.95rem", fontWeight: "bold" }}>
                       {chat.chat.name}
                     </Typography>
                   }
+                  secondaryTypographyProps={{ component: "div" }}
                   secondary={
                     <Box>
-                      <Typography sx={{ color: "#ccc", fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <Typography component="div" sx={{ color: "#ccc", fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {chat.chat.lastMessage}
                       </Typography>
-                      <Typography sx={{ color: "#888", fontSize: "0.75rem" }}>
+                      <Typography component="div" sx={{ color: "#888", fontSize: "0.75rem" }}>
                         {chat.chat.timestamp}
                       </Typography>
                     </Box>
@@ -299,7 +300,7 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
             </Typography>
             {currentContactInfo?.email && (
               <Box sx={{ mt: 1 }}>
-                <Typography sx={{ color: "#ccc", fontSize: "0.9rem" }}>
+                <Typography component="div" sx={{ color: "#ccc", fontSize: "0.9rem" }}>
                   E-mail: <Typography component="span" sx={{ color: "#2196f3", cursor: "pointer" }}>{currentContactInfo.email}</Typography>
                 </Typography>
               </Box>

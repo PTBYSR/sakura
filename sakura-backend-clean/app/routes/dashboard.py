@@ -44,7 +44,7 @@ async def get_all_users(
         if db is None:
             raise HTTPException(status_code=503, detail="Database not available")
         
-        collection = db.users
+        collection = db.customers
         
         # Get total count
         total = collection.count_documents({})
@@ -55,7 +55,7 @@ async def get_all_users(
         
         for doc in cursor:
             # Get chats for this user
-            chats_collection = db.chats
+            chats_collection = db["customer-chats"]
             user_chats = list(chats_collection.find({"user_id": doc.get("_id")}))
             
             # Convert chats to expected format
@@ -124,7 +124,7 @@ async def get_user_by_email(
         if db is None:
             raise HTTPException(status_code=503, detail="Database not available")
         
-        collection = db.users
+        collection = db.customers
         
         # Find user by email in the data field
         doc = collection.find_one({"data.email": email})
@@ -164,7 +164,7 @@ async def get_user_stats(
         if db is None:
             raise HTTPException(status_code=503, detail="Database not available")
         
-        collection = db.users
+        collection = db.customers
         
         # Find user by email
         doc = collection.find_one({"data.email": email})
@@ -291,8 +291,8 @@ async def get_debug_users_chats(db: Database = Depends(get_database)):
             print("⚠️  Database not available, returning empty data")
             return {"users": []}
         
-        users_collection = db.users
-        chats_collection = db.chats
+        users_collection = db.customers
+        chats_collection = db["customer-chats"]
         
         # Get all users
         users_cursor = users_collection.find({})
@@ -302,10 +302,15 @@ async def get_debug_users_chats(db: Database = Depends(get_database)):
             user_email = user_doc.get("email", "unknown@example.com")
             
             # Get chats for this user (using user_id to match)
-            user_chats_cursor = chats_collection.find({"user_id": user_doc.get("_id")})
+            # Try both ObjectId and string matching
+            user_id = user_doc.get("_id")
+            user_chats_list = list(chats_collection.find({"user_id": user_id}))
+            # If no matches with ObjectId, try string match
+            if not user_chats_list:
+                user_chats_list = list(chats_collection.find({"user_id": str(user_id)}))
             chats = []
             
-            for chat_doc in user_chats_cursor:
+            for chat_doc in user_chats_list:
                 chat = {
                     "chat_id": chat_doc.get("chat_id", "unknown"),
                     "status": chat_doc.get("status", "active"),
@@ -357,8 +362,8 @@ async def get_user_by_id(user_id: str, db: Database = Depends(get_database)):
         if db is None:
             raise HTTPException(status_code=503, detail="Database not available")
         
-        users_collection = db.users
-        chats_collection = db.chats
+        users_collection = db.customers
+        chats_collection = db["customer-chats"]
         
         # Find user by _id (handle ObjectId conversion)
         try:
@@ -428,7 +433,7 @@ async def get_chat_by_id_for_context(chat_id: str, db: Database = Depends(get_da
         if db is None:
             raise HTTPException(status_code=503, detail="Database not available")
         
-        chats_collection = db.chats
+        chats_collection = db["customer-chats"]
         chat_doc = chats_collection.find_one({"chat_id": chat_id})
         
         if not chat_doc:
@@ -474,7 +479,7 @@ async def send_message_to_chat(chat_id: str, request: dict, db: Database = Depen
         if db is None:
             raise HTTPException(status_code=503, detail="Database not available")
         
-        chats_collection = db.chats
+        chats_collection = db["customer-chats"]
         content = request.get("content", "")
         
         if not content:

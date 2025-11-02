@@ -18,8 +18,8 @@ async def store_user_data(request: dict, db: Database = Depends(get_database)):
         # Try to get database connection
         try:
             if db is not None:
-                # Store in MongoDB if available - use the same format as existing users
-                collection = db.users
+                # Store in MongoDB if available - use the same format as existing customers
+                collection = db.customers
                 user_email = request.get("email", "unknown@example.com")
                 
                 # Create user document in the same format as existing users

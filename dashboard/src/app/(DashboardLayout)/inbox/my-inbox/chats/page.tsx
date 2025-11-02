@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
-import ExactChatInterface from "../../inbox/components/ExactChatInterface";
+import ExactChatInterface from "../../components/ExactChatInterface";
 
-const HumanChatsPage = () => {
+const ChatsPage = () => {
   return (
     <ExactChatInterface
       inboxType="human"
@@ -17,4 +17,5 @@ const HumanChatsPage = () => {
   );
 };
 
-export default HumanChatsPage;
+export default ChatsPage;
+

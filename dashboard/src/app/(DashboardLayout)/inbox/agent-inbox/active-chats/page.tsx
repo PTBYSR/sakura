@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import ExactChatInterface from "../../inbox/components/ExactChatInterface";
+import ExactChatInterface from "../../components/ExactChatInterface";
 
 const ActiveChatsPage = () => {
   return (
@@ -9,7 +9,7 @@ const ActiveChatsPage = () => {
       userEmail="admin@heirs.com"
       section="agent-inbox-active"
       suggestedReplies={[
-        "Hello! I&apos;m an AI assistant. How can I help you?",
+        "Hello! I'm an AI assistant. How can I help you?",
         "I can assist you with that right away.",
         "Let me process your request...",
       ]}
@@ -18,3 +18,4 @@ const ActiveChatsPage = () => {
 };
 
 export default ActiveChatsPage;
+

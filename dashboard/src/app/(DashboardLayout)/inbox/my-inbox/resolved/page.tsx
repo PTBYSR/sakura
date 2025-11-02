@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import ExactChatInterface from "../../inbox/components/ExactChatInterface";
+import ExactChatInterface from "../../components/ExactChatInterface";
 
 const ResolvedChatsPage = () => {
   return (
@@ -18,3 +18,4 @@ const ResolvedChatsPage = () => {
 };
 
 export default ResolvedChatsPage;
+

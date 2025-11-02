@@ -18,12 +18,13 @@ Updates dynamically based on the active top-level module.
 
 ### Inbox Module (`/inbox`)
 - **My Inbox** (collapsible)
-  - Chats → `/human/human-chats`
-  - Escalated → `/human/escalated-chats`
-  - Resolved → `/human/resolved-chats`
+  - Unified Inbox → `/inbox/my-inbox/unified`
+  - Chats → `/inbox/my-inbox/chats`
+  - Escalated → `/inbox/my-inbox/escalated`
+  - Resolved → `/inbox/my-inbox/resolved`
 - **Agent Inbox** (collapsible)
-  - Active Chats → `/ai-agent/active-chats`
-  - Resolved → `/ai-agent/resolved-chats`
+  - Active Chats → `/inbox/agent-inbox/active-chats`
+  - Resolved → `/inbox/agent-inbox/resolved-chats`
 
 ### AI Agent Module (`/ai-agent`)
 - **Sales Agent** (collapsible)
