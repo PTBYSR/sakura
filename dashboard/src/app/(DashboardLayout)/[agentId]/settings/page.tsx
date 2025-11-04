@@ -8,11 +8,12 @@ import { useParams } from "next/navigation";
 const AgentSettingsPage = () => {
   const params = useParams();
   const agentId = params.agentId as string;
-  const { agents } = useAgents();
+  const { agent } = useAgents();
   
-  const agent = agents.find(a => a.id === agentId);
+  // Check if the agent ID matches the requested agentId
+  const isAgentMatch = agent.id === agentId;
 
-  if (!agent) {
+  if (!isAgentMatch) {
     return (
       <PageContainer title="Agent Not Found" description="The requested agent was not found">
         <Container maxWidth="lg">
