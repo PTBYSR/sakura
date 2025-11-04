@@ -38,6 +38,6 @@
     "@types/react-syntax-highlighter": "^15.5.13"
   },
   "overrides": {
-    "next": "15.3.2"
+    "next": "15.5.6"
   }
 }
