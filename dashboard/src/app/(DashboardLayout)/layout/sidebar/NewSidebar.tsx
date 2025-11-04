@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Drawer,
@@ -17,6 +17,8 @@ import {
 import {
   ExpandLess,
   ExpandMore,
+  ChevronLeft,
+  ChevronRight,
 } from "@mui/icons-material";
 import {
   IconSettings,
@@ -34,21 +36,59 @@ interface NewSidebarProps {
   isMobileSidebarOpen: boolean;
   onSidebarClose: (event: React.MouseEvent<HTMLElement>) => void;
   isSidebarOpen: boolean;
+  isSidebarCollapsed?: boolean;
+  onSidebarToggle?: () => void;
 }
 
 const NewSidebar: React.FC<NewSidebarProps> = ({
   isMobileSidebarOpen,
   onSidebarClose,
   isSidebarOpen,
+  isSidebarCollapsed = false,
+  onSidebarToggle,
 }) => {
   const pathname = usePathname();
   const lgUp = useMediaQuery((theme: any) => theme.breakpoints.up("lg"));
+  // Initialize with all non-collapsible items expanded
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [activeModule, setActiveModule] = useState<string>("inbox");
   const { getUnreadCount, markSectionAsRead } = useSectionUnreadCounts();
 
+  // Track if user manually clicked a module (prevents pathname from overriding)
+  const manualModuleRef = useRef<string | null>(null);
+  const lastPathnameRef = useRef<string | null>(null);
+  
+  useEffect(() => {
+    // Skip if pathname hasn't actually changed (prevents unnecessary updates)
+    if (pathname === lastPathnameRef.current) {
+      return;
+    }
+    lastPathnameRef.current = pathname;
+    
+    // Only auto-update if user hasn't manually clicked a module recently
+    if (!manualModuleRef.current) {
+      // Find which module matches the current pathname
+      const matchingModule = navigationConfig.find(module => {
+        // Check if pathname starts with module href
+        if (pathname?.startsWith(module.href)) {
+          return true;
+        }
+        // Also check if any child matches
+        return module.children?.some(child => pathname?.startsWith(child.href));
+      });
+
+      // Only update if the matching module is different from the current active module
+      if (matchingModule && matchingModule.id !== activeModule) {
+        setActiveModule(matchingModule.id);
+      }
+    }
+  }, [pathname, activeModule]);
+
   const sidebarWidth = "270px";
   const iconBarWidth = "60px";
+  const currentSidebarWidth = isSidebarCollapsed ? iconBarWidth : sidebarWidth;
+  const sidebarWidthNum = parseInt(sidebarWidth);
+  const iconBarWidthNum = parseInt(iconBarWidth);
 
   const scrollbarStyles = {
     '&::-webkit-scrollbar': {
@@ -71,7 +111,19 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
   };
 
   const handleModuleClick = (moduleId: string) => {
+    // Set the module immediately
     setActiveModule(moduleId);
+    // Mark this as manually set to prevent pathname from overriding
+    manualModuleRef.current = moduleId;
+    
+    // Clear the manual flag after a delay to allow pathname-based updates when navigating to other modules
+    // This allows the user to switch modules and then navigate within, but also allows pathname to update when going to a different module
+    setTimeout(() => {
+      // Only clear if we're still on the same module (user hasn't clicked another)
+      if (manualModuleRef.current === moduleId) {
+        manualModuleRef.current = null;
+      }
+    }, 2000);
   };
 
   const isItemActive = (href: string) => {
@@ -79,21 +131,62 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
   };
 
   const renderNavigationItem = (item: NavigationItem, level: number = 0) => {
-    const isExpanded = expandedItems.has(item.id);
+    const isExpanded = expandedItems.has(item.id) || (!item.collapsible && item.children && item.children.length > 0);
     const isActive = isItemActive(item.href);
     const hasChildren = item.children && item.children.length > 0;
+
+    // Check if this is a label item (any item with children that is not collapsible)
+    const isLabelItem = hasChildren && !item.collapsible;
 
     const IconComponent = item.icon;
 
     // Get unread count for this section
     const itemCount = getUnreadCount(item.id);
 
+    // If it's a label item, render as a subtle label
+    if (isLabelItem) {
+      return (
+        <React.Fragment key={item.id}>
+          <Box
+            sx={{
+              mt: level === 0 ? 2.5 : 0,
+              mb: 1.5,
+              px: 2,
+              pt: level === 0 ? 2 : 1,
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: "10px",
+                fontWeight: 600,
+                color: "#555",
+                textTransform: "uppercase",
+                letterSpacing: "0.8px",
+              }}
+            >
+              {item.title}
+            </Typography>
+          </Box>
+          {hasChildren && (
+            <Box sx={{ mb: 1 }}>
+              {item.children!.map((child) => renderNavigationItem(child, level + 1))}
+            </Box>
+          )}
+        </React.Fragment>
+      );
+    }
+
+    // Determine if this is a top-level child (direct child of a module, not nested under a label)
+    // All direct children of modules should use level 1 styling for consistency
+    const isTopLevelChild = level === 0;
+    const effectiveLevel = isTopLevelChild ? 1 : level; // Treat top-level children as level 1 for styling
+    
     const listItemContent = (
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
-          py: 1.5,
+          py: effectiveLevel === 0 ? 1.5 : 1.25,
           px: 2,
           borderRadius: 2,
           mb: 0.5,
@@ -114,15 +207,28 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
           }
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
-          <Box sx={{ mr: 2, display: "flex", alignItems: "center" }}>
-            <IconComponent size={18} stroke={1.5} />
+          <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
+          <Box 
+            sx={{ 
+              mr: 2, 
+              display: "flex", 
+              alignItems: "center",
+              color: effectiveLevel === 0 ? "white" : (isActive ? "#fff" : "#b0b0b0"),
+              opacity: effectiveLevel === 0 ? 1 : (isActive ? 1 : 0.7),
+            }}
+          >
+            <IconComponent 
+              size={effectiveLevel === 0 ? 18 : 16} 
+              stroke={1.5}
+            />
           </Box>
           <Typography
             sx={{
-              fontSize: "14px",
-              fontWeight: isActive ? 600 : 500,
+              fontSize: effectiveLevel === 0 ? "14px" : "13px",
+              fontWeight: isActive ? (effectiveLevel === 0 ? 600 : 500) : (effectiveLevel === 0 ? 500 : 400),
               flex: 1,
+              color: effectiveLevel === 0 ? "white" : (isActive ? "#fff" : "#b0b0b0"),
+              lineHeight: 1.4,
             }}
           >
             {item.title}
@@ -187,11 +293,18 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
         )}
         
         {hasChildren && (
-          <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-            <Box sx={{ pl: 2 }}>
+          item.collapsible ? (
+            <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+              <Box sx={{ pl: 2 }}>
+                {item.children!.map((child) => renderNavigationItem(child, level + 1))}
+              </Box>
+            </Collapse>
+          ) : (
+            // Non-collapsible items: always show children without Collapse animation
+            <Box>
               {item.children!.map((child) => renderNavigationItem(child, level + 1))}
             </Box>
-          </Collapse>
+          )
         )}
       </React.Fragment>
     );
@@ -209,6 +322,9 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
         pt: 2,
         pb: 2,
         gap: 1,
+        position: "relative",
+        overflow: "visible",
+        zIndex: 1301,
       }}
     >
       {/* Logo/Brand */}
@@ -235,7 +351,14 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
         const isActive = activeModule === module.id;
         
         return (
-          <Tooltip key={module.id} title={module.tooltip} placement="right">
+          <Tooltip 
+            key={module.id} 
+            title={module.tooltip} 
+            placement="right"
+            arrow
+            enterDelay={300}
+            leaveDelay={0}
+          >
             <Box
               sx={{
                 width: 40,
@@ -254,7 +377,11 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
                   color: "white",
                 },
               }}
-              onClick={() => handleModuleClick(module.id)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleModuleClick(module.id);
+              }}
             >
               <IconComponent size={20} stroke={1.5} />
             </Box>
@@ -266,7 +393,7 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
       <Box sx={{ flex: 1 }} />
       
       {/* Settings Icon */}
-      <Tooltip title="Settings" placement="right">
+      <Tooltip title="Settings" placement="right" arrow enterDelay={300} leaveDelay={0}>
         <Link href="/settings" style={{ textDecoration: "none", color: "inherit" }}>
           <Box
             sx={{
@@ -291,7 +418,7 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
         </Link>
       </Tooltip>
 
-      <Tooltip title="Help & Support" placement="right">
+      <Tooltip title="Help & Support" placement="right" arrow enterDelay={300} leaveDelay={0}>
         <Box
           sx={{
             width: 40,
@@ -314,7 +441,7 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
       </Tooltip>
 
       {/* Account Settings Button */}
-      <Tooltip title="Account Settings" placement="right">
+      <Tooltip title="Account Settings" placement="right" arrow enterDelay={300} leaveDelay={0}>
         <Link href="/settings/account-settings" style={{ textDecoration: "none", color: "inherit" }}>
           <Box
             sx={{
@@ -355,7 +482,35 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
 
   const renderSecondaryNavigation = () => {
     const activeModuleConfig = navigationConfig.find(m => m.id === activeModule);
-    if (!activeModuleConfig) return null;
+    // If no matching module found, default to first module to prevent empty sidebar
+    if (!activeModuleConfig) {
+      const defaultModule = navigationConfig[0];
+      if (!defaultModule) return null;
+      return (
+        <Box sx={{ 
+          flex: 1, 
+          overflow: "auto", 
+          backgroundColor: "#000000",
+          ...scrollbarStyles,
+          display: isSidebarCollapsed ? "none" : "flex",
+          flexDirection: "column",
+        }}>
+          <Box sx={{ p: 2 }}>
+            <Typography variant="h6" sx={{ 
+              fontWeight: 700, 
+              color: "white",
+              fontSize: "16px",
+              mb: 3
+            }}>
+              {defaultModule.title}
+            </Typography>
+            <Box>
+              {defaultModule.children.map((item) => renderNavigationItem(item))}
+            </Box>
+          </Box>
+        </Box>
+      );
+    }
 
     const allChildren = activeModuleConfig.children;
 
@@ -364,10 +519,12 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
         flex: 1, 
         overflow: "auto", 
         backgroundColor: "#000000",
-        ...scrollbarStyles 
+        ...scrollbarStyles,
+        display: isSidebarCollapsed ? "none" : "flex",
+        flexDirection: "column",
       }}>
         <Box sx={{ p: 2 }}>
-          {/* Header with Add Button */}
+          {/* Header */}
           <Box sx={{ 
             display: "flex", 
             justifyContent: "space-between", 
@@ -381,26 +538,6 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
             }}>
               {activeModuleConfig.title}
             </Typography>
-            <Box
-              sx={{
-                width: 24,
-                height: 24,
-                borderRadius: 1,
-                backgroundColor: "white",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                "&:hover": {
-                  backgroundColor: "#f0f0f0",
-                },
-              }}
-              onClick={() => {
-                // Add module-specific actions here
-              }}
-            >
-              <Typography sx={{ color: "#ffffff", fontSize: "14px", fontWeight: 600 }}>+</Typography>
-            </Box>
           </Box>
 
           {/* Navigation Items */}
@@ -413,38 +550,114 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
   };
 
   const sidebarContent = (
-    <Box sx={{ display: "flex", height: "100%" }}>
+    <Box sx={{ 
+      display: "flex", 
+      height: "100vh", 
+      width: "100%",
+      overflow: "hidden",
+      pointerEvents: "auto",
+    }}>
       {renderIconBar()}
       {renderSecondaryNavigation()}
     </Box>
   );
 
-  if (lgUp) {
+  // Always render the sidebar, but use different drawer variants based on screen size
+  // Use lgUp check, but also ensure it renders on initial load
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (lgUp || !mounted) {
     return (
-      <Box
-        sx={{
-          width: sidebarWidth,
-          flexShrink: 0,
-        }}
-      >
-        <Drawer
-          anchor="left"
-          open={isSidebarOpen}
-          variant="permanent"
-          slotProps={{
-            paper: {
-              sx: {
-                boxSizing: "border-box",
-                width: sidebarWidth,
-                borderRight: "1px solid",
-                borderColor: "divider",
+      <>
+        {/* Toggle Button - Rendered outside sidebar to ensure it's always on top */}
+        {onSidebarToggle && (
+          <Box
+            sx={{
+              position: "fixed",
+              left: isSidebarCollapsed ? `${iconBarWidthNum - 14}px` : `${sidebarWidthNum - 14}px`,
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 1400,
+              pointerEvents: "auto",
+              width: 28,
+              height: 28,
+              borderRadius: "50%",
+              backgroundColor: "#2a2a2a",
+              border: "2px solid #333",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
+              transition: "left 0.3s ease-in-out",
+              "&:hover": {
+                backgroundColor: "#3a3a3a",
+                transform: "translateY(-50%) scale(1.1)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.6)",
               },
-            }
+              "&:active": {
+                transform: "translateY(-50%) scale(0.95)",
+              },
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (onSidebarToggle) {
+                onSidebarToggle();
+              }
+            }}
+          >
+            {isSidebarCollapsed ? (
+              <ChevronRight sx={{ color: "#fff", fontSize: "18px" }} />
+            ) : (
+              <ChevronLeft sx={{ color: "#fff", fontSize: "18px" }} />
+            )}
+          </Box>
+        )}
+        <Box
+          sx={{
+            width: sidebarWidth,
+            flexShrink: 0,
+            position: "fixed",
+            left: 0,
+            top: 0,
+            height: "100vh",
+            zIndex: 1300,
+            overflow: "visible",
+            pointerEvents: "none",
           }}
         >
-          {sidebarContent}
-        </Drawer>
-      </Box>
+          <Drawer
+            anchor="left"
+            open={isSidebarOpen}
+            variant="permanent"
+            slotProps={{
+              paper: {
+                sx: {
+                  boxSizing: "border-box",
+                  width: currentSidebarWidth,
+                  borderRight: "1px solid",
+                  borderColor: "divider",
+                  transition: "width 0.3s ease-in-out",
+                  overflow: "visible",
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  height: "100vh",
+                  zIndex: 1300,
+                  pointerEvents: "auto",
+                },
+              }
+            }}
+          >
+            {sidebarContent}
+          </Drawer>
+        </Box>
+      </>
     );
   }
 

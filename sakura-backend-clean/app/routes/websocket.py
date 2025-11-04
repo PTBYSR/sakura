@@ -236,7 +236,7 @@ async def websocket_endpoint(websocket: WebSocket):
         
         # Start background tasks if not already running
         if not hasattr(manager, "_background_tasks_started"):
-            if db:
+            if db is not None:
                 asyncio.create_task(broadcast_chat_updates(db))
                 asyncio.create_task(broadcast_unread_counts(db))
             manager._background_tasks_started = True

@@ -283,6 +283,70 @@ async def get_chat_by_id(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/reports/stats")
+async def get_reports_stats(db: Database = Depends(get_database)):
+    """Get basic chat statistics for reports."""
+    try:
+        if db is None:
+            raise HTTPException(status_code=503, detail="Database not available")
+        
+        chats_collection = db["customer-chats"]
+        
+        # Get total number of chats
+        total_chats = chats_collection.count_documents({})
+        
+        # Count chats by channel (assuming channel is stored in chat document)
+        # For now, we'll check if there's a channel field, otherwise default to "website"
+        all_chats = list(chats_collection.find({}, {"channel": 1, "source": 1}))
+        
+        whatsapp_chats = 0
+        instagram_chats = 0
+        website_chats = 0
+        
+        # Count chats per channel
+        for chat in all_chats:
+            channel = chat.get("channel") or chat.get("source", "website")
+            channel_lower = str(channel).lower()
+            
+            if "whatsapp" in channel_lower:
+                whatsapp_chats += 1
+            elif "instagram" in channel_lower:
+                instagram_chats += 1
+            else:
+                # Default to website if no channel specified
+                website_chats += 1
+        
+        # Count chats that agents have discussed with (chats with agent messages)
+        agent_chats = 0
+        chats_with_messages = chats_collection.find({"messages": {"$exists": True, "$ne": []}})
+        for chat in chats_with_messages:
+            messages = chat.get("messages", [])
+            # Check if any message has role "agent" or "assistant"
+            has_agent_message = any(
+                msg.get("role") in ["agent", "assistant"] 
+                for msg in messages
+            )
+            if has_agent_message:
+                agent_chats += 1
+        
+        return {
+            "success": True,
+            "total_chats": total_chats,
+            "agent_chats": agent_chats,
+            "channels": {
+                "whatsapp": whatsapp_chats,
+                "instagram": instagram_chats,
+                "website": website_chats,
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error getting reports stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/debug/users-chats")
 async def get_debug_users_chats(db: Database = Depends(get_database)):
     """Debug endpoint that returns users with their chats (for dashboard compatibility)."""
@@ -571,7 +635,7 @@ async def get_chat_by_id_for_context(chat_id: str, db: Database = Depends(get_da
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/chats/{chat_id}/send")
+@router.post("/dashboard/chats/{chat_id}/send")
 async def send_message_to_chat(chat_id: str, request: dict, db: Database = Depends(get_database)):
     """Send a message to a chat (for ChatContext and Widget)."""
     try:
@@ -596,6 +660,16 @@ async def send_message_to_chat(chat_id: str, request: dict, db: Database = Depen
             "read": False
         }
         
+        # First check if chat exists
+        chat_doc = chats_collection.find_one({"chat_id": chat_id})
+        if not chat_doc:
+            print(f"⚠️ Chat not found: {chat_id}")
+            # Log all available chat_ids for debugging
+            all_chats = chats_collection.find({}, {"chat_id": 1, "_id": 0}).limit(10)
+            available_chat_ids = [chat.get("chat_id") for chat in all_chats]
+            print(f"📋 Sample available chat_ids: {available_chat_ids}")
+            raise HTTPException(status_code=404, detail=f"Chat not found: {chat_id}")
+        
         result = chats_collection.update_one(
             {"chat_id": chat_id},
             {
@@ -608,15 +682,12 @@ async def send_message_to_chat(chat_id: str, request: dict, db: Database = Depen
             }
         )
         
-        if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Chat not found")
-        
-        # Update total_messages count
-        chat_doc = chats_collection.find_one({"chat_id": chat_id})
-        if chat_doc:
+        # Update total_messages count (re-fetch to get updated message count)
+        updated_chat_doc = chats_collection.find_one({"chat_id": chat_id})
+        if updated_chat_doc:
             chats_collection.update_one(
                 {"chat_id": chat_id},
-                {"$set": {"total_messages": len(chat_doc.get("messages", []))}}
+                {"$set": {"total_messages": len(updated_chat_doc.get("messages", []))}}
             )
         
         return {"success": True, "message": "Message sent successfully"}
@@ -625,6 +696,71 @@ async def send_message_to_chat(chat_id: str, request: dict, db: Database = Depen
         raise
     except Exception as e:
         print(f"❌ Error sending message: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/dashboard/chats/{chat_id}/ai-agent")
+async def toggle_ai_agent(chat_id: str, request: dict, db: Database = Depends(get_database)):
+    """Toggle AI agent enabled/disabled for a chat."""
+    try:
+        if db is None:
+            raise HTTPException(status_code=503, detail="Database not available")
+        
+        chats_collection = db["customer-chats"]
+        enabled = request.get("enabled", True)
+        
+        result = chats_collection.update_one(
+            {"chat_id": chat_id},
+            {
+                "$set": {
+                    "ai_agent_enabled": enabled,
+                    "updated_at": datetime.now()
+                }
+            }
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Chat not found")
+        
+        return {
+            "success": True,
+            "ai_agent_enabled": enabled,
+            "message": f"AI agent {'enabled' if enabled else 'disabled'} successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error toggling AI agent: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/dashboard/chats/{chat_id}/ai-agent")
+async def get_ai_agent_status(chat_id: str, db: Database = Depends(get_database)):
+    """Get AI agent enabled status for a chat."""
+    try:
+        if db is None:
+            raise HTTPException(status_code=503, detail="Database not available")
+        
+        chats_collection = db["customer-chats"]
+        chat_doc = chats_collection.find_one({"chat_id": chat_id})
+        
+        if not chat_doc:
+            raise HTTPException(status_code=404, detail="Chat not found")
+        
+        # Default to True if not set (backward compatibility)
+        ai_agent_enabled = chat_doc.get("ai_agent_enabled", True)
+        
+        return {
+            "success": True,
+            "ai_agent_enabled": ai_agent_enabled,
+            "chat_id": chat_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error getting AI agent status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

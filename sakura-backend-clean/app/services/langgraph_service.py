@@ -248,13 +248,48 @@ class LangGraphService:
         """Initialize the language model."""
         try:
             print("🤖 Initializing Google Gemini model...")
-            self.system_prompt = (
-    "You are an AI customer concierge for this company.\n"
-    "Your job is to answer user questions clearly and professionally using the company’s verified knowledge base and FAQs.\n"
-    "Always provide the actual answer — do not restate your instructions.\n"
-    "Try to summarize the answer in a few sentences. And always make sure the customer understands the answer.\n"
-    "If no relevant information is available, say so politely and offer to escalate.\n"
-)
+            
+            # Try to load system prompt from database
+            try:
+                from app.core.database import get_database
+                db = get_database()
+                if db is not None:
+                    collection = db["ai-settings"]
+                    settings_doc = collection.find_one({"type": "system_prompt"})
+                    if settings_doc and settings_doc.get("system_prompt"):
+                        self.system_prompt = settings_doc.get("system_prompt")
+                        print("✅ Loaded system prompt from database")
+                    else:
+                        # Default system prompt if not found
+                        self.system_prompt = (
+                            "You are an AI customer concierge for this company.\n"
+                            "Your job is to answer user questions clearly and professionally using the company's verified knowledge base and FAQs.\n"
+                            "Always provide the actual answer — do not restate your instructions.\n"
+                            "Try to summarize the answer in a few sentences. And always make sure the customer understands the answer.\n"
+                            "If no relevant information is available, say so politely and offer to escalate.\n"
+                        )
+                        print("📝 Using default system prompt")
+                else:
+                    # Default system prompt if database not available
+                    self.system_prompt = (
+                        "You are an AI customer concierge for this company.\n"
+                        "Your job is to answer user questions clearly and professionally using the company's verified knowledge base and FAQs.\n"
+                        "Always provide the actual answer — do not restate your instructions.\n"
+                        "Try to summarize the answer in a few sentences. And always make sure the customer understands the answer.\n"
+                        "If no relevant information is available, say so politely and offer to escalate.\n"
+                    )
+                    print("📝 Using default system prompt (database not available)")
+            except Exception as e:
+                # Fallback to default if loading from database fails
+                print(f"⚠️ Error loading system prompt from database: {e}")
+                self.system_prompt = (
+                    "You are an AI customer concierge for this company.\n"
+                    "Your job is to answer user questions clearly and professionally using the company's verified knowledge base and FAQs.\n"
+                    "Always provide the actual answer — do not restate your instructions.\n"
+                    "Try to summarize the answer in a few sentences. And always make sure the customer understands the answer.\n"
+                    "If no relevant information is available, say so politely and offer to escalate.\n"
+                )
+                print("📝 Using default system prompt (fallback)")
 
  
             # Use lower temperature for more deterministic, factual responses

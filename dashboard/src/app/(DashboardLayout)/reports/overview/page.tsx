@@ -1,375 +1,260 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
   Container,
-  Grid,
   Card,
   CardContent,
-  CardHeader,
-  Paper,
-  Chip,
-  LinearProgress,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Avatar,
-  Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import {
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
-  People as PeopleIcon,
   Chat as ChatIcon,
-  Storage as StorageIcon,
-  Speed as SpeedIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  Schedule as ScheduleIcon,
-  Assessment as AssessmentIcon,
-  Psychology as PsychologyIcon,
-  Public as PublicIcon,
-  Description as DescriptionIcon,
+  People as PeopleIcon,
+  WhatsApp as WhatsAppIcon,
+  Instagram as InstagramIcon,
+  Language as LanguageIcon,
 } from "@mui/icons-material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 
-interface MetricCard {
-  title: string;
-  value: string | number;
-  change: number;
-  changeType: 'increase' | 'decrease';
-  icon: React.ReactNode;
-  color: string;
-}
-
-interface TopAgent {
-  id: string;
-  name: string;
-  conversations: number;
-  satisfaction: number;
-  avatar: string;
+interface ReportsStats {
+  total_chats: number;
+  agent_chats: number;
+  channels: {
+    whatsapp: number;
+    instagram: number;
+    website: number;
+  };
 }
 
 const ReportsOverviewPage = () => {
-  const [timeRange, setTimeRange] = useState('7d');
+  const [stats, setStats] = useState<ReportsStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const metrics: MetricCard[] = [
-    {
-      title: "Total Conversations",
-      value: "12,847",
-      change: 12.5,
-      changeType: 'increase',
-      icon: <ChatIcon />,
-      color: "#1976d2"
-    },
-    {
-      title: "Active Users",
-      value: "3,421",
-      change: 8.2,
-      changeType: 'increase',
-      icon: <PeopleIcon />,
-      color: "#388e3c"
-    },
-    {
-      title: "AI Agents",
-      value: "15",
-      change: 2,
-      changeType: 'increase',
-      icon: <PsychologyIcon />,
-      color: "#7b1fa2"
-    },
-    {
-      title: "Knowledge Sources",
-      value: "247",
-      change: 15.3,
-      changeType: 'increase',
-      icon: <StorageIcon />,
-      color: "#f57c00"
-    },
-    {
-      title: "Avg Response Time",
-      value: "1.2s",
-      change: -18.5,
-      changeType: 'decrease',
-      icon: <SpeedIcon />,
-      color: "#d32f2f"
-    },
-    {
-      title: "Success Rate",
-      value: "94.2%",
-      change: 2.1,
-      changeType: 'increase',
-      icon: <CheckCircleIcon />,
-      color: "#388e3c"
-    }
-  ];
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    (process.env.NODE_ENV === "development"
+      ? "http://localhost:8000"
+      : "https://sakura-backend.onrender.com");
 
-  const topAgents: TopAgent[] = [
-    {
-      id: "1",
-      name: "Customer Support Bot",
-      conversations: 3247,
-      satisfaction: 96.2,
-      avatar: "CS"
-    },
-    {
-      id: "2", 
-      name: "Sales Assistant",
-      conversations: 2891,
-      satisfaction: 92.8,
-      avatar: "SA"
-    },
-    {
-      id: "3",
-      name: "Technical Helper",
-      conversations: 2156,
-      satisfaction: 89.4,
-      avatar: "TH"
-    }
-  ];
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await fetch(`${API_BASE_URL}/api/reports/stats`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          mode: "cors",
+          credentials: "include",
+        });
 
-  const recentActivity = [
-    { type: "conversation", message: "New conversation started with Customer Support Bot", time: "2 min ago", status: "success" },
-    { type: "agent", message: "Sales Assistant completed training session", time: "15 min ago", status: "success" },
-    { type: "knowledge", message: "New knowledge source added: Product Manual v2.1", time: "1 hour ago", status: "success" },
-    { type: "error", message: "Technical Helper encountered processing error", time: "2 hours ago", status: "error" },
-    { type: "conversation", message: "High satisfaction conversation completed", time: "3 hours ago", status: "success" }
-  ];
+        if (!response.ok) {
+          throw new Error(`Failed to fetch stats: ${response.statusText}`);
+        }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'success': return <CheckCircleIcon color="success" fontSize="small" />;
-      case 'error': return <ErrorIcon color="error" fontSize="small" />;
-      default: return <ScheduleIcon color="action" fontSize="small" />;
-    }
-  };
+        const data = await response.json();
+        if (data.success) {
+          setStats({
+            total_chats: data.total_chats || 0,
+            agent_chats: data.agent_chats || 0,
+            channels: {
+              whatsapp: data.channels?.whatsapp || 0,
+              instagram: data.channels?.instagram || 0,
+              website: data.channels?.website || 0,
+            },
+          });
+        }
+      } catch (err: any) {
+        console.error("Error fetching reports stats:", err);
+        setError(err.message || "Failed to load reports");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <PageContainer title="Reports Overview" description="View chat statistics and metrics">
+        <Container maxWidth="lg">
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
+            <CircularProgress />
+          </Box>
+        </Container>
+      </PageContainer>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageContainer title="Reports Overview" description="View chat statistics and metrics">
+        <Container maxWidth="lg">
+          <Box sx={{ py: 2 }}>
+            <Alert severity="error">{error}</Alert>
+          </Box>
+        </Container>
+      </PageContainer>
+    );
+  }
 
   return (
-    <PageContainer title="Reports Overview" description="View comprehensive reports and analytics">
-      <Container maxWidth="xl">
-        <Box sx={{ py: 4 }}>
+    <PageContainer title="Reports Overview" description="View chat statistics and metrics">
+      <Container maxWidth="lg">
+        <Box sx={{ py: 2 }}>
           {/* Header */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-            <Box>
-              <Typography variant="h4" gutterBottom>
-                Reports & Analytics
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Comprehensive overview of Sakura&apos;s performance and usage metrics
-              </Typography>
-            </Box>
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel>Time Range</InputLabel>
-              <Select
-                value={timeRange}
-                label="Time Range"
-                onChange={(e) => setTimeRange(e.target.value)}
-              >
-                <MenuItem value="24h">Last 24 Hours</MenuItem>
-                <MenuItem value="7d">Last 7 Days</MenuItem>
-                <MenuItem value="30d">Last 30 Days</MenuItem>
-                <MenuItem value="90d">Last 90 Days</MenuItem>
-              </Select>
-            </FormControl>
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h5" sx={{ fontWeight: 600, fontSize: "1.25rem", mb: 0.5 }}>
+              Reports
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
+              Basic chat statistics and metrics
+            </Typography>
           </Box>
 
-          {/* Key Metrics Grid */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            {metrics.map((metric, index) => (
-              <Grid item xs={12} sm={6} md={4} lg={2} key={index}>
-                <Card sx={{ height: '100%' }}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Avatar sx={{ bgcolor: metric.color, mr: 2 }}>
-                        {metric.icon}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="h6" component="div">
-                          {metric.value}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {metric.title}
-                        </Typography>
-                      </Box>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      {metric.changeType === 'increase' ? (
-                        <TrendingUpIcon color="success" fontSize="small" />
-                      ) : (
-                        <TrendingDownIcon color="error" fontSize="small" />
-                      )}
-                      <Typography 
-                        variant="body2" 
-                        color={metric.changeType === 'increase' ? 'success.main' : 'error.main'}
-                        sx={{ ml: 0.5 }}
-                      >
-                        {Math.abs(metric.change)}%
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-
-          <Grid container spacing={3}>
-            {/* Top Performing Agents */}
-            <Grid item xs={12} md={6}>
-              <Card>
-                <CardHeader 
-                  title="Top Performing Agents"
-                  subheader="Based on conversation volume and satisfaction"
-                />
-                <CardContent>
-                  <List>
-                    {topAgents.map((agent, index) => (
-                      <ListItem key={agent.id} divider={index < topAgents.length - 1}>
-                        <ListItemIcon>
-                          <Avatar sx={{ bgcolor: 'primary.main' }}>
-                            {agent.avatar}
-                          </Avatar>
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={agent.name}
-                          secondary={
-                            <Box>
-                              <Typography variant="body2" color="text.secondary">
-                                {agent.conversations.toLocaleString()} conversations
-                              </Typography>
-                              <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                                <LinearProgress 
-                                  variant="determinate" 
-                                  value={agent.satisfaction} 
-                                  sx={{ width: 100, mr: 1 }}
-                                />
-                                <Typography variant="caption">
-                                  {agent.satisfaction}% satisfaction
-                                </Typography>
-                              </Box>
-                            </Box>
-                          }
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Recent Activity */}
-            <Grid item xs={12} md={6}>
-              <Card>
-                <CardHeader 
-                  title="Recent Activity"
-                  subheader="Latest system events and updates"
-                />
-                <CardContent>
-                  <List>
-                    {recentActivity.map((activity, index) => (
-                      <ListItem key={index} divider={index < recentActivity.length - 1}>
-                        <ListItemIcon>
-                          {getStatusIcon(activity.status)}
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={activity.message}
-                          secondary={activity.time}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Knowledge Base Overview */}
-            <Grid item xs={12} md={6}>
-              <Card>
-                <CardHeader 
-                  title="Knowledge Base Overview"
-                  subheader="Content sources and usage statistics"
-                />
-                <CardContent>
-                  <Grid container spacing={2}>
-                    <Grid item xs={6}>
-                      <Paper sx={{ p: 2, textAlign: 'center' }}>
-                        <PublicIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
-                        <Typography variant="h6">23</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Websites
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Paper sx={{ p: 2, textAlign: 'center' }}>
-                        <DescriptionIcon color="secondary" sx={{ fontSize: 40, mb: 1 }} />
-                        <Typography variant="h6">89</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Documents
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Box sx={{ mt: 2 }}>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                          Total Knowledge Chunks
-                        </Typography>
-                        <LinearProgress variant="determinate" value={75} sx={{ mb: 1 }} />
-                        <Typography variant="caption">
-                          15,247 chunks indexed
-                        </Typography>
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* System Health */}
-            <Grid item xs={12} md={6}>
-              <Card>
-                <CardHeader 
-                  title="System Health"
-                  subheader="Current system status and performance"
-                />
-                <CardContent>
-                  <Box sx={{ mb: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="body2">API Response Time</Typography>
-                      <Typography variant="body2">1.2s</Typography>
-                    </Box>
-                    <LinearProgress variant="determinate" value={85} color="success" />
+          {/* Stats Cards */}
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr" }, gap: 2, mb: 3 }}>
+            {/* Total Chats */}
+            <Card>
+              <CardContent sx={{ p: 2.5 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+                  <Box
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 1,
+                      bgcolor: "primary.main",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <ChatIcon sx={{ color: "white", fontSize: "1.5rem" }} />
                   </Box>
-                  
-                  <Box sx={{ mb: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="body2">Database Performance</Typography>
-                      <Typography variant="body2">98.5%</Typography>
-                    </Box>
-                    <LinearProgress variant="determinate" value={98.5} color="success" />
+                  <Box>
+                    <Typography variant="h4" sx={{ fontSize: "1.75rem", fontWeight: 600 }}>
+                      {stats?.total_chats.toLocaleString() || 0}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
+                      Total Chats
+                    </Typography>
                   </Box>
-                  
-                  <Box sx={{ mb: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="body2">AI Processing</Typography>
-                      <Typography variant="body2">94.2%</Typography>
-                    </Box>
-                    <LinearProgress variant="determinate" value={94.2} color="success" />
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Agent Chats */}
+            <Card>
+              <CardContent sx={{ p: 2.5 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+                  <Box
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 1,
+                      bgcolor: "success.main",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <PeopleIcon sx={{ color: "white", fontSize: "1.5rem" }} />
                   </Box>
-                  
-                  <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                    <Chip label="All Systems Operational" color="success" size="small" />
-                    <Chip label="No Issues Detected" color="success" size="small" />
+                  <Box>
+                    <Typography variant="h4" sx={{ fontSize: "1.75rem", fontWeight: 600 }}>
+                      {stats?.agent_chats.toLocaleString() || 0}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
+                      Agent Chats
+                    </Typography>
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Channel Breakdown Header Card */}
+            <Card>
+              <CardContent sx={{ p: 2.5 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+                  <Box
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 1,
+                      bgcolor: "info.main",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <LanguageIcon sx={{ color: "white", fontSize: "1.5rem" }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="h4" sx={{ fontSize: "1.75rem", fontWeight: 600 }}>
+                      {((stats?.channels.whatsapp || 0) + (stats?.channels.instagram || 0) + (stats?.channels.website || 0)).toLocaleString()}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
+                      Total Channels
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* Channel Breakdown */}
+          <Card>
+            <CardContent sx={{ p: 2.5 }}>
+              <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600, mb: 2 }}>
+                Chats by Channel
+              </Typography>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {/* WhatsApp */}
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", p: 1.5, bgcolor: "action.hover", borderRadius: 1 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                    <WhatsAppIcon sx={{ color: "#25D366", fontSize: "1.5rem" }} />
+                    <Typography variant="body1" sx={{ fontSize: "0.95rem", fontWeight: 500 }}>
+                      WhatsApp
+                    </Typography>
+                  </Box>
+                  <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600 }}>
+                    {stats?.channels.whatsapp.toLocaleString() || 0}
+                  </Typography>
+                </Box>
+
+                {/* Instagram */}
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", p: 1.5, bgcolor: "action.hover", borderRadius: 1 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                    <InstagramIcon sx={{ color: "#E4405F", fontSize: "1.5rem" }} />
+                    <Typography variant="body1" sx={{ fontSize: "0.95rem", fontWeight: 500 }}>
+                      Instagram
+                    </Typography>
+                  </Box>
+                  <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600 }}>
+                    {stats?.channels.instagram.toLocaleString() || 0}
+                  </Typography>
+                </Box>
+
+                {/* Website */}
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", p: 1.5, bgcolor: "action.hover", borderRadius: 1 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                    <LanguageIcon sx={{ color: "primary.main", fontSize: "1.5rem" }} />
+                    <Typography variant="body1" sx={{ fontSize: "0.95rem", fontWeight: 500 }}>
+                      Website
+                    </Typography>
+                  </Box>
+                  <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600 }}>
+                    {stats?.channels.website.toLocaleString() || 0}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
         </Box>
       </Container>
     </PageContainer>

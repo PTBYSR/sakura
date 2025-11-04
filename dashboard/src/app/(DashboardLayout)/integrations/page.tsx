@@ -159,39 +159,41 @@ const IntegrationsPage = () => {
   const totalCount = integrations.length;
 
   return (
-    <PageContainer title="Integrations" description="Manage third-party integrations">
+    <PageContainer title="Integrations" description="Manage integrations">
       <Container maxWidth="xl">
-        <Box sx={{ py: 4 }}>
+        <Box sx={{ py: 2 }}>
           {/* Header */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Box>
-              <Typography variant="h4" gutterBottom>
+              <Typography variant="h5" sx={{ fontWeight: 600, fontSize: "1.25rem", mb: 0.5 }}>
                 Integrations
               </Typography>
-              <Typography variant="body1" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
                 Connect Sakura with contact channels and business tools to enhance your workflow
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 1.5 }}>
               <Chip 
                 label={`${connectedCount}/${totalCount} Connected`} 
                 color="success" 
                 variant="outlined"
+                size="small"
+                sx={{ fontSize: "0.8rem" }}
               />
-              <Button variant="contained" startIcon={<SettingsIcon />}>
+              <Button variant="contained" size="small" startIcon={<SettingsIcon sx={{ fontSize: "1rem" }} />} sx={{ fontSize: "0.875rem" }}>
                 Manage All
               </Button>
             </Box>
           </Box>
 
           {/* Quick Stats */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
             <Grid item xs={12} sm={6} md={3}>
               <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <CheckCircleIcon color="success" sx={{ fontSize: 40, mb: 1 }} />
-                  <Typography variant="h6">{connectedCount}</Typography>
-                  <Typography variant="body2" color="text.secondary">
+                <CardContent sx={{ textAlign: 'center', p: 2 }}>
+                  <CheckCircleIcon color="success" sx={{ fontSize: 32, mb: 0.75 }} />
+                  <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600, mb: 0.5 }}>{connectedCount}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
                     Connected
                   </Typography>
                 </CardContent>
@@ -199,12 +201,12 @@ const IntegrationsPage = () => {
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <ErrorIcon color="error" sx={{ fontSize: 40, mb: 1 }} />
-                  <Typography variant="h6">
+                <CardContent sx={{ textAlign: 'center', p: 2 }}>
+                  <ErrorIcon color="error" sx={{ fontSize: 32, mb: 0.75 }} />
+                  <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600, mb: 0.5 }}>
                     {integrations.filter(i => i.status === 'disconnected').length}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
                     Disconnected
                   </Typography>
                 </CardContent>
@@ -212,12 +214,12 @@ const IntegrationsPage = () => {
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <ScheduleIcon color="warning" sx={{ fontSize: 40, mb: 1 }} />
-                  <Typography variant="h6">
+                <CardContent sx={{ textAlign: 'center', p: 2 }}>
+                  <ScheduleIcon color="warning" sx={{ fontSize: 32, mb: 0.75 }} />
+                  <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600, mb: 0.5 }}>
                     {integrations.filter(i => i.status === 'pending').length}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
                     Pending
                   </Typography>
                 </CardContent>
@@ -225,10 +227,10 @@ const IntegrationsPage = () => {
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <ApiIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
-                  <Typography variant="h6">{totalCount}</Typography>
-                  <Typography variant="body2" color="text.secondary">
+                <CardContent sx={{ textAlign: 'center', p: 2 }}>
+                  <ApiIcon color="primary" sx={{ fontSize: 32, mb: 0.75 }} />
+                  <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600, mb: 0.5 }}>{totalCount}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
                     Total Available
                   </Typography>
                 </CardContent>
@@ -237,60 +239,66 @@ const IntegrationsPage = () => {
           </Grid>
 
           {/* Integrations Grid */}
-          <Grid container spacing={3}>
+          <Grid container spacing={2}>
             {integrations.map((integration) => (
               <Grid item xs={12} sm={6} md={4} key={integration.id}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <CardHeader
                     avatar={
-                      <Avatar sx={{ bgcolor: 'primary.main' }}>
-                        {integration.icon}
+                      <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}>
+                        {React.cloneElement(integration.icon as React.ReactElement, { sx: { fontSize: "1rem" } })}
                       </Avatar>
                     }
                     action={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                         {getStatusIcon(integration.status)}
                         <Chip 
                           label={integration.status} 
                           color={getStatusColor(integration.status) as any}
                           size="small"
+                          sx={{ fontSize: "0.7rem", height: 20 }}
                         />
                       </Box>
                     }
                     title={integration.name}
+                    titleTypographyProps={{ variant: "h6", sx: { fontSize: "0.95rem", fontWeight: 600 } }}
                     subheader={
                       <Chip 
                         label={integration.category} 
                         color={getCategoryColor(integration.category) as any}
                         size="small"
                         variant="outlined"
+                        sx={{ fontSize: "0.7rem", height: 20, mt: 0.5 }}
                       />
                     }
+                    subheaderTypographyProps={{ component: "div" }}
+                    sx={{ pb: 1, pt: 2 }}
                   />
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  <CardContent sx={{ flexGrow: 1, pt: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontSize: "0.85rem" }}>
                       {integration.description}
                     </Typography>
                     
                     {integration.lastSync && (
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem" }}>
                         Last sync: {integration.lastSync}
                       </Typography>
                     )}
                     
                     {integration.error && (
-                      <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>
+                      <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.75, fontSize: "0.75rem" }}>
                         Error: {integration.error}
                       </Typography>
                     )}
                   </CardContent>
-                  <Box sx={{ p: 2, pt: 0 }}>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Box sx={{ p: 1.5, pt: 0 }}>
+                    <Box sx={{ display: 'flex', gap: 0.75 }}>
                       <Button 
                         variant="outlined" 
                         size="small" 
                         fullWidth
                         disabled={integration.status === 'connected'}
+                        sx={{ fontSize: "0.8rem" }}
                       >
                         {integration.status === 'connected' ? 'Connected' : 'Connect'}
                       </Button>
@@ -298,6 +306,7 @@ const IntegrationsPage = () => {
                         variant="outlined" 
                         size="small"
                         disabled={integration.status !== 'connected'}
+                        sx={{ fontSize: "0.8rem" }}
                       >
                         Settings
                       </Button>
@@ -309,33 +318,35 @@ const IntegrationsPage = () => {
           </Grid>
 
           {/* Integration Categories */}
-          <Box sx={{ mt: 6 }}>
-            <Typography variant="h5" gutterBottom>
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="h5" sx={{ fontSize: "1.125rem", fontWeight: 600, mb: 2 }}>
               Integration Categories
             </Typography>
-            <Grid container spacing={3}>
+            <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
                 <Card>
                   <CardHeader 
                     title="Social Platforms"
-                    avatar={<Avatar sx={{ bgcolor: 'primary.main' }}><FacebookIcon /></Avatar>}
+                    titleTypographyProps={{ variant: "h6", sx: { fontSize: "0.95rem", fontWeight: 600 } }}
+                    avatar={<Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}><FacebookIcon sx={{ fontSize: "1rem" }} /></Avatar>}
+                    sx={{ pb: 1, pt: 2 }}
                   />
-                  <CardContent>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  <CardContent sx={{ pt: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontSize: "0.85rem" }}>
                       Connect with popular social media platforms and messaging services
                     </Typography>
-                    <List dense>
-                      <ListItem>
-                        <ListItemIcon><SlackIcon /></ListItemIcon>
-                        <ListItemText primary="Slack" secondary="Team communication" />
+                    <List dense sx={{ py: 0 }}>
+                      <ListItem sx={{ py: 0.5 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}><SlackIcon sx={{ fontSize: "1rem" }} /></ListItemIcon>
+                        <ListItemText primary={<Typography variant="body2" sx={{ fontSize: "0.85rem" }}>Slack</Typography>} secondary={<Typography variant="caption" sx={{ fontSize: "0.75rem" }}>Team communication</Typography>} />
                       </ListItem>
-                      <ListItem>
-                        <ListItemIcon><DiscordIcon /></ListItemIcon>
-                        <ListItemText primary="Discord" secondary="Community management" />
+                      <ListItem sx={{ py: 0.5 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}><DiscordIcon sx={{ fontSize: "1rem" }} /></ListItemIcon>
+                        <ListItemText primary={<Typography variant="body2" sx={{ fontSize: "0.85rem" }}>Discord</Typography>} secondary={<Typography variant="caption" sx={{ fontSize: "0.75rem" }}>Community management</Typography>} />
                       </ListItem>
-                      <ListItem>
-                        <ListItemIcon><WhatsAppIcon /></ListItemIcon>
-                        <ListItemText primary="WhatsApp" secondary="Customer support" />
+                      <ListItem sx={{ py: 0.5 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}><WhatsAppIcon sx={{ fontSize: "1rem" }} /></ListItemIcon>
+                        <ListItemText primary={<Typography variant="body2" sx={{ fontSize: "0.85rem" }}>WhatsApp</Typography>} secondary={<Typography variant="caption" sx={{ fontSize: "0.75rem" }}>Customer support</Typography>} />
                       </ListItem>
                     </List>
                   </CardContent>
@@ -346,24 +357,26 @@ const IntegrationsPage = () => {
                 <Card>
                   <CardHeader 
                     title="API & Automation"
-                    avatar={<Avatar sx={{ bgcolor: 'secondary.main' }}><ApiIcon /></Avatar>}
+                    titleTypographyProps={{ variant: "h6", sx: { fontSize: "0.95rem", fontWeight: 600 } }}
+                    avatar={<Avatar sx={{ bgcolor: 'secondary.main', width: 32, height: 32 }}><ApiIcon sx={{ fontSize: "1rem" }} /></Avatar>}
+                    sx={{ pb: 1, pt: 2 }}
                   />
-                  <CardContent>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  <CardContent sx={{ pt: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontSize: "0.85rem" }}>
                       Connect with external APIs and automation platforms
                     </Typography>
-                    <List dense>
-                      <ListItem>
-                        <ListItemIcon><ApiIcon /></ListItemIcon>
-                        <ListItemText primary="Custom APIs" secondary="External service integration" />
+                    <List dense sx={{ py: 0 }}>
+                      <ListItem sx={{ py: 0.5 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}><ApiIcon sx={{ fontSize: "1rem" }} /></ListItemIcon>
+                        <ListItemText primary={<Typography variant="body2" sx={{ fontSize: "0.85rem" }}>Custom APIs</Typography>} secondary={<Typography variant="caption" sx={{ fontSize: "0.75rem" }}>External service integration</Typography>} />
                       </ListItem>
-                      <ListItem>
-                        <ListItemIcon><WebhookIcon /></ListItemIcon>
-                        <ListItemText primary="Webhooks" secondary="Real-time data sync" />
+                      <ListItem sx={{ py: 0.5 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}><WebhookIcon sx={{ fontSize: "1rem" }} /></ListItemIcon>
+                        <ListItemText primary={<Typography variant="body2" sx={{ fontSize: "0.85rem" }}>Webhooks</Typography>} secondary={<Typography variant="caption" sx={{ fontSize: "0.75rem" }}>Real-time data sync</Typography>} />
                       </ListItem>
-                      <ListItem>
-                        <ListItemIcon><ZapierIcon /></ListItemIcon>
-                        <ListItemText primary="Zapier" secondary="5000+ app connections" />
+                      <ListItem sx={{ py: 0.5 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}><ZapierIcon sx={{ fontSize: "1rem" }} /></ListItemIcon>
+                        <ListItemText primary={<Typography variant="body2" sx={{ fontSize: "0.85rem" }}>Zapier</Typography>} secondary={<Typography variant="caption" sx={{ fontSize: "0.75rem" }}>5000+ app connections</Typography>} />
                       </ListItem>
                     </List>
                   </CardContent>

@@ -256,7 +256,7 @@ async def add_website(
     
     # Store initial entry in database or file-based storage
     db = get_database()
-    if db:
+    if db is not None:
         websites_collection = db.websites
         websites_collection.update_one(
             {"website_id": website_id},
@@ -717,7 +717,7 @@ async def search_faqs(
         )
         
         # Fetch full FAQ details from database for each result
-        if db:
+        if db is not None:
             collection = db.faqs
             enhanced_results = []
             

@@ -315,23 +315,23 @@ export default function FAQsPage() {
 
   return (
     <PageContainer title="FAQs" description="Manage your Frequently Asked Questions">
-      <Container maxWidth={false} sx={{ py: 3 }}>
+      <Container maxWidth={false} sx={{ py: 2 }}>
         {/* Error Message */}
         {error && (
           <Box
             sx={{
-              mb: 2,
-              p: 2,
+              mb: 1.5,
+              p: 1.5,
               bgcolor: "error.light",
               color: "error.contrastText",
               borderRadius: 1,
             }}
           >
-            <Typography variant="body2">{error}</Typography>
+            <Typography variant="body2" sx={{ fontSize: "0.85rem" }}>{error}</Typography>
             <Button
               size="small"
               onClick={() => setError(null)}
-              sx={{ mt: 1 }}
+              sx={{ mt: 0.75, fontSize: "0.8rem" }}
             >
               Dismiss
             </Button>
@@ -341,40 +341,42 @@ export default function FAQsPage() {
         {/* Top Bar */}
         <Toolbar
           sx={{
-            mb: 3,
+            mb: 2,
             px: 0,
-            minHeight: "64px !important",
+            minHeight: "48px !important",
             justifyContent: "space-between",
           }}
         >
-          <Typography variant="h4" fontWeight={600}>
+          <Typography variant="h5" sx={{ fontWeight: 600, fontSize: "1.25rem" }}>
             FAQs Management
           </Typography>
           <Button
             variant="contained"
-            startIcon={<Add />}
+            size="small"
+            startIcon={<Add sx={{ fontSize: "1rem" }} />}
             onClick={handleAddFaq}
-            sx={{ borderRadius: "10px" }}
+            sx={{ borderRadius: "8px", fontSize: "0.875rem" }}
           >
             Add FAQ
           </Button>
         </Toolbar>
 
-        <Box sx={{ display: "flex", gap: 3, flexDirection: { xs: "column", md: "row" } }}>
+        <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", md: "row" } }}>
           {/* Left Panel - FAQs Editor */}
           <Box sx={{ flex: { xs: 1, md: "0 0 calc(58.333% - 12px)" }, minWidth: 0 }}>
             <DashboardCard>
-              <Stack spacing={3}>
+              <Stack spacing={2}>
                 {/* Search Bar */}
                 <TextField
                   fullWidth
                   placeholder="Search FAQs by question..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  size="small"
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Search />
+                        <Search sx={{ fontSize: "1rem" }} />
                       </InputAdornment>
                     ),
                     endAdornment: searchQuery ? (
@@ -383,17 +385,20 @@ export default function FAQsPage() {
                           size="small"
                           onClick={() => setSearchQuery("")}
                         >
-                          <Clear />
+                          <Clear sx={{ fontSize: "1rem" }} />
                         </IconButton>
                       </InputAdornment>
                     ) : null,
                   }}
-                  sx={{ borderRadius: "7px" }}
+                  sx={{ 
+                    borderRadius: "7px",
+                    "& .MuiInputBase-input": { fontSize: "0.875rem" }
+                  }}
                 />
 
                 {/* Filter Options */}
                 <Box>
-                  <Typography variant="subtitle2" color="text.secondary" mb={1}>
+                  <Typography variant="subtitle2" color="text.secondary" mb={0.75} sx={{ fontSize: "0.875rem" }}>
                     Sort by:
                   </Typography>
                   <ToggleButtonGroup
@@ -402,11 +407,11 @@ export default function FAQsPage() {
                     onChange={(_, value) => value && setSortFilter(value)}
                     size="small"
                   >
-                    <ToggleButton value="recently-added">
+                    <ToggleButton value="recently-added" sx={{ fontSize: "0.8rem", px: 1.5 }}>
                       Recently Added
                     </ToggleButton>
-                    <ToggleButton value="largest">Largest</ToggleButton>
-                    <ToggleButton value="a-z">A–Z</ToggleButton>
+                    <ToggleButton value="largest" sx={{ fontSize: "0.8rem", px: 1.5 }}>Largest</ToggleButton>
+                    <ToggleButton value="a-z" sx={{ fontSize: "0.8rem", px: 1.5 }}>A–Z</ToggleButton>
                   </ToggleButtonGroup>
                 </Box>
 
@@ -414,7 +419,7 @@ export default function FAQsPage() {
                 {selectedFaqs.size > 0 && (
                   <Box
                     sx={{
-                      p: 2,
+                      p: 1.5,
                       bgcolor: "action.selected",
                       borderRadius: "7px",
                       display: "flex",
@@ -422,16 +427,17 @@ export default function FAQsPage() {
                       justifyContent: "space-between",
                     }}
                   >
-                    <Typography variant="body2">
+                    <Typography variant="body2" sx={{ fontSize: "0.85rem" }}>
                       {selectedFaqs.size} FAQ{selectedFaqs.size > 1 ? "s" : ""}{" "}
                       selected
                     </Typography>
                     <Button
                       variant="outlined"
                       color="error"
-                      startIcon={<Delete />}
+                      startIcon={<Delete sx={{ fontSize: "1rem" }} />}
                       onClick={handleBulkDelete}
                       size="small"
+                      sx={{ fontSize: "0.8rem" }}
                     >
                       Delete Selected
                     </Button>
@@ -439,26 +445,26 @@ export default function FAQsPage() {
                 )}
 
                 {/* FAQ Cards */}
-                <Stack spacing={2}>
+                <Stack spacing={1.5}>
                   {loading ? (
                     <Box
                       sx={{
-                        p: 4,
+                        p: 3,
                         textAlign: "center",
                         color: "text.secondary",
                       }}
                     >
-                      <Typography variant="body1">Loading FAQs...</Typography>
+                      <Typography variant="body2" sx={{ fontSize: "0.85rem" }}>Loading FAQs...</Typography>
                     </Box>
                   ) : paginatedFaqs.length === 0 ? (
                     <Box
                       sx={{
-                        p: 4,
+                        p: 3,
                         textAlign: "center",
                         color: "text.secondary",
                       }}
                     >
-                      <Typography variant="body1">
+                      <Typography variant="body2" sx={{ fontSize: "0.85rem" }}>
                         {searchQuery
                           ? "No FAQs match your search."
                           : "No FAQs yet. Click 'Add FAQ' to get started."}
@@ -476,10 +482,10 @@ export default function FAQsPage() {
                           transition: "box-shadow 0.2s",
                         }}
                       >
-                        <CardContent>
+                        <CardContent sx={{ p: 2 }}>
                           <Stack
                             direction="row"
-                            spacing={2}
+                            spacing={1.5}
                             alignItems="flex-start"
                           >
                             <Checkbox
@@ -492,6 +498,7 @@ export default function FAQsPage() {
                                 variant="subtitle1"
                                 fontWeight={600}
                                 gutterBottom
+                                sx={{ fontSize: "0.95rem", mb: 0.75 }}
                               >
                                 {faq.question}
                               </Typography>
@@ -503,7 +510,8 @@ export default function FAQsPage() {
                                   WebkitLineClamp: 3,
                                   WebkitBoxOrient: "vertical",
                                   overflow: "hidden",
-                                  mb: 1,
+                                  mb: 0.75,
+                                  fontSize: "0.85rem",
                                 }}
                               >
                                 {faq.answer}
@@ -521,6 +529,7 @@ export default function FAQsPage() {
                                       label={tag}
                                       size="small"
                                       variant="outlined"
+                                      sx={{ fontSize: "0.7rem", height: 22 }}
                                     />
                                   ))}
                                 </Stack>
@@ -531,15 +540,17 @@ export default function FAQsPage() {
                                 size="small"
                                 onClick={() => handleEditFaq(faq)}
                                 color="primary"
+                                sx={{ padding: "6px" }}
                               >
-                                <Edit fontSize="small" />
+                                <Edit sx={{ fontSize: "1rem" }} />
                               </IconButton>
                               <IconButton
                                 size="small"
                                 onClick={() => handleDeleteClick(faq)}
+                                sx={{ padding: "6px" }}
                                 color="error"
                               >
-                                <Delete fontSize="small" />
+                                <Delete sx={{ fontSize: "1rem" }} />
                               </IconButton>
                             </Stack>
                           </Stack>
@@ -555,7 +566,7 @@ export default function FAQsPage() {
                     sx={{
                       display: "flex",
                       justifyContent: "center",
-                      pt: 2,
+                      pt: 1.5,
                     }}
                   >
                     <Pagination
@@ -563,13 +574,14 @@ export default function FAQsPage() {
                       page={page}
                       onChange={(_, value) => setPage(value)}
                       color="primary"
+                      size="small"
                     />
                   </Box>
                 )}
 
                 {/* Select All Checkbox */}
                 {paginatedFaqs.length > 0 && (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
                     <Checkbox
                       checked={
                         paginatedFaqs.length > 0 &&
@@ -584,7 +596,7 @@ export default function FAQsPage() {
                       onChange={handleSelectAll}
                       size="small"
                     />
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.85rem" }}>
                       Select all on this page
                     </Typography>
                   </Box>
@@ -596,7 +608,7 @@ export default function FAQsPage() {
           {/* Right Panel - Chatbot Tester */}
           <Box sx={{ flex: { xs: 1, md: "0 0 calc(41.667% - 12px)" }, minWidth: 0 }}>
             <DashboardCard>
-              <Stack spacing={2}>
+              <Stack spacing={1.5}>
                 <Box
                   sx={{
                     display: "flex",
@@ -604,14 +616,15 @@ export default function FAQsPage() {
                     alignItems: "center",
                   }}
                 >
-                  <Typography variant="h6" fontWeight={600}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "0.95rem" }}>
                     Chatbot Tester
                   </Typography>
                   <Button
                     size="small"
                     variant="outlined"
                     onClick={clearChat}
-                    startIcon={<Clear />}
+                    startIcon={<Clear sx={{ fontSize: "1rem" }} />}
+                    sx={{ fontSize: "0.8rem" }}
                   >
                     Clear Chat
                   </Button>
@@ -642,9 +655,9 @@ export default function FAQsPage() {
           maxWidth="sm"
           fullWidth
         >
-          <DialogTitle>Add New FAQ</DialogTitle>
-          <DialogContent dividers>
-            <Stack spacing={3} sx={{ pt: 1 }}>
+          <DialogTitle sx={{ fontSize: "1.125rem", fontWeight: 600, pb: 1 }}>Add New FAQ</DialogTitle>
+          <DialogContent dividers sx={{ pt: 2 }}>
+            <Stack spacing={2}>
               <TextField
                 fullWidth
                 label="Question"
@@ -653,6 +666,8 @@ export default function FAQsPage() {
                 required
                 multiline
                 rows={2}
+                size="small"
+                sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
               />
               <TextField
                 fullWidth
@@ -662,6 +677,8 @@ export default function FAQsPage() {
                 required
                 multiline
                 rows={6}
+                size="small"
+                sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
               />
               <TextField
                 fullWidth
@@ -670,15 +687,22 @@ export default function FAQsPage() {
                 onChange={(e) => setFormTags(e.target.value)}
                 placeholder="e.g., billing, technical, account"
                 helperText="Separate multiple tags with commas"
+                size="small"
+                sx={{ 
+                  "& .MuiInputBase-input": { fontSize: "0.875rem" },
+                  "& .MuiFormHelperText-root": { fontSize: "0.75rem" }
+                }}
               />
             </Stack>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenAddModal(false)}>Cancel</Button>
+          <DialogActions sx={{ p: 2, pt: 1.5 }}>
+            <Button onClick={() => setOpenAddModal(false)} size="small" sx={{ fontSize: "0.875rem" }}>Cancel</Button>
             <Button
               variant="contained"
               onClick={handleSaveAdd}
               disabled={!formQuestion.trim() || !formAnswer.trim()}
+              size="small"
+              sx={{ fontSize: "0.875rem" }}
             >
               Save
             </Button>
@@ -695,9 +719,9 @@ export default function FAQsPage() {
           maxWidth="sm"
           fullWidth
         >
-          <DialogTitle>Edit FAQ</DialogTitle>
-          <DialogContent dividers>
-            <Stack spacing={3} sx={{ pt: 1 }}>
+          <DialogTitle sx={{ fontSize: "1.125rem", fontWeight: 600, pb: 1 }}>Edit FAQ</DialogTitle>
+          <DialogContent dividers sx={{ pt: 2 }}>
+            <Stack spacing={2}>
               <TextField
                 fullWidth
                 label="Question"
@@ -706,6 +730,8 @@ export default function FAQsPage() {
                 required
                 multiline
                 rows={2}
+                size="small"
+                sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
               />
               <TextField
                 fullWidth
@@ -715,6 +741,8 @@ export default function FAQsPage() {
                 required
                 multiline
                 rows={6}
+                size="small"
+                sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
               />
               <TextField
                 fullWidth
@@ -723,15 +751,22 @@ export default function FAQsPage() {
                 onChange={(e) => setFormTags(e.target.value)}
                 placeholder="e.g., billing, technical, account"
                 helperText="Separate multiple tags with commas"
+                size="small"
+                sx={{ 
+                  "& .MuiInputBase-input": { fontSize: "0.875rem" },
+                  "& .MuiFormHelperText-root": { fontSize: "0.75rem" }
+                }}
               />
             </Stack>
           </DialogContent>
-          <DialogActions>
+          <DialogActions sx={{ p: 2, pt: 1.5 }}>
             <Button
               onClick={() => {
                 setOpenEditModal(false);
                 setEditingFaq(null);
               }}
+              size="small"
+              sx={{ fontSize: "0.875rem" }}
             >
               Cancel
             </Button>
@@ -739,6 +774,8 @@ export default function FAQsPage() {
               variant="contained"
               onClick={handleSaveEdit}
               disabled={!formQuestion.trim() || !formAnswer.trim()}
+              size="small"
+              sx={{ fontSize: "0.875rem" }}
             >
               Save Changes
             </Button>
@@ -753,32 +790,36 @@ export default function FAQsPage() {
             setFaqToDelete(null);
           }}
         >
-          <DialogTitle>Delete FAQ</DialogTitle>
-          <DialogContent>
-            <Typography>
+          <DialogTitle sx={{ fontSize: "1.125rem", fontWeight: 600, pb: 1 }}>Delete FAQ</DialogTitle>
+          <DialogContent sx={{ pt: 2 }}>
+            <Typography sx={{ fontSize: "0.875rem" }}>
               Are you sure you want to delete this FAQ? This action cannot be
               undone.
             </Typography>
             {faqToDelete && (
-              <Box sx={{ mt: 2, p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
-                <Typography variant="subtitle2" fontWeight={600}>
+              <Box sx={{ mt: 1.5, p: 1.5, bgcolor: "action.hover", borderRadius: 1 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: "0.875rem" }}>
                   {faqToDelete.question}
                 </Typography>
               </Box>
             )}
           </DialogContent>
-          <DialogActions>
+          <DialogActions sx={{ p: 2, pt: 1.5 }}>
             <Button
               onClick={() => {
                 setOpenDeleteDialog(false);
                 setFaqToDelete(null);
               }}
+              size="small"
+              sx={{ fontSize: "0.875rem" }}
             >
               Cancel
             </Button>
             <Button
               variant="contained"
               color="error"
+              size="small"
+              sx={{ fontSize: "0.875rem" }}
               onClick={confirmDelete}
             >
               Yes, Delete

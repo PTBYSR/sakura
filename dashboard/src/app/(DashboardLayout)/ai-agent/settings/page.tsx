@@ -1,53 +1,22 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
   Container,
-  Grid,
   Card,
   CardContent,
   CardHeader,
   Avatar,
   TextField,
   Button,
-  Switch,
-  FormControlLabel,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Divider,
-  Chip,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  ListItemSecondaryAction,
-  IconButton,
-  Paper,
-  InputAdornment,
-  Slider,
   Alert,
-  Badge,
+  CircularProgress,
+  Snackbar,
 } from "@mui/material";
 import {
-  Settings as SettingsIcon,
   Save as SaveIcon,
-  Edit as EditIcon,
-  Person as PersonIcon,
-  Message as MessageIcon,
-  Psychology as PsychologyIcon,
-  Book as BookIcon,
   SmartToy as SmartToyIcon,
-  Send as SendIcon,
-  AttachFile as AttachFileIcon,
-  CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon,
-  VolumeUp as VolumeUpIcon,
-  Chat as ChatIcon,
-  ToggleOn as ToggleOnIcon,
-  ToggleOff as ToggleOffIcon,
 } from "@mui/icons-material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { useAgents } from "@/contexts/AgentsContext";
@@ -55,490 +24,222 @@ import { useAgents } from "@/contexts/AgentsContext";
 const AIAgentSettingsPage = () => {
   const { agent, updateAgent } = useAgents();
   
-  // Agent Settings State
-  const [agentSettings, setAgentSettings] = useState({
-    name: agent.name,
-    profilePicture: "",
-    greetingMessage: "Hello! I'm here to help you with any questions you might have. How can I assist you today?",
-    toneOfVoice: "friendly",
-    responseLength: "medium",
+  const [agentName, setAgentName] = useState(agent.name || "");
+  const [systemPrompt, setSystemPrompt] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  
+  // Snackbar states
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+    open: false,
+    message: "",
+    severity: "success",
   });
 
-  // Behavior Controls State
-  const [behaviorSettings, setBehaviorSettings] = useState({
-    enableSmallTalk: true,
-    responseDelay: 1500, // milliseconds
-    typingSimulation: true,
-  });
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    (process.env.NODE_ENV === "development"
+      ? "http://localhost:8000"
+      : "https://sakura-backend.onrender.com");
 
-  // Knowledge Base State
-  const [knowledgeBases, setKnowledgeBases] = useState([
-    { id: "kb-1", name: "Company Website", type: "website", url: "https://company.com", active: true },
-    { id: "kb-2", name: "Product Manual", type: "file", filename: "manual.pdf", active: true },
-    { id: "kb-3", name: "FAQ Database", type: "file", filename: "faq.docx", active: false },
-    { id: "kb-4", name: "Support Docs", type: "website", url: "https://support.company.com", active: true },
-  ]);
+  // Load system prompt from backend on mount
+  useEffect(() => {
+    const loadSystemPrompt = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE_URL}/api/system-prompt`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          mode: "cors",
+          credentials: "include",
+        });
 
-  // Channel Configuration State
-  const [channels, setChannels] = useState([
-    { id: "whatsapp", name: "WhatsApp", icon: "📱", active: true },
-    { id: "instagram", name: "Instagram", icon: "📷", active: false },
-    { id: "messenger", name: "Facebook Messenger", icon: "💬", active: true },
-    { id: "website", name: "Website Widget", icon: "🌐", active: true },
-  ]);
+        if (!response.ok) {
+          throw new Error(`Failed to load system prompt: ${response.statusText}`);
+        }
 
-  // Testing Panel State
-  const [testMessages, setTestMessages] = useState([
-    { id: 1, type: "agent", message: agentSettings.greetingMessage, timestamp: new Date() },
-  ]);
-  const [newTestMessage, setNewTestMessage] = useState("");
+        const data = await response.json();
+        if (data.success && data.system_prompt) {
+          setSystemPrompt(data.system_prompt);
+        }
+      } catch (error: any) {
+        console.error("Error loading system prompt:", error);
+        setSnackbar({
+          open: true,
+          message: "Failed to load system prompt. Using default.",
+          severity: "error",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleAgentSettingChange = (field: string, value: any) => {
-    setAgentSettings(prev => ({ ...prev, [field]: value }));
+    loadSystemPrompt();
+  }, []);
+
+  const handleSave = async () => {
+    if (!agentName.trim()) {
+      setSnackbar({
+        open: true,
+        message: "Agent name cannot be empty",
+        severity: "error",
+      });
+      return;
+    }
+
+    if (!systemPrompt.trim()) {
+      setSnackbar({
+        open: true,
+        message: "System prompt cannot be empty",
+        severity: "error",
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Update agent name in context
+      updateAgent({
+        name: agentName,
+      });
+
+      // Update system prompt in backend
+      const response = await fetch(`${API_BASE_URL}/api/system-prompt`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_prompt: systemPrompt,
+        }),
+        mode: "cors",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to update system prompt");
+      }
+
+      setSnackbar({
+        open: true,
+        message: "Settings saved successfully!",
+        severity: "success",
+      });
+    } catch (error: any) {
+      console.error("Error saving settings:", error);
+      setSnackbar({
+        open: true,
+        message: error.message || "Failed to save settings",
+        severity: "error",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleBehaviorSettingChange = (field: string, value: any) => {
-    setBehaviorSettings(prev => ({ ...prev, [field]: value }));
-  };
-
-  const toggleKnowledgeBase = (kbId: string) => {
-    setKnowledgeBases(prev => 
-      prev.map(kb => 
-        kb.id === kbId ? { ...kb, active: !kb.active } : kb
-      )
+  if (loading) {
+    return (
+      <PageContainer title="AI Agent Settings" description="Configure your AI agent">
+        <Container maxWidth="md">
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
+            <CircularProgress />
+          </Box>
+        </Container>
+      </PageContainer>
     );
-  };
-
-  const toggleChannel = (channelId: string) => {
-    setChannels(prev => 
-      prev.map(channel => 
-        channel.id === channelId ? { ...channel, active: !channel.active } : channel
-      )
-    );
-  };
-
-  const sendTestMessage = () => {
-    if (newTestMessage.trim()) {
-      const userMessage = {
-        id: Date.now(),
-        type: "user",
-        message: newTestMessage,
-        timestamp: new Date()
-      };
-      
-      setTestMessages(prev => [...prev, userMessage]);
-      setNewTestMessage("");
-      
-      // Simulate AI response after delay
-      setTimeout(() => {
-        const aiResponse = {
-          id: Date.now() + 1,
-          type: "agent",
-          message: "Thank you for your message! This is a simulated response from the AI agent.",
-          timestamp: new Date()
-        };
-        setTestMessages(prev => [...prev, aiResponse]);
-      }, behaviorSettings.responseDelay);
-    }
-  };
-
-  const handleSaveSettings = () => {
-    updateAgent({
-      name: agentSettings.name,
-      type: agent.type,
-      description: agent.description
-    });
-    console.log("Settings saved:", { agentSettings, behaviorSettings, knowledgeBases, channels });
-  };
-
-  const getToneIcon = (tone: string) => {
-    switch (tone) {
-      case "friendly": return "😊";
-      case "formal": return "🎩";
-      case "neutral": return "😐";
-      default: return "😊";
-    }
-  };
-
-  const getResponseLengthIcon = (length: string) => {
-    switch (length) {
-      case "short": return "📝";
-      case "medium": return "📄";
-      case "long": return "📚";
-      default: return "📄";
-    }
-  };
+  }
 
   return (
-    <PageContainer title="AI Agent Customization" description="Customize your AI agent's behavior and settings">
-      <Container maxWidth="xl">
-        <Box sx={{ py: 4 }}>
+    <PageContainer title="AI Agent Settings" description="Configure your AI agent">
+      <Container maxWidth="md">
+        <Box sx={{ py: 2 }}>
           {/* Header */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
             <Box>
-              <Typography variant="h4" gutterBottom>
-                AI Agent Customization
+              <Typography variant="h5" sx={{ fontWeight: 600, fontSize: "1.25rem", mb: 0.5 }}>
+                AI Agent Settings
               </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Configure your AI agent&apos;s personality, behavior, and capabilities
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
+                Configure your AI agent&apos;s name and behavior
               </Typography>
             </Box>
-            <Button 
-              variant="contained" 
-              startIcon={<SaveIcon />}
-              onClick={handleSaveSettings}
-              size="large"
+            <Button
+              variant="contained"
+              startIcon={<SaveIcon sx={{ fontSize: "1rem" }} />}
+              onClick={handleSave}
+              disabled={saving}
+              size="small"
+              sx={{ fontSize: "0.875rem" }}
             >
-              Save Settings
+              {saving ? <CircularProgress size={20} /> : "Save Settings"}
             </Button>
           </Box>
 
-          <Grid container spacing={3}>
-            {/* Left Column - Settings */}
-            <Grid item xs={12} lg={8}>
-              {/* 1. Agent Settings */}
-              <Card sx={{ mb: 3 }}>
-                <CardHeader 
-                  title="Agent Settings"
-                  avatar={<Avatar sx={{ bgcolor: 'primary.main' }}><PersonIcon /></Avatar>}
+          {/* Agent Settings Card */}
+          <Card sx={{ mb: 2 }}>
+            <CardHeader
+              avatar={
+                <Avatar sx={{ bgcolor: "primary.main", width: 32, height: 32 }}>
+                  <SmartToyIcon sx={{ fontSize: "1rem" }} />
+                </Avatar>
+              }
+              title="Agent Configuration"
+              titleTypographyProps={{ variant: "h6", sx: { fontSize: "0.95rem", fontWeight: 600 } }}
+              sx={{ pb: 1, pt: 2 }}
+            />
+            <CardContent sx={{ pt: 1 }}>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+                <TextField
+                  label="AI Agent Name"
+                  fullWidth
+                  size="small"
+                  value={agentName}
+                  onChange={(e) => setAgentName(e.target.value)}
+                  placeholder="Enter your AI agent name"
+                  sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
                 />
-                <CardContent>
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        fullWidth
-                        label="Agent Name"
-                        value={agentSettings.name}
-                        onChange={(e) => handleAgentSettingChange('name', e.target.value)}
-                        variant="outlined"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{ width: 60, height: 60, bgcolor: 'primary.main' }}>
-                          <PersonIcon />
-                        </Avatar>
-                        <Box>
-                          <Button variant="outlined" size="small" startIcon={<EditIcon />}>
-                            Change Avatar
-                          </Button>
-                          <Typography variant="caption" display="block" color="text.secondary">
-                            Upload a profile picture
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Default Greeting Message"
-                        value={agentSettings.greetingMessage}
-                        onChange={(e) => handleAgentSettingChange('greetingMessage', e.target.value)}
-                        multiline
-                        rows={3}
-                        variant="outlined"
-                        helperText="This message will be sent when a new conversation starts"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <FormControl fullWidth>
-                        <InputLabel>Tone of Voice</InputLabel>
-                        <Select
-                          value={agentSettings.toneOfVoice}
-                          label="Tone of Voice"
-                          onChange={(e) => handleAgentSettingChange('toneOfVoice', e.target.value)}
-                        >
-                          <MenuItem value="friendly">
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <span>😊</span> Friendly
-                            </Box>
-                          </MenuItem>
-                          <MenuItem value="formal">
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <span>🎩</span> Formal
-                            </Box>
-                          </MenuItem>
-                          <MenuItem value="neutral">
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <span>😐</span> Neutral
-                            </Box>
-                          </MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <FormControl fullWidth>
-                        <InputLabel>Response Length</InputLabel>
-                        <Select
-                          value={agentSettings.responseLength}
-                          label="Response Length"
-                          onChange={(e) => handleAgentSettingChange('responseLength', e.target.value)}
-                        >
-                          <MenuItem value="short">
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <span>📝</span> Short (1-2 sentences)
-                            </Box>
-                          </MenuItem>
-                          <MenuItem value="medium">
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <span>📄</span> Medium (2-4 sentences)
-                            </Box>
-                          </MenuItem>
-                          <MenuItem value="long">
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <span>📚</span> Long (4+ sentences)
-                            </Box>
-                          </MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
 
-              {/* 2. Behavior Controls */}
-              <Card sx={{ mb: 3 }}>
-                <CardHeader 
-                  title="Behavior Controls"
-                  avatar={<Avatar sx={{ bgcolor: 'secondary.main' }}><PsychologyIcon /></Avatar>}
+                <TextField
+                  label="System Prompt"
+                  fullWidth
+                  multiline
+                  rows={12}
+                  size="small"
+                  value={systemPrompt}
+                  onChange={(e) => setSystemPrompt(e.target.value)}
+                  placeholder="Enter the system prompt that defines your AI agent's behavior and personality..."
+                  helperText="This prompt defines how your AI agent responds to users. Be specific about tone, style, and behavior."
+                  sx={{
+                    "& .MuiInputBase-input": {
+                      fontSize: "0.875rem",
+                      fontFamily: "monospace",
+                      lineHeight: 1.5,
+                    },
+                    "& .MuiFormHelperText-root": { fontSize: "0.75rem" },
+                  }}
                 />
-                <CardContent>
-                  <Grid container spacing={3}>
-                    <Grid item xs={12}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={behaviorSettings.enableSmallTalk}
-                            onChange={(e) => handleBehaviorSettingChange('enableSmallTalk', e.target.checked)}
-                          />
-                        }
-                        label="Enable Small Talk"
-                      />
-                      <Typography variant="caption" display="block" color="text.secondary">
-                        Allow the agent to engage in casual conversation
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Typography variant="subtitle2" gutterBottom>
-                        Response Delay: {behaviorSettings.responseDelay}ms
-                      </Typography>
-                      <Slider
-                        value={behaviorSettings.responseDelay}
-                        onChange={(e, value) => handleBehaviorSettingChange('responseDelay', value)}
-                        min={500}
-                        max={5000}
-                        step={100}
-                        marks={[
-                          { value: 500, label: 'Fast' },
-                          { value: 1500, label: 'Normal' },
-                          { value: 3000, label: 'Slow' },
-                          { value: 5000, label: 'Very Slow' },
-                        ]}
-                        valueLabelDisplay="auto"
-                      />
-                      <Typography variant="caption" display="block" color="text.secondary">
-                        Simulate human typing speed for more natural conversations
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
 
-              {/* 3. Knowledge Base Selection */}
-              <Card sx={{ mb: 3 }}>
-                <CardHeader 
-                  title="Knowledge Base Selection"
-                  avatar={<Avatar sx={{ bgcolor: 'info.main' }}><BookIcon /></Avatar>}
-                />
-                <CardContent>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Select which knowledge bases this agent can access
-                  </Typography>
-                  <List>
-                    {knowledgeBases.map((kb, index) => (
-                      <React.Fragment key={kb.id}>
-                        <ListItem>
-                          <ListItemIcon>
-                            {kb.type === 'website' ? <SmartToyIcon /> : <AttachFileIcon />}
-                          </ListItemIcon>
-                          <ListItemText 
-                            primary={kb.name}
-                            secondary={kb.type === 'website' ? kb.url : kb.filename}
-                          />
-                          <ListItemSecondaryAction>
-                            <Switch
-                              checked={kb.active}
-                              onChange={() => toggleKnowledgeBase(kb.id)}
-                            />
-                          </ListItemSecondaryAction>
-                        </ListItem>
-                        {index < knowledgeBases.length - 1 && <Divider />}
-                      </React.Fragment>
-                    ))}
-                  </List>
-                  <Box sx={{ mt: 2 }}>
-                    <Button variant="outlined" startIcon={<AttachFileIcon />}>
-                      Add Knowledge Base
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
+                <Alert severity="info" sx={{ fontSize: "0.875rem" }}>
+                  The system prompt is used to guide your AI agent&apos;s responses. Changes will take effect immediately after saving.
+                </Alert>
+              </Box>
+            </CardContent>
+          </Card>
 
-              {/* 4. Channel Configuration */}
-              <Card sx={{ mb: 3 }}>
-                <CardHeader 
-                  title="Channel Configuration"
-                  avatar={<Avatar sx={{ bgcolor: 'success.main' }}><MessageIcon /></Avatar>}
-                />
-                <CardContent>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Select which channels this agent responds on
-                  </Typography>
-                  <Grid container spacing={2}>
-                    {channels.map((channel) => (
-                      <Grid item xs={12} sm={6} md={3} key={channel.id}>
-                        <Card 
-                          variant="outlined" 
-                          sx={{ 
-                            cursor: 'pointer',
-                            borderColor: channel.active ? 'primary.main' : 'grey.300',
-                            backgroundColor: channel.active ? 'primary.50' : 'transparent'
-                          }}
-                          onClick={() => toggleChannel(channel.id)}
-                        >
-                          <CardContent sx={{ textAlign: 'center', py: 2 }}>
-                            <Typography variant="h4" sx={{ mb: 1 }}>
-                              {channel.icon}
-                            </Typography>
-                            <Typography variant="subtitle2">
-                              {channel.name}
-                            </Typography>
-                            <Box sx={{ mt: 1 }}>
-                              {channel.active ? (
-                                <Chip label="Active" color="primary" size="small" />
-                              ) : (
-                                <Chip label="Inactive" variant="outlined" size="small" />
-                              )}
-                            </Box>
-                          </CardContent>
-                        </Card>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Right Column - Testing Panel */}
-            <Grid item xs={12} lg={4}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CardHeader 
-                  title="Testing Panel"
-                  avatar={<Avatar sx={{ bgcolor: 'warning.main' }}><ChatIcon /></Avatar>}
-                />
-                <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                  {/* Chat Messages */}
-                  <Paper 
-                    variant="outlined" 
-                    sx={{ 
-                      flexGrow: 1, 
-                      p: 2, 
-                      mb: 2, 
-                      minHeight: 400,
-                      maxHeight: 400,
-                      overflow: 'auto',
-                      backgroundColor: '#f8f9fa'
-                    }}
-                  >
-                    {testMessages.map((msg) => (
-                      <Box 
-                        key={msg.id} 
-                        sx={{ 
-                          mb: 2,
-                          display: 'flex',
-                          justifyContent: msg.type === 'user' ? 'flex-end' : 'flex-start'
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            maxWidth: '80%',
-                            p: 2,
-                            borderRadius: 2,
-                            backgroundColor: msg.type === 'user' ? 'primary.main' : 'grey.100',
-                            color: msg.type === 'user' ? 'white' : 'text.primary'
-                          }}
-                        >
-                          <Typography variant="body2">
-                            {msg.message}
-                          </Typography>
-                          <Typography 
-                            variant="caption" 
-                            sx={{ 
-                              display: 'block', 
-                              mt: 1,
-                              opacity: 0.7
-                            }}
-                          >
-                            {msg.timestamp.toLocaleTimeString()}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    ))}
-                  </Paper>
-
-                  {/* Message Input */}
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <TextField
-                      fullWidth
-                      placeholder="Type a test message..."
-                      value={newTestMessage}
-                      onChange={(e) => setNewTestMessage(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          sendTestMessage();
-                        }
-                      }}
-                      size="small"
-                    />
-                    <Button
-                      variant="contained"
-                      onClick={sendTestMessage}
-                      disabled={!newTestMessage.trim()}
-                      sx={{ minWidth: 'auto', px: 2 }}
-                    >
-                      <SendIcon />
-                    </Button>
-                  </Box>
-
-                  <Box sx={{ mt: 2 }}>
-                    <Alert severity="info" sx={{ mb: 2 }}>
-                      Test how your agent responds with the current settings
-                    </Alert>
-                    
-                    <Typography variant="subtitle2" gutterBottom>
-                      Current Settings Preview:
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      <Chip 
-                        label={`Tone: ${agentSettings.toneOfVoice}`} 
-                        size="small" 
-                        icon={<span>{getToneIcon(agentSettings.toneOfVoice)}</span>}
-                      />
-                      <Chip 
-                        label={`Length: ${agentSettings.responseLength}`} 
-                        size="small" 
-                        icon={<span>{getResponseLengthIcon(agentSettings.responseLength)}</span>}
-                      />
-                      <Chip 
-                        label={`Delay: ${behaviorSettings.responseDelay}ms`} 
-                        size="small" 
-                      />
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+          {/* Snackbar for notifications */}
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={6000}
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          >
+            <Alert
+              onClose={() => setSnackbar({ ...snackbar, open: false })}
+              severity={snackbar.severity}
+              sx={{ width: "100%" }}
+            >
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
         </Box>
       </Container>
     </PageContainer>

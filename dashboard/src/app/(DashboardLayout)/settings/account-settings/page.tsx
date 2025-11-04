@@ -7,19 +7,12 @@ import {
   TextField,
   Stack,
   Button,
-  Divider,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
   Alert,
   Box,
   Avatar,
   Chip,
   CircularProgress,
+  Snackbar,
 } from "@mui/material";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -28,20 +21,25 @@ import PageContainer from "@/app/(DashboardLayout)/components/container/PageCont
 export default function AccountSettingsPage() {
   const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
-  // States
-  const [fullName, setFullName] = useState("OpenSea Support");
-  const [companyName, setCompanyName] = useState("");
-  const [email, setEmail] = useState("pasetechnologies@gmail.com");
-  const [vat, setVat] = useState("");
-  const [address, setAddress] = useState("");
-  const [language, setLanguage] = useState("English");
-  const [availability, setAvailability] = useState("always");
-  const [timeFormat, setTimeFormat] = useState("12");
-
+  
+  // Profile states - initialized from session
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [passwordChanging, setPasswordChanging] = useState(false);
+  
+  // Password change states
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [accountStatus, setAccountStatus] = useState<"active" | "inactive" | "pending">("active");
+  
+  // Snackbar states
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   useEffect(() => {
     // Check authentication
@@ -50,32 +48,102 @@ export default function AccountSettingsPage() {
       return;
     }
 
-    // Set account status based on session
+    // Initialize form data from session
     if (session?.user) {
-      // In a real app, you'd fetch this from the backend
-      setAccountStatus("active");
+      setFullName(session.user.name || "");
+      setEmail(session.user.email || "");
     }
   }, [session, isPending, router]);
 
-  const handleSave = () => {
-    console.log({
-      fullName,
-      companyName,
-      email,
-      vat,
-      address,
-      language,
-      availability,
-      timeFormat,
-    });
+  const handleSave = async () => {
+    if (!session?.user) return;
+    
+    setSaving(true);
+    try {
+      // Update user profile using better-auth
+      const { error } = await authClient.updateUser({
+        name: fullName,
+      });
+
+      if (error) {
+        throw new Error(error.message || "Failed to update profile");
+      }
+
+      setSnackbar({
+        open: true,
+        message: "Profile updated successfully!",
+        severity: "success",
+      });
+    } catch (error: any) {
+      setSnackbar({
+        open: true,
+        message: error.message || "Failed to update profile",
+        severity: "error",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleChangePassword = () => {
-    if (newPassword !== confirmPassword) {
-      alert("New passwords do not match!");
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setSnackbar({
+        open: true,
+        message: "Please fill in all password fields",
+        severity: "error",
+      });
       return;
     }
-    console.log({ currentPassword, newPassword });
+
+    if (newPassword !== confirmPassword) {
+      setSnackbar({
+        open: true,
+        message: "New passwords do not match!",
+        severity: "error",
+      });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setSnackbar({
+        open: true,
+        message: "Password must be at least 8 characters long",
+        severity: "error",
+      });
+      return;
+    }
+
+    setPasswordChanging(true);
+    try {
+      // Use better-auth changePassword method
+      const { error } = await authClient.changePassword({
+        currentPassword,
+        newPassword,
+      });
+
+      if (error) {
+        throw new Error(error.message || "Failed to change password");
+      }
+
+      setSnackbar({
+        open: true,
+        message: "Password changed successfully!",
+        severity: "success",
+      });
+
+      // Clear password fields
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      setSnackbar({
+        open: true,
+        message: error.message || "Failed to change password",
+        severity: "error",
+      });
+    } finally {
+      setPasswordChanging(false);
+    }
   };
 
   // Show loading state
@@ -115,254 +183,170 @@ export default function AccountSettingsPage() {
           Account Settings
         </Typography>
 
-        {/* Account Details and Status Section */}
+        {/* Account Details Section */}
         <Card sx={{ width: "100%" }}>
           <CardContent>
             <Stack spacing={3}>
-              <Typography variant="h6">Account Details</Typography>
+              <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600 }}>
+                Account Details
+              </Typography>
               
               {/* User Avatar and Info */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 2, pb: 2, borderBottom: 1, borderColor: "divider" }}>
                 <Avatar
                   sx={{
-                    width: 64,
-                    height: 64,
+                    width: 56,
+                    height: 56,
                     bgcolor: "primary.main",
-                    fontSize: "24px",
+                    fontSize: "20px",
                   }}
                 >
                   {session?.user?.name?.charAt(0).toUpperCase() || session?.user?.email?.charAt(0).toUpperCase() || "U"}
                 </Avatar>
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6">{session?.user?.name || "User"}</Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="h6" sx={{ fontSize: "1rem", fontWeight: 600 }}>
+                    {session?.user?.name || "User"}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
                     {session?.user?.email || "No email"}
                   </Typography>
                 </Box>
                 <Chip
-                  label={accountStatus.charAt(0).toUpperCase() + accountStatus.slice(1)}
-                  color={accountStatus === "active" ? "success" : accountStatus === "pending" ? "warning" : "default"}
-                  sx={{ textTransform: "capitalize" }}
+                  label="Active"
+                  color="success"
+                  size="small"
+                  sx={{ fontSize: "0.75rem" }}
                 />
               </Box>
 
-              {/* Account Status Info */}
+              {/* User ID Info */}
               <Box>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                  Account Status
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
+                  User ID: {session?.user?.id || "N/A"}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {accountStatus === "active" 
-                    ? "Your account is active and fully functional." 
-                    : accountStatus === "pending"
-                    ? "Your account is pending verification."
-                    : "Your account is currently inactive."}
-                </Typography>
-                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                  <Chip 
-                    label={`User ID: ${session?.user?.id?.substring(0, 8) || "N/A"}`}
-                    size="small"
-                    variant="outlined"
-                  />
-                  <Chip 
-                    label="Role: User"
-                    size="small"
-                    variant="outlined"
-                  />
-                </Box>
               </Box>
             </Stack>
           </CardContent>
         </Card>
 
-      {/* Profile Info */}
-      <Card
-       sx={{
-    p: 2,
-      // makes it responsive within grid
-  }}
-      >
+      {/* Profile Information */}
+      <Card sx={{ width: "100%" }}>
         <CardContent>
-          <Stack spacing={3}>
-            <Typography variant="h6">Profile Information</Typography>
+          <Stack spacing={2.5}>
+            <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600 }}>
+              Profile Information
+            </Typography>
 
             <TextField
-              label="Full Name (Will be displayed to your visitors)"
+              label="Full Name"
               fullWidth
-              value={fullName || session?.user?.name || ""}
+              size="small"
+              value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-            />
-
-            <TextField
-              label="Company Name"
-              fullWidth
-              placeholder="Enter your company name"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
+              sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
             />
 
             <TextField
               label="Email"
               fullWidth
-              value={email || session?.user?.email || ""}
-              onChange={(e) => setEmail(e.target.value)}
+              size="small"
+              value={email}
               disabled
               helperText="Email cannot be changed"
+              sx={{ 
+                "& .MuiInputBase-input": { fontSize: "0.875rem" },
+                "& .MuiFormHelperText-root": { fontSize: "0.75rem" }
+              }}
             />
-
-            <TextField
-              label="VAT"
-              fullWidth
-              placeholder="Enter your VAT"
-              value={vat}
-              onChange={(e) => setVat(e.target.value)}
-            />
-
-            <TextField
-              label="Address"
-              fullWidth
-              placeholder="Enter your address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-
-            <FormControl fullWidth>
-              <InputLabel>Preferred Chat Language</InputLabel>
-              <Select
-                value={language}
-                label="Preferred Chat Language"
-                onChange={(e) => setLanguage(e.target.value)}
-              >
-                <MenuItem value="English">English</MenuItem>
-                <MenuItem value="Spanish">Spanish</MenuItem>
-                <MenuItem value="French">French</MenuItem>
-              </Select>
-            </FormControl>
-            <Alert severity="info">
-              Changing the preferred chat language affects the whole team.
-            </Alert>
-
-            <FormControl>
-              <Typography variant="subtitle2">Availability</Typography>
-              <RadioGroup
-                value={availability}
-                onChange={(e) => setAvailability(e.target.value)}
-              >
-                <FormControlLabel
-                  value="always"
-                  control={<Radio />}
-                  label="Always online"
-                />
-                <FormControlLabel
-                  value="custom"
-                  control={<Radio />}
-                  label="Set custom availability"
-                />
-              </RadioGroup>
-            </FormControl>
-
-            <FormControl>
-              <Typography variant="subtitle2">
-                Format for displaying hours in timestamp
-              </Typography>
-              <RadioGroup
-                value={timeFormat}
-                onChange={(e) => setTimeFormat(e.target.value)}
-              >
-                <FormControlLabel
-                  value="12"
-                  control={<Radio />}
-                  label="12 hour format"
-                />
-                <FormControlLabel
-                  value="24"
-                  control={<Radio />}
-                  label="24 hour format"
-                />
-              </RadioGroup>
-            </FormControl>
-            <Alert severity="info">
-              Your team and visitors will view the time in this format. Only the
-              account owner can update the timestamp format.
-            </Alert>
 
             <Button
               variant="contained"
-              size="large"
+              size="small"
               onClick={handleSave}
-              sx={{ alignSelf: "flex-start" }}
+              disabled={saving}
+              sx={{ 
+                alignSelf: "flex-start",
+                fontSize: "0.875rem",
+                mt: 1
+              }}
             >
-              Save Changes
+              {saving ? <CircularProgress size={20} /> : "Save Changes"}
             </Button>
           </Stack>
         </CardContent>
       </Card>
 
       {/* Change Password */}
-      <Card
-      sx={{
-        width: "100%",
-      }}
-      >
+      <Card sx={{ width: "100%" }}>
         <CardContent>
-          <Stack spacing={2}>
-            <Typography variant="h6">Change Password</Typography>
+          <Stack spacing={2.5}>
+            <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600 }}>
+              Change Password
+            </Typography>
             <TextField
               type="password"
               label="Current Password"
               fullWidth
+              size="small"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
+              sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
             />
             <TextField
               type="password"
               label="New Password"
               fullWidth
+              size="small"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
+              helperText="Password must be at least 8 characters long"
+              sx={{ 
+                "& .MuiInputBase-input": { fontSize: "0.875rem" },
+                "& .MuiFormHelperText-root": { fontSize: "0.75rem" }
+              }}
             />
             <TextField
               type="password"
               label="Confirm New Password"
               fullWidth
+              size="small"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
             />
             <Button
               variant="contained"
-              color="secondary"
-              size="large"
+              color="primary"
+              size="small"
               onClick={handleChangePassword}
-              sx={{ alignSelf: "flex-start", mt: 1 }}
+              disabled={passwordChanging}
+              sx={{ 
+                alignSelf: "flex-start",
+                fontSize: "0.875rem",
+                mt: 1
+              }}
             >
-              Update Password
+              {passwordChanging ? <CircularProgress size={20} /> : "Update Password"}
             </Button>
           </Stack>
         </CardContent>
       </Card>
 
-      {/* Delete Account */}
-      <Card
-      sx={{
-        width: "100%",
-      }}
-      
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <CardContent>
-          <Stack spacing={2}>
-            <Typography variant="h6" color="error">
-              Delete Account
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              Deleting your account will permanently remove all data and cannot
-              be undone.
-            </Typography>
-            <Button variant="contained" color="error" sx={{ alignSelf: "flex-start" }}>
-              Delete Account
-            </Button>
-          </Stack>
-        </CardContent>
-      </Card>
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
       </Stack>
     </PageContainer>
   );

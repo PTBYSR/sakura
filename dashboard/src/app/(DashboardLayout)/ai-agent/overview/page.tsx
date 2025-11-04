@@ -53,14 +53,14 @@ const AIAgentOverviewPage = () => {
   return (
     <PageContainer title="AI Agent Overview" description="Overview of AI agent performance and activity">
       <Container maxWidth="xl">
-        <Box sx={{ py: 4 }}>
+        <Box sx={{ py: 2 }}>
           {/* Header */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Box>
-              <Typography variant="h4" gutterBottom>
+              <Typography variant="h5" sx={{ fontWeight: 600, fontSize: "1.25rem", mb: 0.5 }}>
                 AI Agent Overview
               </Typography>
-              <Typography variant="body1" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
                 Current Agent: {agent.name} ({agent.type})
               </Typography>
             </Box>
@@ -68,18 +68,19 @@ const AIAgentOverviewPage = () => {
               label="Online" 
               color="success" 
               variant="outlined"
-              icon={<CheckCircleIcon />}
+              size="small"
+              icon={<CheckCircleIcon sx={{ fontSize: "1rem" }} />}
             />
           </Box>
 
           {/* Stats Cards */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 4 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
             <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
               <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <MessageIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
-                  <Typography variant="h6">{stats.totalConversations.toLocaleString()}</Typography>
-                  <Typography variant="body2" color="text.secondary">
+                <CardContent sx={{ textAlign: 'center', p: 2 }}>
+                  <MessageIcon color="primary" sx={{ fontSize: 32, mb: 0.75 }} />
+                  <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600, mb: 0.5 }}>{stats.totalConversations.toLocaleString()}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
                     Total Conversations
                   </Typography>
                 </CardContent>
@@ -87,10 +88,10 @@ const AIAgentOverviewPage = () => {
             </Box>
             <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
               <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <PersonIcon color="success" sx={{ fontSize: 40, mb: 1 }} />
-                  <Typography variant="h6">{stats.activeConversations}</Typography>
-                  <Typography variant="body2" color="text.secondary">
+                <CardContent sx={{ textAlign: 'center', p: 2 }}>
+                  <PersonIcon color="success" sx={{ fontSize: 32, mb: 0.75 }} />
+                  <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600, mb: 0.5 }}>{stats.activeConversations}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
                     Active Conversations
                   </Typography>
                 </CardContent>
@@ -98,10 +99,10 @@ const AIAgentOverviewPage = () => {
             </Box>
             <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
               <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <CheckCircleIcon color="info" sx={{ fontSize: 40, mb: 1 }} />
-                  <Typography variant="h6">{stats.resolvedToday}</Typography>
-                  <Typography variant="body2" color="text.secondary">
+                <CardContent sx={{ textAlign: 'center', p: 2 }}>
+                  <CheckCircleIcon color="info" sx={{ fontSize: 32, mb: 0.75 }} />
+                  <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600, mb: 0.5 }}>{stats.resolvedToday}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
                     Resolved Today
                   </Typography>
                 </CardContent>
@@ -109,10 +110,10 @@ const AIAgentOverviewPage = () => {
             </Box>
             <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
               <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <SpeedIcon color="warning" sx={{ fontSize: 40, mb: 1 }} />
-                  <Typography variant="h6">{stats.averageResponseTime}</Typography>
-                  <Typography variant="body2" color="text.secondary">
+                <CardContent sx={{ textAlign: 'center', p: 2 }}>
+                  <SpeedIcon color="warning" sx={{ fontSize: 32, mb: 0.75 }} />
+                  <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600, mb: 0.5 }}>{stats.averageResponseTime}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
                     Avg Response Time
                   </Typography>
                 </CardContent>
@@ -121,41 +122,45 @@ const AIAgentOverviewPage = () => {
           </Box>
 
           {/* Performance Metrics */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 4 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
             <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' }, minWidth: 0 }}>
               <Card>
                 <CardHeader 
                   title="Performance Metrics"
-                  avatar={<Avatar sx={{ bgcolor: 'primary.main' }}><AssessmentIcon /></Avatar>}
+                  titleTypographyProps={{ variant: "h6", sx: { fontSize: "0.95rem", fontWeight: 600 } }}
+                  avatar={<Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}><AssessmentIcon sx={{ fontSize: "1rem" }} /></Avatar>}
+                  sx={{ pb: 1, pt: 2 }}
                 />
-                <CardContent>
-                  <Box sx={{ mb: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="body2">Customer Satisfaction</Typography>
-                      <Typography variant="body2">{stats.satisfactionRating}/5.0</Typography>
+                <CardContent sx={{ pt: 1 }}>
+                  <Box sx={{ mb: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.75 }}>
+                      <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>Customer Satisfaction</Typography>
+                      <Typography variant="body2" sx={{ fontSize: "0.8rem", fontWeight: 500 }}>{stats.satisfactionRating}/5.0</Typography>
                     </Box>
                     <LinearProgress 
                       variant="determinate" 
                       value={(stats.satisfactionRating / 5) * 100} 
                       color="success"
+                      sx={{ height: 6 }}
                     />
                   </Box>
                   
-                  <Box sx={{ mb: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="body2">System Uptime</Typography>
-                      <Typography variant="body2">{stats.uptime}%</Typography>
+                  <Box sx={{ mb: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.75 }}>
+                      <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>System Uptime</Typography>
+                      <Typography variant="body2" sx={{ fontSize: "0.8rem", fontWeight: 500 }}>{stats.uptime}%</Typography>
                     </Box>
                     <LinearProgress 
                       variant="determinate" 
                       value={stats.uptime} 
                       color="success"
+                      sx={{ height: 6 }}
                     />
                   </Box>
 
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <StarIcon color="warning" />
-                    <Typography variant="body2">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    <StarIcon color="warning" sx={{ fontSize: "1rem" }} />
+                    <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
                       Excellent performance rating
                     </Typography>
                   </Box>
@@ -167,21 +172,23 @@ const AIAgentOverviewPage = () => {
               <Card>
                 <CardHeader 
                   title="Recent Activity"
-                  avatar={<Avatar sx={{ bgcolor: 'secondary.main' }}><ScheduleIcon /></Avatar>}
+                  titleTypographyProps={{ variant: "h6", sx: { fontSize: "0.95rem", fontWeight: 600 } }}
+                  avatar={<Avatar sx={{ bgcolor: 'secondary.main', width: 32, height: 32 }}><ScheduleIcon sx={{ fontSize: "1rem" }} /></Avatar>}
+                  sx={{ pb: 1, pt: 2 }}
                 />
-                <CardContent>
-                  <List dense>
+                <CardContent sx={{ pt: 1 }}>
+                  <List dense sx={{ py: 0 }}>
                     {recentActivity.map((activity, index) => (
                       <React.Fragment key={activity.id}>
-                        <ListItem sx={{ px: 0 }}>
-                          <ListItemIcon>
-                            {activity.type === 'success' && <CheckCircleIcon color="success" fontSize="small" />}
-                            {activity.type === 'info' && <MessageIcon color="info" fontSize="small" />}
-                            {activity.type === 'warning' && <ScheduleIcon color="warning" fontSize="small" />}
+                        <ListItem sx={{ px: 0, py: 0.75 }}>
+                          <ListItemIcon sx={{ minWidth: 32 }}>
+                            {activity.type === 'success' && <CheckCircleIcon color="success" sx={{ fontSize: "1rem" }} />}
+                            {activity.type === 'info' && <MessageIcon color="info" sx={{ fontSize: "1rem" }} />}
+                            {activity.type === 'warning' && <ScheduleIcon color="warning" sx={{ fontSize: "1rem" }} />}
                           </ListItemIcon>
                           <ListItemText 
-                            primary={activity.action}
-                            secondary={activity.time}
+                            primary={<Typography variant="body2" sx={{ fontSize: "0.85rem" }}>{activity.action}</Typography>}
+                            secondary={<Typography variant="caption" sx={{ fontSize: "0.75rem" }}>{activity.time}</Typography>}
                           />
                         </ListItem>
                         {index < recentActivity.length - 1 && <Divider />}
@@ -197,39 +204,41 @@ const AIAgentOverviewPage = () => {
           <Card>
             <CardHeader 
               title="Agent Information"
-              avatar={<Avatar sx={{ bgcolor: 'info.main' }}><TrendingUpIcon /></Avatar>}
+              titleTypographyProps={{ variant: "h6", sx: { fontSize: "0.95rem", fontWeight: 600 } }}
+              avatar={<Avatar sx={{ bgcolor: 'info.main', width: 32, height: 32 }}><TrendingUpIcon sx={{ fontSize: "1rem" }} /></Avatar>}
+              sx={{ pb: 1, pt: 2 }}
             />
             <CardContent>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                 <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' }, minWidth: 0 }}>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant="h6" sx={{ fontSize: "1rem", fontWeight: 600, mb: 0.75 }}>
                     {agent.name}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.85rem", mb: 1.5 }}>
                     {agent.description}
                   </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    <Chip label={agent.type} color="primary" size="small" />
-                    <Chip label="Active" color="success" size="small" />
-                    <Chip label="Trained" color="info" size="small" />
+                  <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+                    <Chip label={agent.type} color="primary" size="small" sx={{ fontSize: "0.75rem", height: 24 }} />
+                    <Chip label="Active" color="success" size="small" sx={{ fontSize: "0.75rem", height: 24 }} />
+                    <Chip label="Trained" color="info" size="small" sx={{ fontSize: "0.75rem", height: 24 }} />
                   </Box>
                 </Box>
                 <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' }, minWidth: 0 }}>
-                  <Typography variant="subtitle2" gutterBottom>
+                  <Typography variant="subtitle2" sx={{ fontSize: "0.875rem", fontWeight: 600, mb: 1 }}>
                     System Status
                   </Typography>
-                  <List dense>
-                    <ListItem sx={{ px: 0 }}>
-                      <ListItemIcon><CheckCircleIcon color="success" fontSize="small" /></ListItemIcon>
-                      <ListItemText primary="AI Engine" secondary="Running" />
+                  <List dense sx={{ py: 0 }}>
+                    <ListItem sx={{ px: 0, py: 0.5 }}>
+                      <ListItemIcon sx={{ minWidth: 32 }}><CheckCircleIcon color="success" sx={{ fontSize: "1rem" }} /></ListItemIcon>
+                      <ListItemText primary={<Typography variant="body2" sx={{ fontSize: "0.85rem" }}>AI Engine</Typography>} secondary={<Typography variant="caption" sx={{ fontSize: "0.75rem" }}>Running</Typography>} />
                     </ListItem>
-                    <ListItem sx={{ px: 0 }}>
-                      <ListItemIcon><CheckCircleIcon color="success" fontSize="small" /></ListItemIcon>
-                      <ListItemText primary="Knowledge Base" secondary="Connected" />
+                    <ListItem sx={{ px: 0, py: 0.5 }}>
+                      <ListItemIcon sx={{ minWidth: 32 }}><CheckCircleIcon color="success" sx={{ fontSize: "1rem" }} /></ListItemIcon>
+                      <ListItemText primary={<Typography variant="body2" sx={{ fontSize: "0.85rem" }}>Knowledge Base</Typography>} secondary={<Typography variant="caption" sx={{ fontSize: "0.75rem" }}>Connected</Typography>} />
                     </ListItem>
-                    <ListItem sx={{ px: 0 }}>
-                      <ListItemIcon><CheckCircleIcon color="success" fontSize="small" /></ListItemIcon>
-                      <ListItemText primary="Integrations" secondary="Active" />
+                    <ListItem sx={{ px: 0, py: 0.5 }}>
+                      <ListItemIcon sx={{ minWidth: 32 }}><CheckCircleIcon color="success" sx={{ fontSize: "1rem" }} /></ListItemIcon>
+                      <ListItemText primary={<Typography variant="body2" sx={{ fontSize: "0.85rem" }}>Integrations</Typography>} secondary={<Typography variant="caption" sx={{ fontSize: "0.75rem" }}>Active</Typography>} />
                     </ListItem>
                   </List>
                 </Box>

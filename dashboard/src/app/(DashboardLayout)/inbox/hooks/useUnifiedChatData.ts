@@ -682,10 +682,15 @@ export const useUnifiedChatData = ({ inboxType, userEmail, userId, section }: Us
                       messages: (chat.messages || []).map((msg: any, index: number) => ({
                         id: msg._id || msg.id || `msg-${index}`,
                         content: msg.text || msg.content || "",
-                        sender: msg.role === "assistant" || msg.role === "agent" ? "Agent" : user.name || "User",
+                        sender: msg.role === "assistant" 
+                          ? "AI Agent" 
+                          : msg.role === "agent" 
+                          ? "Agent" 
+                          : user.name || "User",
                         timestamp: msg.timestamp || new Date().toISOString(),
                         isRead: msg.read !== undefined ? msg.read : true,
                         avatar: msg.role === "assistant" || msg.role === "agent" ? "A" : user.name?.charAt(0).toUpperCase() || "U",
+                        role: msg.role, // Preserve role for UI differentiation
                       })),
                       contactInfo: {
                         name: user.name || "Unknown User",
@@ -834,6 +839,13 @@ export const useUnifiedChatData = ({ inboxType, userEmail, userId, section }: Us
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`❌ Failed to send message to backend: ${response.status} - ${errorText}`);
+        
+        // Handle 404 specifically - chat might not exist in database
+        if (response.status === 404) {
+          console.warn(`⚠️ Chat ${chatId} not found in database. This chat may have been deleted or never properly created.`);
+          // Could refresh the chat list here to sync with backend
+        }
+        
         // Optionally show error to user or revert the optimistic update
         throw new Error(`Failed to send message: ${response.status}`);
       }

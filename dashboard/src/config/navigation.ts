@@ -62,7 +62,7 @@ export const navigationConfig: NavigationModule[] = [
         title: 'My Inbox',
         href: '/inbox/my-inbox',
         icon: IconMessageCircle,
-        collapsible: true,
+        collapsible: false,
         children: [
           {
             id: 'unified-inbox',
@@ -95,7 +95,7 @@ export const navigationConfig: NavigationModule[] = [
         title: 'Agent Inbox',
         href: '/inbox/agent-inbox',
         icon: IconRobot,
-        collapsible: true,
+        collapsible: false,
         children: [
           {
             id: 'active-chats',
@@ -214,7 +214,7 @@ export const navigationConfig: NavigationModule[] = [
     title: 'Integrations',
     href: '/integrations',
     icon: IconPlug,
-    tooltip: 'Third Party Integrations',
+    tooltip: 'Integrations',
     children: [
       {
         id: 'contact-channels',
@@ -223,9 +223,9 @@ export const navigationConfig: NavigationModule[] = [
         icon: IconMessageCircle,
       },
       {
-        id: 'crms',
-        title: 'CRMs',
-        href: '/integrations/crms',
+        id: 'business-integrations',
+        title: 'Business Integrations',
+        href: '/integrations/business-integrations',
         icon: IconTrendingUp,
       },
     ],
