@@ -180,7 +180,7 @@ const AIAgentSettingsPage = () => {
                 AI Agent Customization
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                Configure your AI agent's personality, behavior, and capabilities
+                Configure your AI agent&apos;s personality, behavior, and capabilities
               </Typography>
             </Box>
             <Button 

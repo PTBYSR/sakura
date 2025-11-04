@@ -245,7 +245,7 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
                 </Typography>
                 {process.env.NODE_ENV === "development" && (
                   <Typography sx={{ color: "#666", fontSize: "0.75rem", mt: 2 }}>
-                    Debug: Section="{section}", Chats={chats.length}, Loading={loading ? "Yes" : "No"}, Error={error || "None"}
+                    Debug: Section=&quot;{section}&quot;, Chats={chats.length}, Loading={loading ? "Yes" : "No"}, Error={error || "None"}
                   </Typography>
                 )}
               </Box>

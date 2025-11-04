@@ -161,7 +161,7 @@ const ReportsOverviewPage = () => {
                 Reports & Analytics
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                Comprehensive overview of Sakura's performance and usage metrics
+                Comprehensive overview of Sakura&apos;s performance and usage metrics
               </Typography>
             </Box>
             <FormControl size="small" sx={{ minWidth: 120 }}>

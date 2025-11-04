@@ -196,7 +196,7 @@ const ContactChannelsPage = () => {
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Today's Activity
+                      Today&apos;s Activity
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 2 }}>
                       <Typography variant="body2">
