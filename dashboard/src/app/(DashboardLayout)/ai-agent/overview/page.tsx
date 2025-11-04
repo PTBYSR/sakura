@@ -121,8 +121,8 @@ const AIAgentOverviewPage = () => {
           </Box>
 
           {/* Performance Metrics */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} md={6}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 4 }}>
+            <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' }, minWidth: 0 }}>
               <Card>
                 <CardHeader 
                   title="Performance Metrics"
@@ -161,9 +161,9 @@ const AIAgentOverviewPage = () => {
                   </Box>
                 </CardContent>
               </Card>
-            </Grid>
+            </Box>
 
-            <Grid item xs={12} md={6}>
+            <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' }, minWidth: 0 }}>
               <Card>
                 <CardHeader 
                   title="Recent Activity"
@@ -190,8 +190,8 @@ const AIAgentOverviewPage = () => {
                   </List>
                 </CardContent>
               </Card>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           {/* Agent Information */}
           <Card>
@@ -200,8 +200,8 @@ const AIAgentOverviewPage = () => {
               avatar={<Avatar sx={{ bgcolor: 'info.main' }}><TrendingUpIcon /></Avatar>}
             />
             <CardContent>
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' }, minWidth: 0 }}>
                   <Typography variant="h6" gutterBottom>
                     {agent.name}
                   </Typography>
@@ -213,8 +213,8 @@ const AIAgentOverviewPage = () => {
                     <Chip label="Active" color="success" size="small" />
                     <Chip label="Trained" color="info" size="small" />
                   </Box>
-                </Grid>
-                <Grid item xs={12} md={6}>
+                </Box>
+                <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' }, minWidth: 0 }}>
                   <Typography variant="subtitle2" gutterBottom>
                     System Status
                   </Typography>
@@ -232,8 +232,8 @@ const AIAgentOverviewPage = () => {
                       <ListItemText primary="Integrations" secondary="Active" />
                     </ListItem>
                   </List>
-                </Grid>
-              </Grid>
+                </Box>
+              </Box>
             </CardContent>
           </Card>
         </Box>
