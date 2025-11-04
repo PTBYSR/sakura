@@ -4,7 +4,6 @@ import {
   Box,
   Typography,
   Container,
-  Grid,
   Card,
   CardContent,
   CardHeader,
@@ -74,8 +73,8 @@ const AIAgentOverviewPage = () => {
           </Box>
 
           {/* Stats Cards */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 4 }}>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
               <Card>
                 <CardContent sx={{ textAlign: 'center' }}>
                   <MessageIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
@@ -85,8 +84,8 @@ const AIAgentOverviewPage = () => {
                   </Typography>
                 </CardContent>
               </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
               <Card>
                 <CardContent sx={{ textAlign: 'center' }}>
                   <PersonIcon color="success" sx={{ fontSize: 40, mb: 1 }} />
@@ -96,8 +95,8 @@ const AIAgentOverviewPage = () => {
                   </Typography>
                 </CardContent>
               </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
               <Card>
                 <CardContent sx={{ textAlign: 'center' }}>
                   <CheckCircleIcon color="info" sx={{ fontSize: 40, mb: 1 }} />
@@ -107,8 +106,8 @@ const AIAgentOverviewPage = () => {
                   </Typography>
                 </CardContent>
               </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
               <Card>
                 <CardContent sx={{ textAlign: 'center' }}>
                   <SpeedIcon color="warning" sx={{ fontSize: 40, mb: 1 }} />
@@ -118,8 +117,8 @@ const AIAgentOverviewPage = () => {
                   </Typography>
                 </CardContent>
               </Card>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           {/* Performance Metrics */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
