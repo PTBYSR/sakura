@@ -4,7 +4,7 @@ import {
   Box,
   Typography,
   Container,
-  Grid,
+  Grid2 as Grid,
   Card,
   CardContent,
   CardHeader,
@@ -75,7 +75,7 @@ const AIAgentOverviewPage = () => {
 
           {/* Stats Cards */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid xs={12} sm={6} md={3}>
               <Card>
                 <CardContent sx={{ textAlign: 'center' }}>
                   <MessageIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
@@ -86,7 +86,7 @@ const AIAgentOverviewPage = () => {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid xs={12} sm={6} md={3}>
               <Card>
                 <CardContent sx={{ textAlign: 'center' }}>
                   <PersonIcon color="success" sx={{ fontSize: 40, mb: 1 }} />
@@ -97,7 +97,7 @@ const AIAgentOverviewPage = () => {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid xs={12} sm={6} md={3}>
               <Card>
                 <CardContent sx={{ textAlign: 'center' }}>
                   <CheckCircleIcon color="info" sx={{ fontSize: 40, mb: 1 }} />
@@ -108,7 +108,7 @@ const AIAgentOverviewPage = () => {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid xs={12} sm={6} md={3}>
               <Card>
                 <CardContent sx={{ textAlign: 'center' }}>
                   <SpeedIcon color="warning" sx={{ fontSize: 40, mb: 1 }} />
