@@ -4,7 +4,6 @@ import {
   Box,
   Typography,
   Container,
-  Grid,
   Card,
   CardContent,
   CardHeader,
@@ -116,8 +115,8 @@ const AIAgentPerformancePage = () => {
           </Box>
 
           {/* Key Performance Indicators */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 4 }}>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
               <Card>
                 <CardContent sx={{ textAlign: 'center' }}>
                   <SpeedIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
@@ -130,8 +129,8 @@ const AIAgentPerformancePage = () => {
                   </Typography>
                 </CardContent>
               </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
               <Card>
                 <CardContent sx={{ textAlign: 'center' }}>
                   <CheckCircleIcon color="success" sx={{ fontSize: 40, mb: 1 }} />
@@ -144,8 +143,8 @@ const AIAgentPerformancePage = () => {
                   </Typography>
                 </CardContent>
               </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
               <Card>
                 <CardContent sx={{ textAlign: 'center' }}>
                   <StarIcon color="warning" sx={{ fontSize: 40, mb: 1 }} />
@@ -158,8 +157,8 @@ const AIAgentPerformancePage = () => {
                   </Typography>
                 </CardContent>
               </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            </Box>
+            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
               <Card>
                 <CardContent sx={{ textAlign: 'center' }}>
                   <TrendingUpIcon color="info" sx={{ fontSize: 40, mb: 1 }} />
@@ -172,8 +171,8 @@ const AIAgentPerformancePage = () => {
                   </Typography>
                 </CardContent>
               </Card>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           {/* Performance Tabs */}
           <Card sx={{ mb: 4 }}>
@@ -265,8 +264,8 @@ const AIAgentPerformancePage = () => {
                   <Typography variant="h6" gutterBottom>
                     Response Time Analysis
                   </Typography>
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={4}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                    <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(33.333% - 16px)' }, minWidth: 0 }}>
                       <Card variant="outlined">
                         <CardContent>
                           <Typography variant="subtitle2" gutterBottom>
@@ -280,8 +279,8 @@ const AIAgentPerformancePage = () => {
                           </Typography>
                         </CardContent>
                       </Card>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
+                    </Box>
+                    <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(33.333% - 16px)' }, minWidth: 0 }}>
                       <Card variant="outlined">
                         <CardContent>
                           <Typography variant="subtitle2" gutterBottom>
@@ -295,8 +294,8 @@ const AIAgentPerformancePage = () => {
                           </Typography>
                         </CardContent>
                       </Card>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
+                    </Box>
+                    <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(33.333% - 16px)' }, minWidth: 0 }}>
                       <Card variant="outlined">
                         <CardContent>
                           <Typography variant="subtitle2" gutterBottom>
@@ -310,8 +309,8 @@ const AIAgentPerformancePage = () => {
                           </Typography>
                         </CardContent>
                       </Card>
-                    </Grid>
-                  </Grid>
+                    </Box>
+                  </Box>
                 </Box>
               )}
 
@@ -320,8 +319,8 @@ const AIAgentPerformancePage = () => {
                   <Typography variant="h6" gutterBottom>
                     Quality Metrics
                   </Typography>
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                    <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' }, minWidth: 0 }}>
                       <Card variant="outlined">
                         <CardHeader 
                           title="Accuracy Metrics"
@@ -347,8 +346,8 @@ const AIAgentPerformancePage = () => {
                           </Typography>
                         </CardContent>
                       </Card>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
+                    </Box>
+                    <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' }, minWidth: 0 }}>
                       <Card variant="outlined">
                         <CardHeader 
                           title="Customer Satisfaction"
@@ -374,8 +373,8 @@ const AIAgentPerformancePage = () => {
                           </Typography>
                         </CardContent>
                       </Card>
-                    </Grid>
-                  </Grid>
+                    </Box>
+                  </Box>
                 </Box>
               )}
             </Box>
