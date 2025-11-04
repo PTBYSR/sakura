@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -31,6 +31,12 @@ import { useRouter } from "next/navigation";
 
 const InboxPage = () => {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [stats] = useState({
     totalChats: 24,
     activeChats: 8,
@@ -85,6 +91,19 @@ const InboxPage = () => {
       href: "/inbox/agent-inbox",
     },
   ]);
+
+  // Prevent hydration mismatch by only rendering on client
+  if (!mounted) {
+    return (
+      <PageContainer title="Inbox" description="Manage your conversations">
+        <Container maxWidth="lg">
+          <Box sx={{ py: 4, display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
+            <Typography>Loading...</Typography>
+          </Box>
+        </Container>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer title="Inbox" description="Manage your conversations">
@@ -196,10 +215,18 @@ const InboxPage = () => {
                         }}
                       >
                         <Box sx={{ textAlign: "left" }}>
-                          <Typography variant="body1" sx={{ fontWeight: "medium" }}>
+                          <Typography 
+                            variant="body1" 
+                            component="div" 
+                            sx={{ fontWeight: "medium" }}
+                          >
                             {action.title}
                           </Typography>
-                          <Typography variant="body2" sx={{ color: "#ccc" }}>
+                          <Typography 
+                            variant="body2" 
+                            component="div" 
+                            sx={{ color: "#ccc" }}
+                          >
                             {action.description}
                           </Typography>
                         </Box>
@@ -241,7 +268,11 @@ const InboxPage = () => {
                           <ListItemText
                             primary={
                               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                <Typography variant="body1" sx={{ color: "white" }}>
+                                <Typography 
+                                  variant="body1" 
+                                  component="span" 
+                                  sx={{ color: "white" }}
+                                >
                                   {chat.name}
                                 </Typography>
                                 <Chip
@@ -255,8 +286,13 @@ const InboxPage = () => {
                                 />
                               </Box>
                             }
+                            secondaryTypographyProps={{ component: "div" }}
                             secondary={
-                              <Typography variant="body2" sx={{ color: "#ccc" }}>
+                              <Typography 
+                                variant="body2" 
+                                component="div" 
+                                sx={{ color: "#ccc" }}
+                              >
                                 {chat.lastMessage}
                               </Typography>
                             }

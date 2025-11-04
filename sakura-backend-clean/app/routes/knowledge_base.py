@@ -2,7 +2,8 @@
 Knowledge base API routes for managing websites and documents.
 """
 import asyncio
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
+import logging
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query, Form
 from typing import List, Optional, Union
 from pydantic import BaseModel, HttpUrl, Field
 from datetime import datetime
@@ -12,9 +13,16 @@ from bson import ObjectId
 from app.services.website_crawler_service import get_website_crawler_service, WebsiteCrawlerService
 from app.services.vector_store_service import get_vector_store_service, VectorStoreService
 from app.services.faq_embedding_service import get_faq_embedding_service, FAQEmbeddingService
+from app.services.file_processing_service import get_file_processing_service, FileProcessingService
 from app.core.database import get_database
 from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
+from fastapi import UploadFile, File as FastAPIFile
+import tempfile
+import uuid
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(prefix="/api/knowledge-base", tags=["Knowledge Base"])
@@ -43,11 +51,13 @@ def to_iso_string(value: Union[datetime, str, None], default: Optional[datetime]
 
 class WebsiteRequest(BaseModel):
     url: HttpUrl
+    dashboard_user_id: Optional[str] = None
 
 
 class WebsiteResponse(BaseModel):
     id: str
     url: str
+    dashboard_user_id: Optional[str] = None
     title: str
     status: str
     pagesExtracted: int
@@ -230,7 +240,7 @@ async def add_website(
     domain_name = parsed.netloc.replace("www.", "").replace(".", "_")
     website_id = f"{domain_name}_{int(datetime.now().timestamp())}"
     
-    # Create initial metadata entry
+    # Create initial metadata entry in database if available
     initial_website = {
         "id": website_id,
         "url": url_str,
@@ -240,19 +250,56 @@ async def add_website(
         "totalChunks": 0,
         "createdAt": datetime.now().isoformat(),
         "lastUpdated": datetime.now().isoformat(),
-        "error": None
+        "error": None,
+        "dashboard_user_id": request.dashboard_user_id  # Store dashboard user ID
     }
     
-    # Store initial entry
-    crawler_service.websites_metadata[website_id] = initial_website
-    crawler_service._save_metadata()
+    # Store initial entry in database or file-based storage
+    db = get_database()
+    if db:
+        websites_collection = db.websites
+        websites_collection.update_one(
+            {"website_id": website_id},
+            {
+                "$set": {
+                    "website_id": website_id,
+                    "url": url_str,
+                    "title": parsed.netloc.replace("www.", ""),
+                    "domain": domain_name,
+                    "status": "pending",
+                    "pages_extracted": 0,
+                    "total_chunks": 0,
+                    "dashboard_user_id": request.dashboard_user_id,
+                    "last_updated": datetime.now()
+                },
+                "$setOnInsert": {
+                    "created_at": datetime.now(),
+                    "error": None,
+                    "config": {
+                        "max_pages": crawler_service.max_pages,
+                        "chunk_size": crawler_service.chunk_size,
+                        "overlap": crawler_service.overlap
+                    }
+                }
+            },
+            upsert=True
+        )
+        logger.info(f"✅ Created initial website entry in database: {website_id}")
+    else:
+        # Fallback to file-based storage
+        crawler_service.websites_metadata[website_id] = initial_website
+        crawler_service._save_metadata()
     
     # Run crawling in background
     def process_website():
         try:
-            # Process website (this will update the metadata)
-            website = crawler_service.process_website(url_str, website_id)
-            # After crawling completes, index chunks in vector store
+            # Process website (this will update the metadata and store chunks in MongoDB)
+            website = crawler_service.process_website(
+                url_str, 
+                website_id, 
+                dashboard_user_id=request.dashboard_user_id
+            )
+            # After crawling completes, index chunks in vector store (load from MongoDB)
             if website["status"] == "completed":
                 index_website_chunks_in_vector_store(
                     website["id"],
@@ -269,10 +316,13 @@ async def add_website(
 
 @router.get("/websites", response_model=List[WebsiteResponse])
 async def list_websites(
+    dashboard_user_id: Optional[str] = Query(None, description="Filter by dashboard user ID"),
     crawler_service: WebsiteCrawlerService = Depends(get_website_crawler_service)
 ):
-    """List all websites."""
-    websites = crawler_service.list_websites()
+    """List websites, optionally filtered by dashboard user ID."""
+    # Pass dashboard_user_id to service for database-level filtering
+    websites = crawler_service.list_websites(dashboard_user_id=dashboard_user_id)
+    
     return [WebsiteResponse(**website) for website in websites]
 
 
@@ -312,6 +362,7 @@ class FAQRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=500)
     answer: str = Field(..., min_length=1)
     tags: List[str] = Field(default_factory=list)
+    dashboard_user_id: Optional[str] = None
 
 
 class FAQResponse(BaseModel):
@@ -329,9 +380,10 @@ async def get_faqs(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     search: Optional[str] = Query(None),
+    dashboard_user_id: Optional[str] = Query(None, description="Filter by dashboard user ID"),
     db: Database = Depends(get_database)
 ):
-    """Get all FAQs with optional search and pagination."""
+    """Get FAQs with optional search, pagination, and user filtering."""
     try:
         if db is None:
             raise HTTPException(status_code=503, detail="Database not available")
@@ -339,14 +391,23 @@ async def get_faqs(
         collection = db.faqs
         query = {}
         
+        # Filter by dashboard_user_id if provided
+        if dashboard_user_id:
+            query["dashboard_user_id"] = dashboard_user_id
+        
         # Add search filter if provided
         if search:
-            query = {
+            search_query = {
                 "$or": [
                     {"question": {"$regex": search, "$options": "i"}},
                     {"answer": {"$regex": search, "$options": "i"}}
                 ]
             }
+            # Merge search query with existing query
+            if query:
+                query = {"$and": [query, search_query]}
+            else:
+                query = search_query
         
         # Get FAQs with pagination
         # Sort by createdAt descending, but handle cases where field might not exist
@@ -433,7 +494,8 @@ async def create_faq(
             "answer": request.answer,
             "tags": request.tags,
             "createdAt": now,
-            "updatedAt": now
+            "updatedAt": now,
+            "dashboard_user_id": request.dashboard_user_id  # Store dashboard user ID
         }
         
         # Insert into database
@@ -496,6 +558,10 @@ async def update_faq(
                 "updatedAt": datetime.now()
             }
         }
+        
+        # Preserve dashboard_user_id if provided (for ownership), otherwise keep existing
+        if request.dashboard_user_id:
+            update_doc["$set"]["dashboard_user_id"] = request.dashboard_user_id
         
         collection.update_one({"_id": ObjectId(faq_id)}, update_doc)
         
@@ -679,4 +745,312 @@ async def search_faqs(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error searching FAQs: {str(e)}")
+
+
+# ==================== FILE PROCESSING ENDPOINTS ====================
+
+class FileResponse(BaseModel):
+    id: str
+    name: str
+    originalName: str
+    type: str
+    size: int
+    status: str
+    pagesExtracted: int
+    totalChunks: int
+    createdAt: str
+    lastUpdated: str
+    error: Optional[str] = None
+
+
+def index_file_chunks_in_vector_store(
+    file_id: str,
+    file_processing_service: FileProcessingService,
+    vector_store_service: VectorStoreService
+):
+    """Background task to index file chunks into vector store."""
+    try:
+        chunks = file_processing_service.get_file_chunks(file_id)
+        if not chunks:
+            return
+        
+        # Convert chunks to LangChain Documents
+        documents = []
+        for chunk in chunks:
+            metadata = {
+                "source": chunk.get("source", ""),
+                "file_id": chunk.get("file_id", file_id),
+                "chunk_index": chunk.get("chunk_index", 0),
+                "chunk_id": chunk.get("id", ""),
+                "type": "file"  # Mark as file chunk
+            }
+            
+            doc = Document(
+                page_content=chunk.get("text", ""),
+                metadata=metadata
+            )
+            documents.append(doc)
+        
+        # Add documents to vector store
+        if documents and vector_store_service.is_initialized():
+            vector_store = vector_store_service.get_vector_store()
+            if vector_store:
+                vector_store.add_documents(documents)
+                # Save the updated index
+                from app.core.settings import get_settings
+                settings = get_settings()
+                vector_store.save_local(str(settings.faiss_index_path))
+                logger.info(f"✅ Indexed {len(documents)} chunks from file {file_id}")
+    except Exception as e:
+        logger.error(f"❌ Error indexing chunks for file {file_id}: {e}")
+
+
+def remove_file_chunks_from_vector_store(
+    file_id: str,
+    vector_store_service: VectorStoreService
+):
+    """Remove file chunks from vector store by filtering out documents with matching file_id."""
+    try:
+        if not vector_store_service.is_initialized():
+            logger.warning("❌ Vector store not initialized, skipping removal")
+            return False
+        
+        vector_store = vector_store_service.get_vector_store()
+        if not vector_store:
+            logger.warning("❌ Vector store instance not available")
+            return False
+        
+        from app.core.settings import get_settings
+        settings = get_settings()
+        
+        # Access the docstore to get all documents
+        docstore = vector_store.docstore
+        
+        # Collect all documents that should be kept (not from the deleted file)
+        documents_to_keep = []
+        removed_count = 0
+        
+        # Iterate through all documents in the docstore
+        if hasattr(docstore, '_dict'):
+            for doc_id, doc in docstore._dict.items():
+                metadata = getattr(doc, 'metadata', {})
+                if not isinstance(metadata, dict):
+                    documents_to_keep.append(doc)
+                    continue
+                    
+                doc_file_id = metadata.get('file_id', '')
+                
+                if doc_file_id != file_id:
+                    documents_to_keep.append(doc)
+                else:
+                    removed_count += 1
+        
+        if removed_count == 0:
+            logger.info(f"ℹ️ No chunks found for file {file_id} in vector store")
+            return True
+        
+        # Rebuild the vector store with remaining documents
+        if documents_to_keep:
+            logger.info(f"🔄 Rebuilding vector store with {len(documents_to_keep)} documents (removed {removed_count} from file {file_id})...")
+            
+            embeddings = vector_store_service.embeddings_service.get_embeddings()
+            new_vector_store = FAISS.from_documents(documents_to_keep, embeddings)
+            new_vector_store.save_local(str(settings.faiss_index_path))
+            vector_store_service.vector_store = new_vector_store
+            
+            logger.info(f"✅ Removed {removed_count} chunks from file {file_id}")
+        else:
+            # If no documents left, create a minimal index
+            logger.warning(f"⚠️ All documents removed. Creating minimal index...")
+            embeddings = vector_store_service.embeddings_service.get_embeddings()
+            new_vector_store = FAISS.from_texts(
+                ["Welcome to Sakura AI Assistant!"],
+                embeddings
+            )
+            new_vector_store.save_local(str(settings.faiss_index_path))
+            vector_store_service.vector_store = new_vector_store
+            logger.info(f"✅ Removed all chunks from file {file_id} (index now minimal)")
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Error removing file chunks from vector store: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+@router.post("/files", response_model=FileResponse, status_code=202)
+async def upload_file(
+    file: UploadFile = FastAPIFile(...),
+    dashboard_user_id: Optional[str] = Form(None),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    file_processing_service: FileProcessingService = Depends(get_file_processing_service),
+    vector_store_service: VectorStoreService = Depends(get_vector_store_service)
+):
+    """Upload a file for processing and indexing."""
+    # Validate file type
+    allowed_extensions = {'.pdf', '.txt', '.docx', '.csv', '.xlsx', '.xls'}
+    file_extension = Path(file.filename).suffix.lower()
+    
+    if file_extension not in allowed_extensions:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type. Allowed types: {', '.join(allowed_extensions)}"
+        )
+    
+    # Generate file ID
+    file_id = f"file_{uuid.uuid4().hex[:12]}_{int(datetime.now().timestamp())}"
+    
+    # Determine file type
+    file_type_map = {
+        '.pdf': 'pdf',
+        '.txt': 'txt',
+        '.docx': 'docx',
+        '.csv': 'csv',
+        '.xlsx': 'xlsx',
+        '.xls': 'xlsx'
+    }
+    file_type = file_type_map.get(file_extension, 'other')
+    
+    # Save file temporarily
+    temp_dir = Path(tempfile.gettempdir())
+    temp_file_path = temp_dir / f"{file_id}_{file.filename}"
+    
+    try:
+        # Save uploaded file
+        with open(temp_file_path, 'wb') as f:
+            content = await file.read()
+            f.write(content)
+            file_size = len(content)
+        
+        # Create initial file entry in database
+        db = get_database()
+        if db is not None:
+            files_collection = db.files
+            files_collection.update_one(
+                {"file_id": file_id},
+                {
+                    "$set": {
+                        "file_id": file_id,
+                        "name": file.filename,
+                        "original_name": file.filename,
+                        "type": file_type,
+                        "size": file_size,
+                        "status": "pending",
+                        "pages_extracted": 0,
+                        "total_chunks": 0,
+                        "dashboard_user_id": dashboard_user_id,
+                        "last_updated": datetime.now()
+                    },
+                    "$setOnInsert": {
+                        "created_at": datetime.now(),
+                        "error": None,
+                        "config": {
+                            "chunk_size": file_processing_service.chunk_size,
+                            "overlap": file_processing_service.overlap
+                        }
+                    }
+                },
+                upsert=True
+            )
+            logger.info(f"✅ Created initial file entry in database: {file_id}")
+        
+        # Return initial response
+        initial_file = {
+            "id": file_id,
+            "name": file.filename,
+            "originalName": file.filename,
+            "type": file_type,
+            "size": file_size,
+            "status": "pending",
+            "pagesExtracted": 0,
+            "totalChunks": 0,
+            "createdAt": datetime.now().isoformat(),
+            "lastUpdated": datetime.now().isoformat(),
+            "error": None
+        }
+        
+        # Process file in background
+        def process_file():
+            try:
+                # Process file (extract text, chunk, store in MongoDB)
+                processed_file = file_processing_service.process_file(
+                    temp_file_path,
+                    file.filename,
+                    file_type,
+                    file_id,
+                    dashboard_user_id=dashboard_user_id
+                )
+                # After processing completes, index chunks in vector store
+                if processed_file.get("status") == "completed":
+                    index_file_chunks_in_vector_store(
+                        file_id,
+                        file_processing_service,
+                        vector_store_service
+                    )
+            except Exception as e:
+                logger.error(f"Error processing file {file.filename}: {e}")
+            finally:
+                # Clean up temp file
+                if temp_file_path.exists():
+                    temp_file_path.unlink()
+        
+        background_tasks.add_task(process_file)
+        
+        return FileResponse(**initial_file)
+        
+    except Exception as e:
+        # Clean up temp file on error
+        if temp_file_path.exists():
+            temp_file_path.unlink()
+        raise HTTPException(status_code=500, detail=f"Error uploading file: {str(e)}")
+
+
+@router.get("/files", response_model=List[FileResponse])
+async def list_files(
+    dashboard_user_id: Optional[str] = Query(None, description="Filter by dashboard user ID"),
+    file_processing_service: FileProcessingService = Depends(get_file_processing_service)
+):
+    """List files, optionally filtered by dashboard user ID."""
+    files = file_processing_service.list_files(dashboard_user_id=dashboard_user_id)
+    return [FileResponse(**file) for file in files]
+
+
+@router.get("/files/{file_id}", response_model=FileResponse)
+async def get_file(
+    file_id: str,
+    file_processing_service: FileProcessingService = Depends(get_file_processing_service)
+):
+    """Get file metadata by ID."""
+    file = file_processing_service.get_file(file_id)
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(**file)
+
+
+@router.delete("/files/{file_id}")
+async def delete_file(
+    file_id: str,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    file_processing_service: FileProcessingService = Depends(get_file_processing_service),
+    vector_store_service: VectorStoreService = Depends(get_vector_store_service)
+):
+    """Delete a file and its chunks from database and vector store."""
+    file = file_processing_service.get_file(file_id)
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # Delete from database
+    success = file_processing_service.delete_file(file_id)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to delete file from database")
+    
+    # Remove chunks from vector store in background
+    def remove_from_vector_store():
+        remove_file_chunks_from_vector_store(file_id, vector_store_service)
+    
+    background_tasks.add_task(remove_from_vector_store)
+    
+    return {"message": "File deleted successfully", "file_id": file_id}
 

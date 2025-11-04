@@ -8,11 +8,6 @@ const ResolvedChatsPage = () => {
       inboxType="human"
       userEmail="agent@heirs.com"
       section="my-inbox-resolved"
-      suggestedReplies={[
-        "Thank you for contacting us.",
-        "Is there anything else I can help with?",
-        "Have a great day!",
-      ]}
     />
   );
 };

@@ -8,11 +8,6 @@ const UnifiedInboxPage = () => {
       inboxType="human"
       userEmail="agent@heirs.com"
       section="unified-inbox"
-      suggestedReplies={[
-        "Hi there! 👋",
-        "How can I help you today?",
-        "Let me assist you with that...",
-      ]}
     />
   );
 };

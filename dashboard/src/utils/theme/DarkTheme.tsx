@@ -17,7 +17,7 @@ const baseDarkTheme = createTheme({
       dark: "#4570EA",
     },
     secondary: {
-      main: "#49BEFF",
+      main: "#EE66AA",
       light: "#E8F7FF",
       dark: "#23afdb",
     },
@@ -192,7 +192,7 @@ const baseDarkTheme = createTheme({
           "& .MuiInputLabel-root": {
             color: "#B0BEC5",
             "&.Mui-focused": {
-              color: "#49BEFF",
+              color: "#EE66AA",
             },
           },
           "& .MuiOutlinedInput-root": {
@@ -203,7 +203,7 @@ const baseDarkTheme = createTheme({
               borderColor: "rgba(255, 255, 255, 0.4)",
             },
             "&.Mui-focused fieldset": {
-              borderColor: "#49BEFF",
+              borderColor: "#EE66AA",
             },
           },
         },
@@ -230,18 +230,18 @@ const baseDarkTheme = createTheme({
       fontSize: "0.7rem",
     },
     contained: {
-      backgroundColor: "#49BEFF",
+      backgroundColor: "#EE66AA",
       color: "#ffffff",
       "&:hover": {
-        backgroundColor: "#23afdb",
+        backgroundColor: "#d1488a",
       },
     },
     outlined: {
-      borderColor: "#49BEFF",
-      color: "#49BEFF",
+      borderColor: "#EE66AA",
+      color: "#EE66AA",
       "&:hover": {
-        borderColor: "#23afdb",
-        backgroundColor: "rgba(73,190,255,0.08)",
+        borderColor: "#d1488a",
+        backgroundColor: "rgba(238,102,170,0.08)",
       },
     },
   },

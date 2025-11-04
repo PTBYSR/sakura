@@ -18,6 +18,7 @@ export interface CreateFAQRequest {
   question: string;
   answer: string;
   tags: string[];
+  dashboard_user_id?: string;
 }
 
 export interface UpdateFAQRequest extends CreateFAQRequest {}
@@ -26,6 +27,7 @@ export interface GetFAQsParams {
   skip?: number;
   limit?: number;
   search?: string;
+  dashboard_user_id?: string;
 }
 
 class FAQService {
@@ -36,12 +38,15 @@ class FAQService {
   }
 
   async getFAQs(params: GetFAQsParams = {}): Promise<FAQ[]> {
-    const { skip = 0, limit = 1000, search } = params;
+    const { skip = 0, limit = 1000, search, dashboard_user_id } = params;
     const searchParams = new URLSearchParams();
     searchParams.append("skip", skip.toString());
     searchParams.append("limit", limit.toString());
     if (search) {
       searchParams.append("search", search);
+    }
+    if (dashboard_user_id) {
+      searchParams.append("dashboard_user_id", dashboard_user_id);
     }
 
     const response = await fetch(`${this.baseUrl}/faqs?${searchParams.toString()}`);

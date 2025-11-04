@@ -31,6 +31,7 @@ import {
   Schedule as ScheduleIcon,
 } from "@mui/icons-material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
+import { authClient } from "@/lib/auth-client";
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
@@ -47,15 +48,28 @@ interface WebsiteSource {
 }
 
 const KnowledgeBaseWebsitesPage = () => {
+  // Get logged-in user's ID from session
+  const { data: session, isPending } = authClient.useSession();
+  const userId = session?.user?.id || null;
+  const [mounted, setMounted] = useState(false);
+
   const [newUrl, setNewUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [websites, setWebsites] = useState<WebsiteSource[]>([]);
   const [deleteDialog, setDeleteDialog] = useState<string | null>(null);
   const [deletingWebsiteId, setDeletingWebsiteId] = useState<string | null>(null);
 
+  // Prevent hydration mismatch by only rendering after mount
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const refreshList = async () => {
     try {
-      const resp = await fetch(`${API_BASE}/api/knowledge-base/websites`);
+      const url = userId 
+        ? `${API_BASE}/api/knowledge-base/websites?dashboard_user_id=${userId}`
+        : `${API_BASE}/api/knowledge-base/websites`;
+      const resp = await fetch(url);
       if (resp.ok) {
         const list = await resp.json();
         setWebsites(list);
@@ -64,9 +78,15 @@ const KnowledgeBaseWebsitesPage = () => {
   };
 
   React.useEffect(() => {
-    refreshList();
-  }, []);
+    if (userId) {
+      refreshList();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
+  // Note: Website status updates via WebSocket can be added later
+  // For now, we'll keep a simplified polling only for specific website status checks
+  // This can be enhanced to use WebSocket when backend supports website_status subscription
   const pollWebsite = (id: string) => {
     const iv = setInterval(async () => {
       try {
@@ -94,7 +114,10 @@ const KnowledgeBaseWebsitesPage = () => {
       const response = await fetch(`${API_BASE}/api/knowledge-base/websites`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: newUrl })
+        body: JSON.stringify({ 
+          url: newUrl,
+          dashboard_user_id: userId || undefined
+        })
       });
 
       if (response.ok) {
@@ -154,6 +177,21 @@ const KnowledgeBaseWebsitesPage = () => {
       default: return 'default';
     }
   };
+
+  // Prevent hydration mismatch - don't render content until mounted
+  if (!mounted) {
+    return (
+      <PageContainer title="Knowledge Base Websites" description="Manage website knowledge sources">
+        <Container maxWidth="lg">
+          <Box sx={{ py: 4 }}>
+            <Typography variant="h4" gutterBottom>
+              Loading...
+            </Typography>
+          </Box>
+        </Container>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer title="Knowledge Base Websites" description="Manage website knowledge sources">

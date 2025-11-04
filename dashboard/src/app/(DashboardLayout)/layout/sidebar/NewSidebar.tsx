@@ -24,9 +24,11 @@ import {
   IconUser,
 } from "@tabler/icons-react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { navigationConfig, NavigationModule, NavigationItem } from "@/config/navigation";
 import { useAgents } from "@/contexts/AgentsContext";
+import { useSectionUnreadCounts } from "@/app/(DashboardLayout)/inbox/hooks/useSectionUnreadCounts";
 
 interface NewSidebarProps {
   isMobileSidebarOpen: boolean;
@@ -43,6 +45,7 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
   const lgUp = useMediaQuery((theme: any) => theme.breakpoints.up("lg"));
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [activeModule, setActiveModule] = useState<string>("inbox");
+  const { getUnreadCount, markSectionAsRead } = useSectionUnreadCounts();
 
   const sidebarWidth = "270px";
   const iconBarWidth = "60px";
@@ -82,19 +85,8 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
 
     const IconComponent = item.icon;
 
-    // Mock count for demonstration - you can replace with real data
-    const getItemCount = (itemId: string) => {
-      const counts: { [key: string]: number } = {
-        'human-chats': 12,
-        'escalated-chats': 3,
-        'resolved-chats': 0,
-        'active-chats': 8,
-        'resolved-agent-chats': 0,
-      };
-      return counts[itemId] || 0;
-    };
-
-    const itemCount = getItemCount(item.id);
+    // Get unread count for this section
+    const itemCount = getUnreadCount(item.id);
 
     const listItemContent = (
       <Box
@@ -113,8 +105,11 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
             backgroundColor: isActive ? "#2a2a2a" : "#1a1a1a",
           },
         }}
-        onClick={() => {
+        onClick={(e) => {
+          // For collapsible items with children, toggle accordion (prevent navigation)
           if (item.collapsible && hasChildren) {
+            e.preventDefault();
+            e.stopPropagation();
             handleToggleExpand(item.id);
           }
         }}
@@ -135,7 +130,8 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
         </Box>
         
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {itemCount > 0 && (
+          {/* Only show count for specific sections and only if count > 0 */}
+          {((item.id === 'human-chats' || item.id === 'escalated-chats' || item.id === 'active-chats')) && itemCount > 0 && (
             <Typography
               sx={{
                 fontSize: "12px",
@@ -156,9 +152,16 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
       </Box>
     );
 
+    // For collapsible items with children, don't wrap in Link (only toggle accordion)
+    const isCollapsibleParent = item.collapsible && hasChildren;
+
     return (
       <React.Fragment key={item.id}>
-        {item.external ? (
+        {isCollapsibleParent ? (
+          // Collapsible parent: Just render the content without Link
+          listItemContent
+        ) : item.external ? (
+          // External link
           <a
             href={item.href}
             target="_blank"
@@ -168,7 +171,17 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
             {listItemContent}
           </a>
         ) : (
-          <Link href={item.href} style={{ textDecoration: "none", color: "inherit" }}>
+          // Regular navigation item - mark as read on click
+          <Link 
+            href={item.href} 
+            style={{ textDecoration: "none", color: "inherit" }}
+            onClick={() => {
+              // Mark section as read when clicked (for sections that show counts)
+              if (item.id === 'human-chats' || item.id === 'escalated-chats' || item.id === 'active-chats') {
+                markSectionAsRead(item.id);
+              }
+            }}
+          >
             {listItemContent}
           </Link>
         )}
@@ -201,14 +214,19 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
       {/* Logo/Brand */}
       <Box
         sx={{
-          color: "white",
-          fontSize: "12px",
-          fontWeight: 600,
           mb: 2,
-          letterSpacing: "0.5px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        SAKURA
+        <Image
+          src="/images/logos/nav-logo.svg"
+          alt="Sakura"
+          width={120}
+          height={32}
+          priority
+        />
       </Box>
 
       {/* Navigation Icons */}
@@ -247,76 +265,91 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
       {/* Bottom Section */}
       <Box sx={{ flex: 1 }} />
       
-      {/* Additional Icons */}
-      <Box
-        sx={{
-          width: 40,
-          height: 40,
-          borderRadius: 2,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#8a8a8a",
-          cursor: "pointer",
-          transition: "all 0.2s ease",
-          "&:hover": {
-            backgroundColor: "#1a1a1a",
-            color: "white",
-          },
-        }}
-      >
-        <IconSettings size={20} stroke={1.5} />
-      </Box>
+      {/* Settings Icon */}
+      <Tooltip title="Settings" placement="right">
+        <Link href="/settings" style={{ textDecoration: "none", color: "inherit" }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: isItemActive("/settings") ? "white" : "#8a8a8a",
+              backgroundColor: isItemActive("/settings") ? "#2a2a2a" : "transparent",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              "&:hover": {
+                backgroundColor: isItemActive("/settings") ? "#2a2a2a" : "#1a1a1a",
+                color: "white",
+              },
+            }}
+          >
+            <IconSettings size={20} stroke={1.5} />
+          </Box>
+        </Link>
+      </Tooltip>
 
-      <Box
-        sx={{
-          width: 40,
-          height: 40,
-          borderRadius: 2,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#8a8a8a",
-          cursor: "pointer",
-          transition: "all 0.2s ease",
-          "&:hover": {
-            backgroundColor: "#1a1a1a",
-            color: "white",
-          },
-        }}
-      >
-        <IconHelp size={20} stroke={1.5} />
-      </Box>
+      <Tooltip title="Help & Support" placement="right">
+        <Box
+          sx={{
+            width: 40,
+            height: 40,
+            borderRadius: 2,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#8a8a8a",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            "&:hover": {
+              backgroundColor: "#1a1a1a",
+              color: "white",
+            },
+          }}
+        >
+          <IconHelp size={20} stroke={1.5} />
+        </Box>
+      </Tooltip>
 
-      {/* Status Button */}
-      <Box
-        sx={{
-          width: 40,
-          height: 40,
-          borderRadius: "50%",
-          backgroundColor: "#1976d2",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "white",
-          cursor: "pointer",
-          position: "relative",
-          mt: 1,
-          "&::after": {
-            content: '""',
-            position: "absolute",
-            top: -2,
-            right: -2,
-            width: 12,
-            height: 12,
-            borderRadius: "50%",
-            backgroundColor: "#4caf50",
-            border: "2px solid #000000",
-          },
-        }}
-      >
-        <IconUser size={20} stroke={1.5} />
-      </Box>
+      {/* Account Settings Button */}
+      <Tooltip title="Account Settings" placement="right">
+        <Link href="/settings/account-settings" style={{ textDecoration: "none", color: "inherit" }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              backgroundColor: isItemActive("/settings/account-settings") ? "#1976d2" : "#1976d2",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "white",
+              cursor: "pointer",
+              position: "relative",
+              mt: 1,
+              transition: "all 0.2s ease",
+              "&:hover": {
+                backgroundColor: "#1565c0",
+              },
+              "&::after": {
+                content: '""',
+                position: "absolute",
+                top: -2,
+                right: -2,
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                backgroundColor: "#4caf50",
+                border: "2px solid #000000",
+              },
+            }}
+          >
+            <IconUser size={20} stroke={1.5} />
+          </Box>
+        </Link>
+      </Tooltip>
     </Box>
   );
 

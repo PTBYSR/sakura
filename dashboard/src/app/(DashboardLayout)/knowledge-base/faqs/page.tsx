@@ -34,6 +34,7 @@ import PageContainer from "@/app/(DashboardLayout)/components/container/PageCont
 import DashboardCard from "@/app/(DashboardLayout)/components/shared/DashboardCard";
 import ChatbotTester from "./components/ChatbotTester";
 import { faqService, FAQ as FAQType } from "./services/faqService";
+import { authClient } from "@/lib/auth-client";
 
 // Use FAQ type from service
 type FAQ = FAQType;
@@ -44,6 +45,11 @@ type SortFilter = "recently-added" | "largest" | "a-z";
 const ITEMS_PER_PAGE = 10;
 
 export default function FAQsPage() {
+  // Get logged-in user's ID from session
+  const { data: session } = authClient.useSession();
+  const userId = session?.user?.id || null;
+  const [mounted, setMounted] = useState(false); // For hydration mismatch prevention
+
   // State management
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -59,21 +65,31 @@ export default function FAQsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Prevent hydration mismatch by only rendering after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Form state
   const [formQuestion, setFormQuestion] = useState("");
   const [formAnswer, setFormAnswer] = useState("");
   const [formTags, setFormTags] = useState("");
 
-  // Load FAQs from API on mount
+  // Load FAQs from API on mount and when userId changes
   useEffect(() => {
-    loadFAQs();
-  }, []);
+    if (userId) {
+      loadFAQs();
+    }
+  }, [userId]);
 
   const loadFAQs = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await faqService.getFAQs({ limit: 1000 });
+      const data = await faqService.getFAQs({ 
+        limit: 1000,
+        dashboard_user_id: userId || undefined
+      });
       setFaqs(data);
     } catch (err: any) {
       console.error("Failed to load FAQs:", err);
@@ -216,6 +232,7 @@ export default function FAQsPage() {
           .split(",")
           .map((tag) => tag.trim())
           .filter((tag) => tag.length > 0),
+        dashboard_user_id: userId || undefined,
       });
       await loadFAQs(); // Reload FAQs from API
       setOpenAddModal(false);
@@ -240,6 +257,7 @@ export default function FAQsPage() {
           .split(",")
           .map((tag) => tag.trim())
           .filter((tag) => tag.length > 0),
+        dashboard_user_id: userId || undefined,
       });
       await loadFAQs(); // Reload FAQs from API
       setOpenEditModal(false);
@@ -278,6 +296,21 @@ export default function FAQsPage() {
   // Show error message
   if (error && !loading) {
     // Error will be shown in the UI below
+  }
+
+  // Conditional render for hydration
+  if (!mounted) {
+    return (
+      <PageContainer title="FAQs" description="Manage your Frequently Asked Questions">
+        <Container maxWidth={false} sx={{ py: 3 }}>
+          <Box sx={{ py: 4 }}>
+            <Typography variant="h4" gutterBottom>
+              Loading...
+            </Typography>
+          </Box>
+        </Container>
+      </PageContainer>
+    );
   }
 
   return (

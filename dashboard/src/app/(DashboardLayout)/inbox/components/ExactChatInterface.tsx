@@ -85,6 +85,7 @@ interface ContactInfo {
 interface ChatInterfaceProps {
   inboxType: "agent" | "human";
   userEmail?: string;
+  userId?: string | null;
   section?: string;
   contactInfo?: ContactInfo;
   suggestedReplies?: string[];
@@ -93,6 +94,7 @@ interface ChatInterfaceProps {
 const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
   inboxType,
   userEmail = "agent@heirs.com",
+  userId = null,
   section,
   contactInfo: defaultContactInfo,
   suggestedReplies = [],
@@ -112,7 +114,7 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
     markAsRead,
     loading,
     error,
-  } = useUnifiedChatData({ inboxType, userEmail, section: section || "" });
+  } = useUnifiedChatData({ inboxType, userEmail, userId, section: section || "" });
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
@@ -236,7 +238,19 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
 
           {/* Chat List */}
           <Box sx={{ flex: 1, overflow: "auto" }}>
-            {chats.map((chat) => (
+            {chats.length === 0 ? (
+              <Box sx={{ p: 3, textAlign: "center" }}>
+                <Typography sx={{ color: "#888", fontSize: "0.9rem" }}>
+                  No active chats found. {loading ? "Loading..." : "Chats will appear here when customers start conversations."}
+                </Typography>
+                {process.env.NODE_ENV === "development" && (
+                  <Typography sx={{ color: "#666", fontSize: "0.75rem", mt: 2 }}>
+                    Debug: Section="{section}", Chats={chats.length}, Loading={loading ? "Yes" : "No"}, Error={error || "None"}
+                  </Typography>
+                )}
+              </Box>
+            ) : (
+              chats.map((chat) => (
               <ListItemButton
                 key={chat.chat.id}
                 onClick={() => setSelectedChat(chat)}
@@ -287,7 +301,8 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
                   }
                 />
               </ListItemButton>
-            ))}
+              ))
+            )}
           </Box>
         </Box>
 
@@ -350,25 +365,6 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
 
           {/* Message Input Area */}
           <Box sx={{ p: 3, borderTop: "1px solid #333", backgroundColor: "#2a2a2a" }}>
-            {/* Suggested Replies */}
-            {suggestedReplies.length > 0 && (
-              <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
-                {suggestedReplies.map((reply, index) => (
-                  <Chip
-                    key={index}
-                    label={reply}
-                    onClick={() => setNewMessage(reply)}
-                    sx={{
-                      backgroundColor: "#3a3a3a",
-                      color: "white",
-                      fontSize: "0.8rem",
-                      "&:hover": { backgroundColor: "#4a4a4a" },
-                    }}
-                  />
-                ))}
-              </Box>
-            )}
-
             {/* Message Input */}
             <TextField
               fullWidth

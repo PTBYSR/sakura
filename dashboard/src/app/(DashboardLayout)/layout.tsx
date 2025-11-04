@@ -6,6 +6,7 @@ import NewSidebar from "@/app/(DashboardLayout)/layout/sidebar/NewSidebar";
 import { AgentsProvider } from "@/contexts/AgentsContext";
 import { ChatProvider } from "@/contexts/ChatContext";
 import { SOPsProvider } from "@/contexts/SOPsContext";
+import { WebSocketProvider } from "@/contexts/WebSocketContext";
 
 
 const MainWrapper = styled("div")(() => ({
@@ -37,10 +38,11 @@ export default function RootLayout({
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   return (
-    <AgentsProvider>
-      <ChatProvider>
-        <SOPsProvider>
-          <MainWrapper className="mainwrapper">
+    <WebSocketProvider>
+      <AgentsProvider>
+        <ChatProvider>
+          <SOPsProvider>
+            <MainWrapper className="mainwrapper">
             {/* ------------------------------------------- */}
             {/* Sidebar */}
             {/* ------------------------------------------- */}
@@ -79,5 +81,6 @@ export default function RootLayout({
         </SOPsProvider>
       </ChatProvider>
     </AgentsProvider>
+    </WebSocketProvider>
   );
 }

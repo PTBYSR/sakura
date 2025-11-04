@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { authClient } from "@/lib/auth-client";
 import {
   Box,
   Typography,
@@ -53,36 +54,92 @@ interface FileSource {
 }
 
 const KnowledgeBaseFilesPage = () => {
+  // Get logged-in user's ID from session
+  const { data: session } = authClient.useSession();
+  const userId = session?.user?.id || null;
+  const [mounted, setMounted] = useState(false); // For hydration mismatch prevention
+
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [files, setFiles] = useState<FileSource[]>([
-    {
-      id: "1",
-      name: "company-handbook.pdf",
-      originalName: "Company Handbook.pdf",
-      type: "pdf",
-      size: 2048576, // 2MB
-      status: "completed",
-      pagesExtracted: 25,
-      totalChunks: 150,
-      createdAt: "2024-01-15",
-      lastUpdated: "2024-01-15",
-    },
-    {
-      id: "2",
-      name: "product-specs.docx",
-      originalName: "Product Specifications.docx",
-      type: "docx",
-      size: 1024000, // 1MB
-      status: "processing",
-      pagesExtracted: 8,
-      totalChunks: 0,
-      createdAt: "2024-01-16",
-      lastUpdated: "2024-01-16",
-    }
-  ]);
+  const [files, setFiles] = useState<FileSource[]>([]);
   const [deleteDialog, setDeleteDialog] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Prevent hydration mismatch by only rendering after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    (process.env.NODE_ENV === "development"
+      ? "http://localhost:8000"
+      : "https://sakura-backend.onrender.com");
+
+  // Load files on mount and when userId changes
+  useEffect(() => {
+    if (userId) {
+      loadFiles();
+    }
+  }, [userId]);
+
+  const loadFiles = async () => {
+    try {
+      setLoading(true);
+      const url = userId 
+        ? `${API_BASE_URL}/api/knowledge-base/files?dashboard_user_id=${userId}`
+        : `${API_BASE_URL}/api/knowledge-base/files`;
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        setFiles(data);
+        
+        // Start polling for any files that are still processing
+        data.forEach((file: FileSource) => {
+          if (file.status === 'pending' || file.status === 'processing') {
+            pollFileStatus(file.id);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error loading files:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Poll file status until it's completed or errored
+  const pollFileStatus = (fileId: string) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/knowledge-base/files/${fileId}`);
+        if (!response.ok) {
+          clearInterval(pollInterval);
+          return;
+        }
+        
+        const updatedFile: FileSource = await response.json();
+        
+        // Update the file in the list
+        setFiles(prev => {
+          const updated = prev.map(f => f.id === fileId ? updatedFile : f);
+          return updated;
+        });
+        
+        // Stop polling if file is completed or errored
+        if (updatedFile.status === 'completed' || updatedFile.status === 'error') {
+          clearInterval(pollInterval);
+        }
+      } catch (error) {
+        console.error('Error polling file status:', error);
+        clearInterval(pollInterval);
+      }
+    }, 2000); // Poll every 2 seconds
+    
+    // Store interval reference to clean up on unmount if needed
+    return pollInterval;
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files;
@@ -102,7 +159,12 @@ const KnowledgeBaseFilesPage = () => {
           setUploadProgress(prev => Math.min(prev + 10, 90));
         }, 200);
 
-        const response = await fetch('/api/knowledge-base/files', {
+        // Add dashboard_user_id to form data if available
+        if (userId) {
+          formData.append('dashboard_user_id', userId);
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/knowledge-base/files`, {
           method: 'POST',
           body: formData
         });
@@ -113,8 +175,13 @@ const KnowledgeBaseFilesPage = () => {
         if (response.ok) {
           const newFile = await response.json();
           setFiles(prev => [newFile, ...prev]);
+          // Start polling for status updates if file is still processing
+          if (newFile.status === 'pending' || newFile.status === 'processing') {
+            pollFileStatus(newFile.id);
+          }
         } else {
-          throw new Error(`Failed to upload ${file.name}`);
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `Failed to upload ${file.name}`);
         }
       }
     } catch (error) {
@@ -130,14 +197,31 @@ const KnowledgeBaseFilesPage = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      await fetch(`/api/knowledge-base/files/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/knowledge-base/files/${id}`, {
         method: 'DELETE'
       });
-      setFiles(prev => prev.filter(f => f.id !== id));
-    } catch (error) {
+      
+      if (response.ok) {
+        // Remove file from UI immediately
+        setFiles(prev => prev.filter(f => f.id !== id));
+        console.log(`✅ File ${id} deleted successfully`);
+      } else {
+        // Try to get error message from response
+        let errorMessage = 'Failed to delete file';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorMessage;
+        } catch {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
+    } catch (error: any) {
       console.error('Error deleting file:', error);
+      alert(error.message || 'Failed to delete file. Please try again.');
+    } finally {
+      setDeleteDialog(null);
     }
-    setDeleteDialog(null);
   };
 
   const getFileIcon = (type: string) => {
@@ -187,6 +271,21 @@ const KnowledgeBaseFilesPage = () => {
       default: return 'default';
     }
   };
+
+  // Conditional render for hydration
+  if (!mounted) {
+    return (
+      <PageContainer title="Knowledge Base Files" description="Manage file-based knowledge sources">
+        <Container maxWidth="lg">
+          <Box sx={{ py: 4 }}>
+            <Typography variant="h4" gutterBottom>
+              Loading...
+            </Typography>
+          </Box>
+        </Container>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer title="Knowledge Base Files" description="Manage file-based knowledge sources">
@@ -246,7 +345,11 @@ const KnowledgeBaseFilesPage = () => {
                 File Sources ({files.length})
               </Typography>
               
-              {files.length === 0 ? (
+              {loading ? (
+                <Box sx={{ p: 4, textAlign: "center" }}>
+                  <Typography variant="body1">Loading files...</Typography>
+                </Box>
+              ) : files.length === 0 ? (
                 <Alert severity="info">
                   No files uploaded yet. Upload your first document above to get started.
                 </Alert>
@@ -263,7 +366,7 @@ const KnowledgeBaseFilesPage = () => {
                       <ListItemText
                         primary={
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                            <Typography variant="subtitle1">
+                            <Typography variant="subtitle1" component="span">
                               {file.originalName}
                             </Typography>
                             <Chip 
@@ -279,21 +382,59 @@ const KnowledgeBaseFilesPage = () => {
                           </Box>
                         }
                         secondary={
-                          <Box>
-                            <Box sx={{ display: 'flex', gap: 2, mt: 1, flexWrap: 'wrap' }}>
-                              <Typography variant="caption">
+                          <Box component="div" sx={{ mt: 1 }}>
+                            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 1 }}>
+                              <Typography variant="caption" component="span">
                                 Size: {formatFileSize(file.size)}
                               </Typography>
-                              <Typography variant="caption">
-                                Pages: {file.pagesExtracted}
+                              <Typography variant="caption" component="span">
+                                Pages: {file.pagesExtracted > 0 ? file.pagesExtracted : '...'}
                               </Typography>
-                              <Typography variant="caption">
-                                Chunks: {file.totalChunks}
+                              <Typography variant="caption" component="span">
+                                Chunks: {file.totalChunks > 0 ? file.totalChunks : '...'}
                               </Typography>
-                              <Typography variant="caption">
-                                Updated: {file.lastUpdated}
+                              <Typography variant="caption" component="span">
+                                Updated: {new Date(file.lastUpdated).toLocaleString()}
                               </Typography>
                             </Box>
+                            
+                            {/* Live progress indicators for processing stages */}
+                            {file.status === 'processing' && (
+                              <Box component="div" sx={{ mt: 1.5, width: '100%' }}>
+                                <LinearProgress sx={{ mb: 1 }} />
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                  <Typography variant="caption" color="text.secondary" component="div">
+                                    🔄 Processing stages:
+                                  </Typography>
+                                  <Box sx={{ pl: 2 }}>
+                                    <Typography variant="caption" color="text.secondary" component="div" sx={{ display: 'block' }}>
+                                      {file.pagesExtracted > 0 ? '✅' : '⏳'} Extracting text from file
+                                      {file.pagesExtracted > 0 && ` (${file.pagesExtracted} pages extracted)`}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary" component="div" sx={{ display: 'block' }}>
+                                      {file.totalChunks > 0 ? '✅' : '⏳'} Creating chunks
+                                      {file.totalChunks > 0 && ` (${file.totalChunks} chunks created)`}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary" component="div" sx={{ display: 'block' }}>
+                                      {file.totalChunks > 0 ? '✅' : '⏳'} Storing in database
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary" component="div" sx={{ display: 'block' }}>
+                                      {file.totalChunks > 0 ? '⏳' : '⏳'} Indexing into vector store (happens after chunks are created)
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                              </Box>
+                            )}
+                            {file.status === 'pending' && (
+                              <Typography variant="caption" color="text.secondary" component="div" sx={{ display: 'block', mt: 1 }}>
+                                ⏳ Queued for processing... Waiting to start
+                              </Typography>
+                            )}
+                            {file.status === 'completed' && (
+                              <Typography variant="caption" color="success.main" component="div" sx={{ display: 'block', mt: 1, fontWeight: 500 }}>
+                                ✅ Ready to use! File has been processed, chunked, and indexed
+                              </Typography>
+                            )}
                             {file.error && (
                               <Alert severity="error" sx={{ mt: 1 }}>
                                 {file.error}

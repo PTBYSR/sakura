@@ -286,28 +286,80 @@ async def get_chat_by_id(
 @router.get("/debug/users-chats")
 async def get_debug_users_chats(db: Database = Depends(get_database)):
     """Debug endpoint that returns users with their chats (for dashboard compatibility)."""
+    import time
+    start_time = time.time()
+    print(f"🔄 [DEBUG] /api/debug/users-chats called at {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    
     try:
         if db is None:
-            print("⚠️  Database not available, returning empty data")
-            return {"users": []}
+            elapsed = time.time() - start_time
+            print(f"⚠️  [DEBUG] Database not available (took {elapsed:.2f}s), returning error")
+            raise HTTPException(status_code=503, detail="Database not available. Please ensure MongoDB is running.")
+        
+        print(f"✅ [DEBUG] Database connection OK (took {time.time() - start_time:.2f}s)")
         
         users_collection = db.customers
         chats_collection = db["customer-chats"]
         
-        # Get all users
-        users_cursor = users_collection.find({})
+        # Test database connection with a quick query before heavy queries
+        try:
+            # Use a simple count query to test connection (faster than ping)
+            users_collection.count_documents({}, limit=1)
+            print(f"✅ [DEBUG] Database connection test successful")
+        except Exception as ping_error:
+            elapsed = time.time() - start_time
+            print(f"❌ [DEBUG] Database connection test failed (took {elapsed:.2f}s): {ping_error}")
+            raise HTTPException(status_code=503, detail=f"Database connection test failed: {str(ping_error)}")
+        
+        # Get all users with a timeout-aware operation
+        print(f"📊 [DEBUG] Fetching users from collection...")
+        try:
+            users_cursor = users_collection.find({}).limit(100)  # Limit to prevent huge queries
+            # Force evaluation with timeout - convert to list immediately to catch connection issues
+            users_list_temp = list(users_cursor)[:100]  # Limit in memory too
+            users_cursor = iter(users_list_temp)
+        except Exception as query_error:
+            elapsed = time.time() - start_time
+            print(f"❌ [DEBUG] Query failed (took {elapsed:.2f}s): {query_error}")
+            raise HTTPException(status_code=503, detail=f"Database query failed: {str(query_error)}")
+        
         users = []
         
         for user_doc in users_cursor:
             user_email = user_doc.get("email", "unknown@example.com")
+            user_name = user_doc.get("name", "Unknown User")
+            
+            # Log users with "Widget User" name for debugging
+            if user_name == "Widget User":
+                print(f"🔍 [DEBUG] Found 'Widget User' with email: {user_email}, _id: {user_doc.get('_id')}")
             
             # Get chats for this user (using user_id to match)
-            # Try both ObjectId and string matching
+            # Try multiple matching strategies
             user_id = user_doc.get("_id")
+            user_chats_list = []
+            
+            # Method 1: Direct ObjectId/string match
             user_chats_list = list(chats_collection.find({"user_id": user_id}))
-            # If no matches with ObjectId, try string match
+            
+            # Method 2: If no matches and user_id is ObjectId, try string
             if not user_chats_list:
                 user_chats_list = list(chats_collection.find({"user_id": str(user_id)}))
+            
+            # Method 3: If still no matches and user_id is string, try ObjectId
+            if not user_chats_list and isinstance(user_id, str):
+                try:
+                    obj_id = ObjectId(user_id)
+                    user_chats_list = list(chats_collection.find({"user_id": obj_id}))
+                except:
+                    pass
+            
+            # Method 4: Try original_user_id field if it exists
+            if not user_chats_list:
+                original_user_id = user_doc.get("user_id")
+                if original_user_id:
+                    user_chats_list = list(chats_collection.find({"original_user_id": original_user_id}))
+                    if not user_chats_list:
+                        user_chats_list = list(chats_collection.find({"original_user_id": str(original_user_id)}))
             chats = []
             
             for chat_doc in user_chats_list:
@@ -339,19 +391,28 @@ async def get_debug_users_chats(db: Database = Depends(get_database)):
                 "email": user_email,
                 "ip": user_doc.get("ip"),
                 "vibe": user_doc.get("vibe", "neutral"),
-                "category": user_doc.get("category", "human-chats"),
+                "category": user_doc.get("category", "agent-inbox"),  # Default to agent-inbox to match creation logic
                 "status": user_doc.get("status", "active"),
                 "location": user_doc.get("location", {}),
                 "device": user_doc.get("device", {}),
+                "dashboard_user_id": user_doc.get("dashboard_user_id"),  # Link to dashboard user who owns the widget
                 "chats": chats
             }
             users.append(user)
         
+        elapsed = time.time() - start_time
+        print(f"✅ [DEBUG] Returning {len(users)} users (total time: {elapsed:.2f}s)")
         return {"users": users}
         
+    except HTTPException:
+        # Re-raise HTTP exceptions (like 503 for DB unavailable)
+        raise
     except Exception as e:
-        print(f"❌ Error in debug endpoint: {e}")
-        return {"users": []}
+        elapsed = time.time() - start_time
+        print(f"❌ [DEBUG] Error in debug endpoint (took {elapsed:.2f}s): {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 # Additional endpoints for ChatContext compatibility
@@ -426,6 +487,44 @@ async def get_user_by_id(user_id: str, db: Database = Depends(get_database)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/dashboard-users/{email}")
+async def get_dashboard_user_by_email(email: str, db: Database = Depends(get_database)):
+    """Check if a dashboard account user exists in Better Auth's user collection."""
+    try:
+        if db is None:
+            raise HTTPException(status_code=503, detail="Database not available")
+        
+        # Better Auth stores users in the "user" collection
+        user_collection = db.user
+        
+        # Find user by email (Better Auth uses "email" field directly)
+        user_doc = user_collection.find_one({"email": email})
+        
+        if not user_doc:
+            return {
+                "exists": False,
+                "email": email,
+                "message": "Dashboard account user not found"
+            }
+        
+        # Return user info (excluding sensitive data)
+        return {
+            "exists": True,
+            "email": user_doc.get("email"),
+            "name": user_doc.get("name"),
+            "emailVerified": user_doc.get("emailVerified", False),
+            "createdAt": to_iso_string(user_doc.get("createdAt")),
+            "updatedAt": to_iso_string(user_doc.get("updatedAt")),
+            "id": str(user_doc.get("_id", ""))
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error checking dashboard user: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/chats/{chat_id}")
 async def get_chat_by_id_for_context(chat_id: str, db: Database = Depends(get_database)):
     """Get a specific chat by ID (for ChatContext)."""
@@ -474,13 +573,14 @@ async def get_chat_by_id_for_context(chat_id: str, db: Database = Depends(get_da
 
 @router.post("/chats/{chat_id}/send")
 async def send_message_to_chat(chat_id: str, request: dict, db: Database = Depends(get_database)):
-    """Send a message to a chat (for ChatContext)."""
+    """Send a message to a chat (for ChatContext and Widget)."""
     try:
         if db is None:
             raise HTTPException(status_code=503, detail="Database not available")
         
         chats_collection = db["customer-chats"]
         content = request.get("content", "")
+        role = request.get("role", "user")  # Allow role to be specified (user or assistant)
         
         if not content:
             raise HTTPException(status_code=400, detail="Message content is required")
@@ -488,22 +588,36 @@ async def send_message_to_chat(chat_id: str, request: dict, db: Database = Depen
         # Add message to chat
         message = {
             "_id": f"msg_{int(datetime.now().timestamp())}",
-            "role": "user",
+            "role": role,
             "content": content,
-            "timestamp": to_iso_string(datetime.now()),
-            "status": "sent"
+            "text": content,  # Store as both content and text for compatibility
+            "timestamp": datetime.now(),
+            "status": "sent",
+            "read": False
         }
         
         result = chats_collection.update_one(
             {"chat_id": chat_id},
             {
                 "$push": {"messages": message},
-                "$set": {"updated_at": datetime.now()}
+                "$set": {
+                    "updated_at": datetime.now(),
+                    "last_activity": datetime.now(),
+                    "total_messages": {"$size": "$messages"}  # This won't work, we'll recalculate
+                }
             }
         )
         
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Chat not found")
+        
+        # Update total_messages count
+        chat_doc = chats_collection.find_one({"chat_id": chat_id})
+        if chat_doc:
+            chats_collection.update_one(
+                {"chat_id": chat_id},
+                {"$set": {"total_messages": len(chat_doc.get("messages", []))}}
+            )
         
         return {"success": True, "message": "Message sent successfully"}
         
@@ -512,3 +626,130 @@ async def send_message_to_chat(chat_id: str, request: dict, db: Database = Depen
     except Exception as e:
         print(f"❌ Error sending message: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/debug/database-overview")
+async def get_database_overview(db: Database = Depends(get_database)):
+    """Comprehensive database overview endpoint showing all collections and their data."""
+    import time
+    start_time = time.time()
+    print(f"🔄 [DEBUG] /api/debug/database-overview called at {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    try:
+        if db is None:
+            raise HTTPException(status_code=503, detail="Database not available. Please ensure MongoDB is running.")
+        
+        # Get all collections in the database
+        collection_names = db.list_collection_names()
+        
+        overview = {
+            "database_name": db.name,
+            "collections": {},
+            "statistics": {},
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # Widget Customers Collection
+        customers_collection = db.customers
+        customers_count = customers_collection.count_documents({})
+        customers = []
+        if customers_count > 0:
+            customers_cursor = customers_collection.find({}).limit(100)
+            for customer_doc in customers_cursor:
+                customer = {
+                    "_id": str(customer_doc.get("_id", "")),
+                    "name": customer_doc.get("name", "Unknown"),
+                    "email": customer_doc.get("email", "unknown@example.com"),
+                    "category": customer_doc.get("category", "agent-inbox"),
+                    "status": customer_doc.get("status", "active"),
+                    "dashboard_user_id": customer_doc.get("dashboard_user_id"),
+                    "ip": customer_doc.get("ip"),
+                    "location": customer_doc.get("location", {}),
+                    "device": customer_doc.get("device", {}),
+                    "created_at": to_iso_string(customer_doc.get("created_at")),
+                    "last_seen": to_iso_string(customer_doc.get("last_seen")),
+                    "vibe": customer_doc.get("vibe", "neutral"),
+                }
+                customers.append(customer)
+        
+        overview["collections"]["customers"] = {
+            "count": customers_count,
+            "data": customers
+        }
+        
+        # Customer Chats Collection
+        chats_collection = db["customer-chats"]
+        chats_count = chats_collection.count_documents({})
+        chats = []
+        if chats_count > 0:
+            chats_cursor = chats_collection.find({}).limit(100)
+            for chat_doc in chats_cursor:
+                chat = {
+                    "_id": str(chat_doc.get("_id", "")),
+                    "chat_id": chat_doc.get("chat_id", "unknown"),
+                    "user_id": str(chat_doc.get("user_id", "")) if chat_doc.get("user_id") else None,
+                    "status": chat_doc.get("status", "active"),
+                    "created_at": to_iso_string(chat_doc.get("created_at")),
+                    "last_activity": to_iso_string(chat_doc.get("last_activity")),
+                    "total_messages": chat_doc.get("total_messages", len(chat_doc.get("messages", []))),
+                    "messages_count": len(chat_doc.get("messages", [])),
+                    "first_message": chat_doc.get("messages", [{}])[0].get("content", "") if chat_doc.get("messages") and len(chat_doc.get("messages", [])) > 0 else None,
+                    "last_message": chat_doc.get("messages", [{}])[-1].get("content", "") if chat_doc.get("messages") and len(chat_doc.get("messages", [])) > 0 else None,
+                }
+                chats.append(chat)
+        
+        overview["collections"]["customer-chats"] = {
+            "count": chats_count,
+            "data": chats
+        }
+        
+        # Dashboard Users Collection (Better Auth)
+        users_collection = db.user
+        dashboard_users_count = users_collection.count_documents({})
+        dashboard_users = []
+        if dashboard_users_count > 0:
+            users_cursor = users_collection.find({}).limit(100)
+            for user_doc in users_cursor:
+                dashboard_user = {
+                    "_id": str(user_doc.get("_id", "")),
+                    "email": user_doc.get("email", "unknown@example.com"),
+                    "name": user_doc.get("name", "Unknown"),
+                    "emailVerified": user_doc.get("emailVerified", False),
+                    "createdAt": to_iso_string(user_doc.get("createdAt")),
+                    "updatedAt": to_iso_string(user_doc.get("updatedAt")),
+                }
+                dashboard_users.append(dashboard_user)
+        
+        overview["collections"]["dashboard_users"] = {
+            "count": dashboard_users_count,
+            "data": dashboard_users
+        }
+        
+        # Statistics
+        total_chats = chats_count
+        total_messages = sum(chat.get("messages_count", 0) for chat in chats)
+        customers_with_chats = len([c for c in customers if c.get("_id")])
+        customers_linked_to_dashboard = len([c for c in customers if c.get("dashboard_user_id")])
+        
+        overview["statistics"] = {
+            "total_widget_customers": customers_count,
+            "total_customer_chats": total_chats,
+            "total_messages": total_messages,
+            "total_dashboard_users": dashboard_users_count,
+            "customers_with_chats": customers_with_chats,
+            "customers_linked_to_dashboard": customers_linked_to_dashboard,
+            "customers_not_linked": customers_count - customers_linked_to_dashboard,
+        }
+        
+        elapsed = time.time() - start_time
+        print(f"✅ [DEBUG] Database overview generated (took {elapsed:.2f}s)")
+        return overview
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        elapsed = time.time() - start_time
+        print(f"❌ [DEBUG] Error generating overview (took {elapsed:.2f}s): {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating database overview: {str(e)}")

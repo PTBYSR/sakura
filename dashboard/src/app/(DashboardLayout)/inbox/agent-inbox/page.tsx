@@ -8,11 +8,6 @@ const AgentInboxPage = () => {
       inboxType="agent"
       userEmail="admin@heirs.com"
       section="agent-inbox-active"
-      suggestedReplies={[
-        "Hi there! 👋",
-        "How can I help you today?",
-        "Let me assist you with that...",
-      ]}
     />
   );
 };
