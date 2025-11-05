@@ -449,7 +449,24 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
             role: msg.role === 'assistant' || msg.role === 'agent' ? 'assistant' : 'user',
             timestamp: msg.timestamp
           }));
-          setMessages(chatMessages);
+          
+          // Merge with any existing messages from localStorage/state
+          // This preserves messages that were loaded on mount before this API call
+          setMessages(prevMessages => {
+            // If we already have messages (from localStorage restore), merge them
+            if (prevMessages.length > 0) {
+              console.log(`🔄 Merging ${chatMessages.length} backend messages with ${prevMessages.length} existing messages`);
+              // Use backend messages as base, add any localStorage messages not in backend
+              const backendMessageIds = new Set(chatMessages.map(m => m.id));
+              const unsavedMessages = prevMessages.filter(m => !backendMessageIds.has(m.id));
+              const merged = [...chatMessages, ...unsavedMessages];
+              console.log(`✅ Merged to ${merged.length} total messages`);
+              return merged;
+            }
+            // No existing messages, just use backend messages
+            console.log(`📥 Loaded ${chatMessages.length} messages from backend`);
+            return chatMessages;
+          });
           } else {
             // Chat exists but has no messages - check localStorage first
             const savedMessages = localStorage.getItem("messages");
@@ -458,8 +475,11 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
                 const parsedMessages = JSON.parse(savedMessages);
                 if (parsedMessages && parsedMessages.length > 0) {
                   setMessages(parsedMessages);
+                } else {
+                  setMessages([]);
                 }
               } catch (e) {
+                console.error('Error parsing saved messages:', e);
                 setMessages([]);
               }
             } else {
@@ -511,35 +531,48 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
   }, [stage]);
 
   /**
-   * Load saved messages from localStorage on mount
+   * Load saved messages from localStorage on mount - runs FIRST
    * Messages are stored in localStorage for quick access during the session
+   * This ensures messages are available immediately on page load, before any API calls
    */
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedMessages = localStorage.getItem("messages");
       if (savedMessages) {
         try {
-          const parsedMessages = JSON.parse(savedMessages);
+          const parsedMessages = JSON.parse(savedMessages) as Message[];
           if (parsedMessages && parsedMessages.length > 0) {
+            console.log(`📦 Restoring ${parsedMessages.length} messages from localStorage`);
+            // Set messages immediately - this will be merged later if backend has messages
             setMessages(parsedMessages);
           }
         } catch (e) {
           console.error('Error parsing saved messages:', e);
-          localStorage.removeItem("messages");
+          // Don't remove messages on parse error - might be temporary
         }
       }
     }
-  }, []);
+  }, []); // Empty deps - runs once on mount, BEFORE other effects
 
   /**
    * Persist messages to localStorage whenever they change
    * This provides fast access and offline capability during the session
    */
   useEffect(() => {
-    if (typeof window !== "undefined" && messages.length > 0) {
-      localStorage.setItem("messages", JSON.stringify(messages));
+    if (typeof window !== "undefined") {
+      if (messages.length > 0) {
+        localStorage.setItem("messages", JSON.stringify(messages));
+      } else {
+        // Only clear localStorage if we're intentionally clearing messages (e.g., new session)
+        // Don't clear on initial load or if messages might be loading
+        const isInitialLoad = !currentChatId && !userId;
+        if (!isInitialLoad) {
+          // Messages were cleared intentionally, remove from localStorage
+          localStorage.removeItem("messages");
+        }
+      }
     }
-  }, [messages]);
+  }, [messages, currentChatId, userId]);
 
   /**
    * Sync messages to database on browser close/tab close
