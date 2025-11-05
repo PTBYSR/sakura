@@ -62,10 +62,16 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
     setError("");
     setLoading(true);
     try {
+      // Better Auth social sign-in redirects automatically
+      // The redirect URL is handled by Better Auth internally
       await authClient.signIn.social({
         provider: "google",
+        callbackURL: window.location.origin + "/", // Redirect to home after successful sign-in
       });
+      // Note: The browser will redirect automatically, so we don't need to handle navigation
+      // The loading state will persist until redirect happens
     } catch (err: any) {
+      console.error("Google sign-in error:", err);
       setError(err.message || "Failed to sign in with Google");
       setLoading(false);
     }

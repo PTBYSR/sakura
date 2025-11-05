@@ -135,6 +135,69 @@ async def health_check(
     )
 
 
+@router.get("/aops")
+async def get_aops(
+    langgraph_service: LangGraphService = Depends(get_langgraph_service)
+):
+    """Get all Agent Operating Procedures (AOPs)."""
+    try:
+        return {
+            "success": True,
+            "aops": langgraph_service.aops or [],
+            "count": len(langgraph_service.aops) if langgraph_service.aops else 0
+        }
+    except Exception as e:
+        print(f"❌ Error getting AOPs: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/agent/stats")
+async def get_agent_stats(
+    db: Database = Depends(get_database),
+    langgraph_service: LangGraphService = Depends(get_langgraph_service)
+):
+    """Get AI agent statistics including chats responded to, model info, and status."""
+    try:
+        # Get model information from LangGraph service
+        model_name = "gemini-2.0-flash-exp"
+        if langgraph_service.llm:
+            # Try to get model name from the LLM
+            if hasattr(langgraph_service.llm, 'model_name'):
+                model_name = langgraph_service.llm.model_name
+            elif hasattr(langgraph_service.llm, 'model'):
+                model_name = langgraph_service.llm.model
+        
+        # Check if service is initialized
+        status = "online" if langgraph_service._initialized else "offline"
+        
+        # Count chats that AI agent has responded to
+        ai_chats_count = 0
+        if db is not None:
+            chats_collection = db["customer-chats"]
+            chats_with_messages = chats_collection.find({"messages": {"$exists": True, "$ne": []}})
+            for chat in chats_with_messages:
+                messages = chat.get("messages", [])
+                # Check if any message has role "assistant" (AI agent response)
+                has_ai_response = any(
+                    msg.get("role") == "assistant" 
+                    for msg in messages
+                )
+                if has_ai_response:
+                    ai_chats_count += 1
+        
+        return {
+            "success": True,
+            "chats_responded_to": ai_chats_count,
+            "model": model_name,
+            "status": status,
+            "initialized": langgraph_service._initialized,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        print(f"❌ Error getting agent stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/system-prompt")
 async def get_system_prompt(
     db: Database = Depends(get_database)

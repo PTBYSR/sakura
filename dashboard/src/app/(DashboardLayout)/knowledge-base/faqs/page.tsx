@@ -22,6 +22,7 @@ import {
   Pagination,
   Divider,
   Toolbar,
+  CircularProgress,
 } from "@mui/material";
 import {
   Add,
@@ -48,7 +49,6 @@ export default function FAQsPage() {
   // Get logged-in user's ID from session
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id || null;
-  const [mounted, setMounted] = useState(false); // For hydration mismatch prevention
 
   // State management
   const [faqs, setFaqs] = useState<FAQ[]>([]);
@@ -65,11 +65,6 @@ export default function FAQsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Prevent hydration mismatch by only rendering after mount
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // Form state
   const [formQuestion, setFormQuestion] = useState("");
   const [formAnswer, setFormAnswer] = useState("");
@@ -77,9 +72,8 @@ export default function FAQsPage() {
 
   // Load FAQs from API on mount and when userId changes
   useEffect(() => {
-    if (userId) {
-      loadFAQs();
-    }
+    // Load FAQs regardless of userId (can be null/undefined)
+    loadFAQs();
   }, [userId]);
 
   const loadFAQs = async () => {
@@ -298,15 +292,18 @@ export default function FAQsPage() {
     // Error will be shown in the UI below
   }
 
-  // Conditional render for hydration
-  if (!mounted) {
+  // Show loading state
+  if (loading && faqs.length === 0) {
     return (
       <PageContainer title="FAQs" description="Manage your Frequently Asked Questions">
-        <Container maxWidth={false} sx={{ py: 3 }}>
-          <Box sx={{ py: 4 }}>
-            <Typography variant="h4" gutterBottom>
-              Loading...
-            </Typography>
+        <Container maxWidth={false} sx={{ py: 2 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
+            <Box sx={{ textAlign: "center" }}>
+              <CircularProgress />
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontSize: "0.875rem" }}>
+                Loading FAQs...
+              </Typography>
+            </Box>
           </Box>
         </Container>
       </PageContainer>

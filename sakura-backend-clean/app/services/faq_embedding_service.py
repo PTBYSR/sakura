@@ -25,56 +25,31 @@ class FAQEmbeddingService:
         """Generate combined text from FAQ question and answer for embedding."""
         return f"{question}\n\n{answer}".strip()
     
-    def add_faq_embedding(self, faq_id: str, question: str, answer: str) -> bool:
+    def add_faq_embedding(self, faq_id: str, question: str, answer: str, auto_add_to_vector_store: bool = False) -> bool:
         """
-        Generate embedding for FAQ and add it to the vector store.
+        Generate embedding for FAQ.
+        
+        NOTE: FAQ is stored in MongoDB but NOT automatically added to vector store.
+        It will only be added when the FAQ is selected in AI Agent Settings.
         
         Args:
             faq_id: Unique FAQ identifier
             question: FAQ question text
             answer: FAQ answer text
+            auto_add_to_vector_store: If True, add to vector store immediately (for backward compatibility)
             
         Returns:
             bool: True if successful, False otherwise
         """
         try:
-            if not self.vector_store_service.is_initialized():
-                print("❌ Vector store not initialized, skipping FAQ embedding")
-                return False
-            
-            vector_store = self.vector_store_service.get_vector_store()
-            if not vector_store:
-                print("❌ Vector store instance not available")
-                return False
-            
-            # Generate combined text
-            faq_text = self.generate_faq_text(question, answer)
-            
-            # Create document with metadata for easy retrieval/deletion
-            metadata = {
-                "source": "faq",
-                "faq_id": faq_id,
-                "type": "faq",
-                "question": question[:200],  # Store truncated question for reference
-            }
-            
-            doc = Document(
-                page_content=faq_text,
-                metadata=metadata
-            )
-            
-            # Add to vector store
-            vector_store.add_documents([doc])
-            
-            # Save the updated index
-            faiss_path = self.settings.faiss_index_path
-            vector_store.save_local(str(faiss_path))
-            
-            print(f"✅ Added embedding for FAQ {faq_id}")
+            # FAQ is already stored in MongoDB
+            # We don't automatically add it to vector store anymore
+            # It will be added when the user enables this FAQ in AI Agent Settings
+            print(f"✅ FAQ {faq_id} stored in MongoDB (will be indexed when enabled in AI Agent Settings)")
             return True
             
         except Exception as e:
-            print(f"❌ Error adding FAQ embedding: {e}")
+            print(f"❌ Error processing FAQ {faq_id}: {e}")
             return False
     
     def update_faq_embedding(self, faq_id: str, question: str, answer: str) -> bool:

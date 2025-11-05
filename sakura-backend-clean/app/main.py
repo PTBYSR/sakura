@@ -12,7 +12,7 @@ from app.services.embeddings_service import init_embeddings_service
 from app.services.vector_store_service import init_vector_store_service
 from app.services.faq_embedding_service import init_faq_embedding_service
 from app.services.langgraph_service import init_langgraph_service
-from app.routes import ai, users, dashboard, knowledge_base, websocket
+from app.routes import ai, users, dashboard, knowledge_base, websocket, ai_agent_kb
 from app.services.website_crawler_service import init_website_crawler_service
 from app.services.file_processing_service import init_file_processing_service
 
@@ -108,6 +108,7 @@ def create_app() -> FastAPI:
     app.include_router(dashboard.router)
     app.include_router(knowledge_base.router)
     app.include_router(websocket.router)
+    app.include_router(ai_agent_kb.router)
     
     # Root endpoint
     @app.get("/")

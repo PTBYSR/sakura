@@ -71,10 +71,16 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
         setError('');
         setLoading(true);
         try {
+            // Better Auth social sign-in redirects automatically
+            // The redirect URL is handled by Better Auth internally
             await authClient.signIn.social({
                 provider: 'google',
+                callbackURL: typeof window !== 'undefined' ? window.location.origin + '/' : '/',
             });
+            // Note: The browser will redirect automatically, so we don't need to handle navigation
+            // The loading state will persist until redirect happens
         } catch (err: any) {
+            console.error('Google sign-up error:', err);
             setError(err.message || 'Failed to sign up with Google');
             setLoading(false);
         }

@@ -13,14 +13,28 @@ import {
   Alert,
   Snackbar,
   CircularProgress,
+  Avatar,
+  Chip,
 } from "@mui/material";
 import {
   Code as CodeIcon,
   ContentCopy as CopyIcon,
   CheckCircle as CheckCircleIcon,
+  WhatsApp as WhatsAppIcon,
+  Instagram as InstagramIcon,
+  Settings as SettingsIcon,
 } from "@mui/icons-material";
 import { authClient } from "@/lib/auth-client";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
+
+interface ContactChannel {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  status: 'connected' | 'disconnected';
+  color: string;
+}
 
 const ContactChannelsPage = () => {
   const { data: session } = authClient.useSession();
@@ -28,6 +42,25 @@ const ContactChannelsPage = () => {
   const [widgetUrl, setWidgetUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [copySuccess, setCopySuccess] = useState(false);
+  
+  const [channels] = useState<ContactChannel[]>([
+    {
+      id: "whatsapp",
+      name: "WhatsApp",
+      description: "Connect WhatsApp Business API for customer support",
+      icon: <WhatsAppIcon />,
+      status: "disconnected",
+      color: "#25D366",
+    },
+    {
+      id: "instagram",
+      name: "Instagram",
+      description: "Connect Instagram Direct Messages for customer engagement",
+      icon: <InstagramIcon />,
+      status: "disconnected",
+      color: "#E4405F",
+    },
+  ]);
 
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -102,6 +135,19 @@ const ContactChannelsPage = () => {
     }
   };
 
+  const handleConnectChannel = (channelId: string) => {
+    // Placeholder for connect functionality
+    console.log(`Connect ${channelId}`);
+  };
+
+  const getStatusIcon = (status: string) => {
+    return status === 'connected' ? (
+      <CheckCircleIcon color="success" sx={{ fontSize: "1rem" }} />
+    ) : (
+      <CheckCircleIcon color="disabled" sx={{ fontSize: "1rem" }} />
+    );
+  };
+
   if (loading) {
     return (
       <PageContainer title="Contact Channels" description="Get your widget link">
@@ -121,10 +167,73 @@ const ContactChannelsPage = () => {
           {/* Header */}
           <Box sx={{ mb: 3 }}>
             <Typography variant="h5" sx={{ fontWeight: 600, fontSize: "1.25rem", mb: 0.5 }}>
-              Widget Link
+              Contact Channels
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
-              Copy and embed this code on your website to enable the Sakura chat widget
+              Connect with messaging platforms and embed the chat widget on your website
+            </Typography>
+          </Box>
+
+          {/* Contact Channel Integrations */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600, mb: 2 }}>
+              Messaging Platforms
+            </Typography>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {channels.map((channel) => (
+                <Card key={channel.id}>
+                  <CardContent sx={{ p: 2.5 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <Avatar sx={{ bgcolor: channel.color, width: 48, height: 48 }}>
+                          {channel.icon}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="h6" sx={{ fontSize: "1rem", fontWeight: 600 }}>
+                            {channel.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
+                            {channel.description}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                        {getStatusIcon(channel.status)}
+                        <Chip
+                          label={channel.status}
+                          color={channel.status === 'connected' ? 'success' : 'default'}
+                          size="small"
+                          sx={{ fontSize: "0.75rem", height: 24 }}
+                        />
+                        <Button
+                          variant={channel.status === 'connected' ? 'outlined' : 'contained'}
+                          size="small"
+                          onClick={() => handleConnectChannel(channel.id)}
+                          sx={{ fontSize: "0.875rem" }}
+                        >
+                          {channel.status === 'connected' ? 'Disconnect' : 'Connect'}
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<SettingsIcon sx={{ fontSize: "1rem" }} />}
+                          disabled={channel.status !== 'connected'}
+                          sx={{ fontSize: "0.875rem" }}
+                        >
+                          Settings
+                        </Button>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          </Box>
+
+          {/* Widget Link Section */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600, mb: 2 }}>
+              Website Widget
             </Typography>
           </Box>
 
@@ -192,9 +301,9 @@ const ContactChannelsPage = () => {
                 <CodeIcon sx={{ color: "primary.main", fontSize: "1.25rem" }} />
                 <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600 }}>
                   Widget Script URL
-                </Typography>
-              </Box>
-
+                      </Typography>
+                  </Box>
+                  
               <TextField
                 fullWidth
                 value={widgetUrl}
@@ -204,7 +313,7 @@ const ContactChannelsPage = () => {
                     <InputAdornment position="end">
                       <IconButton
                         onClick={handleCopyUrl}
-                        size="small"
+                          size="small" 
                         sx={{ color: copySuccess ? "success.main" : "inherit" }}
                       >
                         {copySuccess ? (
@@ -226,7 +335,7 @@ const ContactChannelsPage = () => {
               <Alert severity="info" sx={{ mt: 2, fontSize: "0.875rem" }}>
                 Add this script tag to your website&apos;s HTML head section to enable the chat widget.
               </Alert>
-            </CardContent>
+                </CardContent>
           </Card>
 
           {/* Snackbar for copy feedback */}

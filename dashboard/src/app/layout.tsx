@@ -14,10 +14,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   // Create cache once and reuse it to prevent hydration mismatches
+  // Using useState with lazy initialization ensures it's only created once
   const [emotionCache] = useState(() => createEmotionCache());
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="emotion-insertion-point" content="" />
+      </head>
       <body suppressHydrationWarning>
         <CacheProvider value={emotionCache}>
           <ThemeProvider theme={baseDarkTheme}>

@@ -126,12 +126,12 @@ export const navigationConfig: NavigationModule[] = [
         href: '/ai-agent/overview',
         icon: IconEye,
       },
-      {
-        id: 'performance',
-        title: 'Performance',
-        href: '/ai-agent/performance',
-        icon: IconTrendingUp,
-      },
+      // {
+      //   id: 'performance',
+      //   title: 'Performance',
+      //   href: '/ai-agent/performance',
+      //   icon: IconTrendingUp,
+      // },
       {
         id: 'settings',
         title: 'Settings',

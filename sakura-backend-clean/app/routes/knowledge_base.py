@@ -70,47 +70,21 @@ class WebsiteResponse(BaseModel):
 def index_website_chunks_in_vector_store(
     website_id: str,
     crawler_service: WebsiteCrawlerService,
-    vector_store_service: VectorStoreService
+    vector_store_service: VectorStoreService,
+    dashboard_user_id: Optional[str] = None
 ):
-    """Background task to index website chunks into vector store."""
+    """
+    Background task to index website chunks into vector store.
+    NOTE: Chunks are stored in MongoDB but NOT automatically added to vector store.
+    They will only be added when the website is selected in AI Agent Settings.
+    """
     try:
-        chunks = crawler_service.get_website_chunks(website_id)
-        if not chunks:
-            return
-        
-        # Convert chunks to LangChain Documents
-        documents = []
-        for chunk in chunks:
-            metadata = {
-                "source": chunk.get("source", ""),
-                "website_id": chunk.get("website_id", website_id),
-                "domain": chunk.get("domain", ""),
-                "title": chunk.get("title", ""),
-                "chunk_index": chunk.get("chunk_index", 0),
-                "chunk_id": chunk.get("id", ""),
-            }
-            # Add headings if available
-            if chunk.get("headings"):
-                metadata["headings"] = ", ".join(chunk.get("headings", []))
-            
-            doc = Document(
-                page_content=chunk.get("text", ""),
-                metadata=metadata
-            )
-            documents.append(doc)
-        
-        # Add documents to vector store
-        if documents and vector_store_service.is_initialized():
-            vector_store = vector_store_service.get_vector_store()
-            if vector_store:
-                vector_store.add_documents(documents)
-                # Save the updated index
-                from app.core.settings import get_settings
-                settings = get_settings()
-                vector_store.save_local(str(settings.faiss_index_path))
-                print(f"✅ Indexed {len(documents)} chunks from website {website_id}")
+        # Chunks are already stored in MongoDB by crawler_service
+        # We don't automatically add them to vector store anymore
+        # They will be added when the user enables this website in AI Agent Settings
+        print(f"✅ Website {website_id} chunks stored in MongoDB (will be indexed when enabled in AI Agent Settings)")
     except Exception as e:
-        print(f"❌ Error indexing chunks for website {website_id}: {e}")
+        print(f"❌ Error processing website chunks {website_id}: {e}")
 
 
 def remove_website_chunks_from_vector_store(
@@ -299,12 +273,14 @@ async def add_website(
                 website_id, 
                 dashboard_user_id=request.dashboard_user_id
             )
-            # After crawling completes, index chunks in vector store (load from MongoDB)
+            # After crawling completes, chunks are stored in MongoDB
+            # They will be indexed in vector store only when enabled in AI Agent Settings
             if website["status"] == "completed":
                 index_website_chunks_in_vector_store(
                     website["id"],
                     crawler_service,
-                    vector_store_service
+                    vector_store_service,
+                    dashboard_user_id=request.dashboard_user_id
                 )
         except Exception as e:
             print(f"Error processing website {url_str}: {e}")
@@ -766,43 +742,21 @@ class FileResponse(BaseModel):
 def index_file_chunks_in_vector_store(
     file_id: str,
     file_processing_service: FileProcessingService,
-    vector_store_service: VectorStoreService
+    vector_store_service: VectorStoreService,
+    dashboard_user_id: Optional[str] = None
 ):
-    """Background task to index file chunks into vector store."""
+    """
+    Background task to process file chunks.
+    NOTE: Chunks are stored in MongoDB but NOT automatically added to vector store.
+    They will only be added when the file is selected in AI Agent Settings.
+    """
     try:
-        chunks = file_processing_service.get_file_chunks(file_id)
-        if not chunks:
-            return
-        
-        # Convert chunks to LangChain Documents
-        documents = []
-        for chunk in chunks:
-            metadata = {
-                "source": chunk.get("source", ""),
-                "file_id": chunk.get("file_id", file_id),
-                "chunk_index": chunk.get("chunk_index", 0),
-                "chunk_id": chunk.get("id", ""),
-                "type": "file"  # Mark as file chunk
-            }
-            
-            doc = Document(
-                page_content=chunk.get("text", ""),
-                metadata=metadata
-            )
-            documents.append(doc)
-        
-        # Add documents to vector store
-        if documents and vector_store_service.is_initialized():
-            vector_store = vector_store_service.get_vector_store()
-            if vector_store:
-                vector_store.add_documents(documents)
-                # Save the updated index
-                from app.core.settings import get_settings
-                settings = get_settings()
-                vector_store.save_local(str(settings.faiss_index_path))
-                logger.info(f"✅ Indexed {len(documents)} chunks from file {file_id}")
+        # Chunks are already stored in MongoDB by file_processing_service
+        # We don't automatically add them to vector store anymore
+        # They will be added when the user enables this file in AI Agent Settings
+        logger.info(f"✅ File {file_id} chunks stored in MongoDB (will be indexed when enabled in AI Agent Settings)")
     except Exception as e:
-        logger.error(f"❌ Error indexing chunks for file {file_id}: {e}")
+        logger.error(f"❌ Error processing file chunks {file_id}: {e}")
 
 
 def remove_file_chunks_from_vector_store(
@@ -982,12 +936,14 @@ async def upload_file(
                     file_id,
                     dashboard_user_id=dashboard_user_id
                 )
-                # After processing completes, index chunks in vector store
+                # After processing completes, chunks are stored in MongoDB
+                # They will be indexed in vector store only when enabled in AI Agent Settings
                 if processed_file.get("status") == "completed":
                     index_file_chunks_in_vector_store(
                         file_id,
                         file_processing_service,
-                        vector_store_service
+                        vector_store_service,
+                        dashboard_user_id=dashboard_user_id
                     )
             except Exception as e:
                 logger.error(f"Error processing file {file.filename}: {e}")
