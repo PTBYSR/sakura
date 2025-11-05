@@ -27,11 +27,12 @@ const renderMenuItems = (items: any, pathDirect: any) => {
       // Display Subheader
       return (
         <Box display={item.navlabel ? 'block' : 'none'} key={item.subheader}>
-
           <Menu
             subHeading={item.subheader}
             key={item.subheader}
-          />
+          >
+            {null}
+          </Menu>
         </Box>
       );
     }
