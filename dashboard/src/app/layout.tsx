@@ -5,7 +5,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { CacheProvider } from "@emotion/react";
 import createEmotionCache from "@/utils/createEmotionCache";
-import { useState } from "react";
+import { useMemo } from "react";
 import './global.css'
 
 export default function RootLayout({
@@ -13,9 +13,14 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Create cache once and reuse it to prevent hydration mismatches
-  // Using useState with lazy initialization ensures it's only created once
-  const [emotionCache] = useState(() => createEmotionCache());
+  // Create cache using useMemo to ensure it's stable and available during SSG
+  const emotionCache = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return createEmotionCache();
+    }
+    // Return a minimal cache for SSR/SSG
+    return createEmotionCache();
+  }, []);
 
   return (
     <html lang="en" suppressHydrationWarning>
