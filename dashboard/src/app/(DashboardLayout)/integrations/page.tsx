@@ -188,7 +188,7 @@ const IntegrationsPage = () => {
 
           {/* Quick Stats */}
           <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
               <Card>
                 <CardContent sx={{ textAlign: 'center', p: 2 }}>
                   <CheckCircleIcon color="success" sx={{ fontSize: 32, mb: 0.75 }} />
@@ -199,7 +199,7 @@ const IntegrationsPage = () => {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
               <Card>
                 <CardContent sx={{ textAlign: 'center', p: 2 }}>
                   <ErrorIcon color="error" sx={{ fontSize: 32, mb: 0.75 }} />
@@ -212,7 +212,7 @@ const IntegrationsPage = () => {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
               <Card>
                 <CardContent sx={{ textAlign: 'center', p: 2 }}>
                   <ScheduleIcon color="warning" sx={{ fontSize: 32, mb: 0.75 }} />
@@ -225,7 +225,7 @@ const IntegrationsPage = () => {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
               <Card>
                 <CardContent sx={{ textAlign: 'center', p: 2 }}>
                   <ApiIcon color="primary" sx={{ fontSize: 32, mb: 0.75 }} />
@@ -241,7 +241,7 @@ const IntegrationsPage = () => {
           {/* Integrations Grid */}
           <Grid container spacing={2}>
             {integrations.map((integration) => (
-              <Grid item xs={12} sm={6} md={4} key={integration.id}>
+              <Grid sx={{ xs: 12, sm: 6, md: 4 }} key={integration.id}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <CardHeader
                     avatar={
@@ -323,7 +323,7 @@ const IntegrationsPage = () => {
               Integration Categories
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+              <Grid sx={{ xs: 12, md: 6 }}>
                 <Card>
                   <CardHeader 
                     title="Social Platforms"
@@ -353,7 +353,7 @@ const IntegrationsPage = () => {
                 </Card>
               </Grid>
               
-              <Grid item xs={12} md={6}>
+              <Grid sx={{ xs: 12, md: 6 }}>
                 <Card>
                   <CardHeader 
                     title="API & Automation"

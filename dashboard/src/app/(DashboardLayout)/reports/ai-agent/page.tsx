@@ -313,7 +313,7 @@ const AIAgentReportsPage = () => {
           {/* Key Metrics Grid */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
             {agentMetrics.map((metric, index) => (
-              <Grid item xs={12} sm={6} md={4} lg={2} key={index}>
+              <Grid sx={{ xs: 12, sm: 6, md: 4, lg: 2 }} key={index}>
                 <Card sx={{ height: '100%' }}>
                   <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -363,7 +363,7 @@ const AIAgentReportsPage = () => {
           {activeTab === 0 && (
             <Grid container spacing={3}>
               {/* Performance Chart Placeholder */}
-              <Grid item xs={12} md={8}>
+              <Grid sx={{ xs: 12, md: 8 }}>
                 <Card>
                   <CardHeader title="Conversation Trends" />
                   <CardContent>
@@ -377,7 +377,7 @@ const AIAgentReportsPage = () => {
               </Grid>
 
               {/* Quick Stats */}
-              <Grid item xs={12} md={4}>
+              <Grid sx={{ xs: 12, md: 4 }}>
                 <Card>
                   <CardHeader title="Quick Stats" />
                   <CardContent>
@@ -480,7 +480,7 @@ const AIAgentReportsPage = () => {
 
           {activeTab === 2 && (
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid sx={{ xs: 12, md: 6 }}>
                 <Card>
                   <CardHeader title="Hourly Conversation Volume" />
                   <CardContent>
@@ -512,7 +512,7 @@ const AIAgentReportsPage = () => {
                 </Card>
               </Grid>
               
-              <Grid item xs={12} md={6}>
+              <Grid sx={{ xs: 12, md: 6 }}>
                 <Card>
                   <CardHeader title="Performance Insights" />
                   <CardContent>
@@ -575,7 +575,7 @@ const AIAgentReportsPage = () => {
 
           {activeTab === 3 && (
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid sx={{ xs: 12, md: 6 }}>
                 <Card>
                   <CardHeader title="Quality Metrics" />
                   <CardContent>
@@ -606,7 +606,7 @@ const AIAgentReportsPage = () => {
                 </Card>
               </Grid>
               
-              <Grid item xs={12} md={6}>
+              <Grid sx={{ xs: 12, md: 6 }}>
                 <Card>
                   <CardHeader title="Training Recommendations" />
                   <CardContent>

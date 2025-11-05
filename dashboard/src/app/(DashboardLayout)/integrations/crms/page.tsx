@@ -198,7 +198,7 @@ const CRMsPage = () => {
 
           {/* Stats Cards */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
               <Card>
                 <CardContent sx={{ textAlign: 'center' }}>
                   <StorageIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
@@ -209,7 +209,7 @@ const CRMsPage = () => {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
               <Card>
                 <CardContent sx={{ textAlign: 'center' }}>
                   <SyncIcon color="success" sx={{ fontSize: 40, mb: 1 }} />
@@ -220,7 +220,7 @@ const CRMsPage = () => {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
               <Card>
                 <CardContent sx={{ textAlign: 'center' }}>
                   <SpeedIcon color="info" sx={{ fontSize: 40, mb: 1 }} />
@@ -233,7 +233,7 @@ const CRMsPage = () => {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
               <Card>
                 <CardContent sx={{ textAlign: 'center' }}>
                   <ErrorIcon color="error" sx={{ fontSize: 40, mb: 1 }} />
@@ -249,7 +249,7 @@ const CRMsPage = () => {
           {/* Integration Cards */}
           <Grid container spacing={3}>
             {integrations.map((integration) => (
-              <Grid item xs={12} sm={6} md={4} key={integration.id}>
+              <Grid sx={{ xs: 12, sm: 6, md: 4 }} key={integration.id}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <CardHeader
                     avatar={
@@ -361,7 +361,7 @@ const CRMsPage = () => {
               Integration Categories
             </Typography>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid sx={{ xs: 12, md: 6 }}>
                 <Card>
                   <CardHeader 
                     title="E-commerce Platforms"
@@ -385,7 +385,7 @@ const CRMsPage = () => {
                 </Card>
               </Grid>
               
-              <Grid item xs={12} md={6}>
+              <Grid sx={{ xs: 12, md: 6 }}>
                 <Card>
                   <CardHeader 
                     title="CRM & Automation"
@@ -415,7 +415,7 @@ const CRMsPage = () => {
             <Card>
               <CardContent>
                 <Grid container spacing={3}>
-                  <Grid item xs={12} md={4}>
+                  <Grid sx={{ xs: 12, md: 4 }}>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h6" color="success.main">98.5%</Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -423,7 +423,7 @@ const CRMsPage = () => {
                       </Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={12} md={4}>
+                  <Grid sx={{ xs: 12, md: 4 }}>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h6" color="primary.main">2.3s</Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -431,7 +431,7 @@ const CRMsPage = () => {
                       </Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={12} md={4}>
+                  <Grid sx={{ xs: 12, md: 4 }}>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h6" color="info.main">24/7</Typography>
                       <Typography variant="body2" color="text.secondary">
