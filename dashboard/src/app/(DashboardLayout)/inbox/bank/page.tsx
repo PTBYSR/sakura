@@ -377,7 +377,7 @@ export default function DatabaseInspectorPage() {
 
         {/* Statistics Cards */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
             <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
               <CardContent>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -395,7 +395,7 @@ export default function DatabaseInspectorPage() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
             <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
               <CardContent>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -413,7 +413,7 @@ export default function DatabaseInspectorPage() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
             <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
               <CardContent>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -431,7 +431,7 @@ export default function DatabaseInspectorPage() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
             <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
               <CardContent>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -452,7 +452,7 @@ export default function DatabaseInspectorPage() {
 
         {/* Additional Stats */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={4}>
+          <Grid sx={{ xs: 12, sm: 4 }}>
             <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
               <CardContent>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -470,7 +470,7 @@ export default function DatabaseInspectorPage() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid sx={{ xs: 12, sm: 4 }}>
             <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
               <CardContent>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -488,7 +488,7 @@ export default function DatabaseInspectorPage() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid sx={{ xs: 12, sm: 4 }}>
             <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
               <CardContent>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -615,14 +615,14 @@ export default function DatabaseInspectorPage() {
                   <Collapse in={expandedItems[`customer-${customer._id}`]}>
               <CardContent>
                       <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Customer ID</Typography>
                           <Typography variant="body2" sx={{ color: "#ccc", mb: 2, fontFamily: "monospace" }}>
                             {customer._id}
                           </Typography>
                         </Grid>
                         {customer.dashboard_user_id && (
-                          <Grid item xs={12} md={6}>
+                          <Grid sx={{ xs: 12, md: 6 }}>
                             <Typography variant="subtitle2" sx={{ color: "#4caf50", mb: 1 }}>
                               Linked to Dashboard User
                             </Typography>
@@ -631,37 +631,37 @@ export default function DatabaseInspectorPage() {
                             </Typography>
                           </Grid>
                         )}
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Location</Typography>
                           <Typography variant="body2" sx={{ color: "#ccc" }}>
                             {customer.location?.city || "?"}, {customer.location?.country || "?"}
                           </Typography>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Device</Typography>
                           <Typography variant="body2" sx={{ color: "#ccc" }}>
                             {customer.device?.platform || "Unknown"}
                           </Typography>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>IP Address</Typography>
                     <Typography variant="body2" sx={{ color: "#ccc" }}>
                             {customer.ip || "N/A"}
                     </Typography>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Vibe</Typography>
                     <Typography variant="body2" sx={{ color: "#ccc" }}>
                             {customer.vibe || "neutral"}
                     </Typography>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Created</Typography>
                     <Typography variant="body2" sx={{ color: "#ccc" }}>
                             {customer.created_at ? new Date(customer.created_at).toLocaleString() : "N/A"}
                     </Typography>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Last Seen</Typography>
                           <Typography variant="body2" sx={{ color: "#ccc" }}>
                             {customer.last_seen ? new Date(customer.last_seen).toLocaleString() : "N/A"}
@@ -718,20 +718,20 @@ export default function DatabaseInspectorPage() {
                   <Collapse in={expandedItems[`chat-${chat._id}`]}>
                           <CardContent>
                       <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Chat ID</Typography>
                           <Typography variant="body2" sx={{ color: "#ccc", mb: 2, fontFamily: "monospace" }}>
                             {chat.chat_id}
                           </Typography>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Document ID</Typography>
                           <Typography variant="body2" sx={{ color: "#ccc", mb: 2, fontFamily: "monospace" }}>
                             {chat._id}
                           </Typography>
                         </Grid>
                         {chat.user_id && (
-                          <Grid item xs={12} md={6}>
+                          <Grid sx={{ xs: 12, md: 6 }}>
                             <Typography variant="subtitle2" sx={{ color: "#4caf50", mb: 1 }}>
                               Linked to Customer
                             </Typography>
@@ -740,20 +740,20 @@ export default function DatabaseInspectorPage() {
                             </Typography>
                           </Grid>
                         )}
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Created</Typography>
                           <Typography variant="body2" sx={{ color: "#ccc" }}>
                             {chat.created_at ? new Date(chat.created_at).toLocaleString() : "N/A"}
                                         </Typography>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Last Activity</Typography>
                           <Typography variant="body2" sx={{ color: "#ccc" }}>
                             {chat.last_activity ? new Date(chat.last_activity).toLocaleString() : "N/A"}
                                         </Typography>
                         </Grid>
                         {chat.first_message && (
-                          <Grid item xs={12}>
+                          <Grid sx={{ xs: 12 }}>
                             <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>First Message</Typography>
                             <Paper sx={{ p: 2, backgroundColor: "#333", color: "#ccc" }}>
                               {chat.first_message}
@@ -761,7 +761,7 @@ export default function DatabaseInspectorPage() {
                           </Grid>
                         )}
                         {chat.last_message && (
-                          <Grid item xs={12}>
+                          <Grid sx={{ xs: 12 }}>
                             <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Last Message</Typography>
                             <Paper sx={{ p: 2, backgroundColor: "#333", color: "#ccc" }}>
                               {chat.last_message}
@@ -822,31 +822,31 @@ export default function DatabaseInspectorPage() {
                   <Collapse in={expandedItems[`dashuser-${user._id}`]}>
                     <CardContent>
                       <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <Typography variant="subtitle2" sx={{ color: "#9c27b0", mb: 1 }}>User ID</Typography>
                           <Typography variant="body2" sx={{ color: "#ccc", mb: 2, fontFamily: "monospace" }}>
                             {user._id}
                           </Typography>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <Typography variant="subtitle2" sx={{ color: "#9c27b0", mb: 1 }}>Email Verified</Typography>
                           <Typography variant="body2" sx={{ color: "#ccc", mb: 2 }}>
                             {user.emailVerified ? "Yes" : "No"}
                           </Typography>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <Typography variant="subtitle2" sx={{ color: "#9c27b0", mb: 1 }}>Created</Typography>
                           <Typography variant="body2" sx={{ color: "#ccc" }}>
                             {user.createdAt ? new Date(user.createdAt).toLocaleString() : "N/A"}
                           </Typography>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <Typography variant="subtitle2" sx={{ color: "#9c27b0", mb: 1 }}>Updated</Typography>
                           <Typography variant="body2" sx={{ color: "#ccc" }}>
                             {user.updatedAt ? new Date(user.updatedAt).toLocaleString() : "N/A"}
                           </Typography>
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid sx={{ xs: 12 }}>
                           <Typography variant="subtitle2" sx={{ color: "#9c27b0", mb: 1 }}>Widget Link</Typography>
                           <Typography variant="body2" sx={{ color: "#4caf50", fontFamily: "monospace" }}>
                             {typeof window !== "undefined" && `/widget/${user._id}`}
