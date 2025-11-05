@@ -111,7 +111,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
               fullWidth
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
               required
               disabled={loading}
               autoComplete="email"
@@ -133,7 +133,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
               variant="outlined"
               fullWidth
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
               required
               disabled={loading}
               autoComplete="current-password"
@@ -150,7 +150,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
                 control={
                   <Checkbox
                     checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRememberMe(e.target.checked)}
                     disabled={loading}
                   />
                 }
