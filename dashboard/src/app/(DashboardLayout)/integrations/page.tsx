@@ -246,7 +246,9 @@ const IntegrationsPage = () => {
                   <CardHeader
                     avatar={
                       <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}>
-                        {React.cloneElement(integration.icon as React.ReactElement, { sx: { fontSize: "1rem" } })}
+                        <Box sx={{ fontSize: "1rem", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {integration.icon}
+                        </Box>
                       </Avatar>
                     }
                     action={
