@@ -80,7 +80,7 @@ const SidebarItems = () => {
     < >
       <MUI_Sidebar width={"100%"} showProfile={false} themeColor={"#5D87FF"} themeSecondaryColor={'#EE66AA'} >
 
-        <Logo img='/images/logos/dark-logo.svg' component={Link} to="/" >Modernize</Logo>
+        <Logo img='/images/logos/dark-logo.svg' component={Link} href="/" >Modernize</Logo>
 <Box mt={5}>
 
 
