@@ -10,11 +10,15 @@ import { ReactNode } from "react";
 // Create a singleton cache instance that's safe for SSR/SSG
 // This ensures the cache is created once and reused across renders
 let clientSideEmotionCache: ReturnType<typeof createEmotionCache> | null = null;
+let serverSideEmotionCache: ReturnType<typeof createEmotionCache> | null = null;
 
 function getEmotionCache() {
   if (typeof window === 'undefined') {
-    // Server-side: create a new cache without insertion point
-    return createEmotionCache();
+    // Server-side: create a singleton cache for SSG/SSR
+    if (!serverSideEmotionCache) {
+      serverSideEmotionCache = createEmotionCache();
+    }
+    return serverSideEmotionCache;
   }
   
   // Client-side: reuse singleton cache

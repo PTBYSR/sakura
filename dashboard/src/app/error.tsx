@@ -3,11 +3,17 @@
 import { Box, Typography, Button, Container } from "@mui/material";
 import Link from "next/link";
 
-// Force dynamic rendering - skip static generation to avoid context issues
+// Force dynamic rendering - skip static generation
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default function NotFound() {
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
   return (
     <Container maxWidth="sm">
       <Box
@@ -21,22 +27,31 @@ export default function NotFound() {
         }}
       >
         <Typography variant="h1" sx={{ fontSize: "8rem", fontWeight: "bold", mb: 2 }}>
-          404
+          Error
         </Typography>
         <Typography variant="h4" sx={{ mb: 2 }}>
-          Page Not Found
+          Something went wrong
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-          The page you are looking for does not exist.
+          {error?.message || "An unexpected error occurred"}
         </Typography>
-        <Button
-          variant="contained"
-          component={Link}
-          href="/"
-          sx={{ textTransform: "none" }}
-        >
-          Go Home
-        </Button>
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <Button
+            variant="contained"
+            onClick={reset}
+            sx={{ textTransform: "none" }}
+          >
+            Try Again
+          </Button>
+          <Button
+            variant="outlined"
+            component={Link}
+            href="/"
+            sx={{ textTransform: "none" }}
+          >
+            Go Home
+          </Button>
+        </Box>
       </Box>
     </Container>
   );
