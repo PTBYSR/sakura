@@ -12,30 +12,21 @@ import { ReactNode } from "react";
 let clientSideEmotionCache: ReturnType<typeof createEmotionCache> | null = null;
 let serverSideEmotionCache: ReturnType<typeof createEmotionCache> | null = null;
 
-// Check if we're in a build environment where React context might not be available
-// During Next.js static generation, React context can be null
-function isBuildEnvironment(): boolean {
+// Simple check: skip providers during server-side rendering to avoid React context errors
+// This prevents "Cannot read properties of null (reading 'useContext')" during SSG
+// Pages will hydrate with full providers on the client-side
+function shouldSkipProviders(): boolean {
   // Always use providers on client-side
   if (typeof window !== 'undefined') {
     return false;
   }
   
-  // On server: check if we're in a build phase
-  // Next.js sets NEXT_PHASE during build
-  if (typeof process !== 'undefined') {
-    // Check for Next.js build phase
-    if (process.env.NEXT_PHASE === 'phase-production-build') {
-      return true;
-    }
-    // During Vercel build, we're in production but building
-    if (process.env.NODE_ENV === 'production' && process.env.VERCEL === '1') {
-      // Check if we're actually building (not running)
-      // Vercel sets this during build
-      return true;
-    }
-  }
-  
-  return false;
+  // On server (SSR/SSG), skip providers to avoid context errors
+  // This is safe because:
+  // 1. Pages will still render (just without MUI theming during build)
+  // 2. Client-side hydration will add providers and styling
+  // 3. Prevents the React context null error during static generation
+  return true;
 }
 
 function getEmotionCache() {
@@ -59,10 +50,10 @@ interface ProvidersProps {
 }
 
 export function Providers({ children }: ProvidersProps) {
-  // During build time (SSG), skip providers to avoid React context errors
+  // Skip providers during server-side rendering (SSR/SSG) to avoid React context errors
   // This prevents the "Cannot read properties of null (reading 'useContext')" error
-  // The page will still work - it just won't have MUI theming during build
-  if (isBuildEnvironment()) {
+  // Pages will hydrate with full providers and styling on the client-side
+  if (shouldSkipProviders()) {
     return <>{children}</>;
   }
 
