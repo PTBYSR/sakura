@@ -2,7 +2,7 @@
 
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { baseDarkTheme } from "@/utils/theme/DarkTheme";
 import AppRouterCacheProvider from "./AppRouterCacheProvider";
 
@@ -11,7 +11,18 @@ interface ProvidersProps {
 }
 
 export function Providers({ children }: ProvidersProps) {
-  // Always render providers - pages using this layout are dynamic, so context is available
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // During SSG/build, render children without providers to avoid useContext errors
+  if (!mounted) {
+    return <>{children}</>;
+  }
+
+  // On client, render with providers
   return (
     <AppRouterCacheProvider>
       <ThemeProvider theme={baseDarkTheme}>
