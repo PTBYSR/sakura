@@ -16,15 +16,20 @@ export default function AppRouterCacheProvider({
     const cache = createEmotionCache();
     cache.compat = true;
 
-    const prevInsert = cache.insert;
+    type InsertFn = typeof cache.insert;
+    const prevInsert: InsertFn = cache.insert;
     let inserted: string[] = [];
 
-    cache.insert = (...args: any[]) => {
-      const serialized = args[1];
+    cache.insert = function insertEmotion(
+      selector: Parameters<InsertFn>[0],
+      serialized: Parameters<InsertFn>[1],
+      sheet: Parameters<InsertFn>[2],
+      shouldCache?: Parameters<InsertFn>[3],
+    ) {
       if (cache.inserted[serialized.name] === undefined) {
         inserted.push(serialized.name);
       }
-      return prevInsert(...args);
+      return prevInsert.call(cache, selector, serialized, sheet, shouldCache);
     };
 
     const flush = () => {
