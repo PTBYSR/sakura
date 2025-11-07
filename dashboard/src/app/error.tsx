@@ -1,7 +1,7 @@
 "use client";
 
-import { Box, Typography, Button, Container } from "@mui/material";
 import Link from "next/link";
+import { useEffect } from "react";
 
 // Force dynamic rendering - skip static generation
 export const dynamic = 'force-dynamic';
@@ -14,46 +14,101 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
   return (
-    <Container maxWidth="sm">
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "100vh",
-          textAlign: "center",
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "100vh",
+        textAlign: "center",
+        backgroundColor: "#202024",
+        color: "#ffffff",
+        padding: "20px",
+      }}
+    >
+      <h1
+        style={{
+          fontSize: "8rem",
+          fontWeight: "bold",
+          margin: "0 0 1rem 0",
+          lineHeight: "1",
         }}
       >
-        <Typography variant="h1" sx={{ fontSize: "8rem", fontWeight: "bold", mb: 2 }}>
-          Error
-        </Typography>
-        <Typography variant="h4" sx={{ mb: 2 }}>
-          Something went wrong
-        </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-          {error?.message || "An unexpected error occurred"}
-        </Typography>
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <Button
-            variant="contained"
-            onClick={reset}
-            sx={{ textTransform: "none" }}
-          >
-            Try Again
-          </Button>
-          <Button
-            variant="outlined"
-            component={Link}
-            href="/"
-            sx={{ textTransform: "none" }}
-          >
-            Go Home
-          </Button>
-        </Box>
-      </Box>
-    </Container>
+        Error
+      </h1>
+      <h2
+        style={{
+          fontSize: "2rem",
+          fontWeight: "600",
+          margin: "0 0 1rem 0",
+        }}
+      >
+        Something went wrong
+      </h2>
+      <p
+        style={{
+          fontSize: "1rem",
+          color: "#B0BEC5",
+          margin: "0 0 2rem 0",
+          maxWidth: "500px",
+        }}
+      >
+        {error?.message || "An unexpected error occurred"}
+      </p>
+      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center" }}>
+        <button
+          onClick={reset}
+          style={{
+            padding: "10px 24px",
+            backgroundColor: "#EE66AA",
+            color: "#ffffff",
+            border: "none",
+            borderRadius: "10px",
+            fontWeight: "600",
+            fontSize: "0.875rem",
+            cursor: "pointer",
+            transition: "background-color 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#d1488a";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "#EE66AA";
+          }}
+        >
+          Try Again
+        </button>
+        <Link
+          href="/"
+          style={{
+            display: "inline-block",
+            padding: "10px 24px",
+            backgroundColor: "transparent",
+            color: "#EE66AA",
+            textDecoration: "none",
+            borderRadius: "10px",
+            fontWeight: "600",
+            fontSize: "0.875rem",
+            border: "1px solid #EE66AA",
+            transition: "background-color 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "rgba(238,102,170,0.08)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "transparent";
+          }}
+        >
+          Go Home
+        </Link>
+      </div>
+    </div>
   );
 }
 
