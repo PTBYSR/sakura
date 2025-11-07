@@ -92,6 +92,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Force dynamic rendering for dashboard layout to ensure providers are available
+export const dynamic = 'force-dynamic';
+
 export default function RootLayout({
   children,
 }: {

@@ -1,5 +1,8 @@
 "use client";
 import React, { useState } from "react";
+
+// Force dynamic rendering to avoid SSG issues with MUI theme
+export const dynamic = 'force-dynamic';
 import {
   Box,
   Typography,

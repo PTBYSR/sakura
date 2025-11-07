@@ -11,6 +11,7 @@ interface ProvidersProps {
 }
 
 export function Providers({ children }: ProvidersProps) {
+  // Always render providers - pages using this layout are dynamic, so context is available
   return (
     <AppRouterCacheProvider>
       <ThemeProvider theme={baseDarkTheme}>
