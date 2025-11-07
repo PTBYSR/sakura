@@ -29,7 +29,8 @@ export default function AppRouterCacheProvider({
       if (cache.inserted[serialized.name] === undefined) {
         inserted.push(serialized.name);
       }
-      return prevInsert.call(cache, selector, serialized, sheet, shouldCache);
+      const cacheFlag = shouldCache ?? true;
+      return prevInsert.call(cache, selector, serialized, sheet, cacheFlag);
     };
 
     const flush = () => {
