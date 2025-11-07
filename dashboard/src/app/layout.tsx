@@ -1,6 +1,9 @@
 import { Providers } from "./providers";
 import './global.css'
 
+// Force dynamic rendering to ensure providers are available during build
+export const dynamic = 'force-dynamic';
+
 export default function RootLayout({
   children,
 }: {
