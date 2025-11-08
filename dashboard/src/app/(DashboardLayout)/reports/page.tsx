@@ -1,21 +1,20 @@
 "use client";
 import React from "react";
-import { Box, Typography, Container } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 
 const ReportsPage = () => {
   return (
     <PageContainer title="Reports" description="View analytics and reports">
-      <Container maxWidth="lg">
-        <Box sx={{ py: 4 }}>
-          <Typography variant="h4" gutterBottom>
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="py-8">
+          <h1 className="text-3xl font-bold text-white mb-2">
             Reports
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
+          </h1>
+          <p className="text-gray-300">
             This is the Reports page at /reports
-          </Typography>
-        </Box>
-      </Container>
+          </p>
+        </div>
+      </div>
     </PageContainer>
   );
 };

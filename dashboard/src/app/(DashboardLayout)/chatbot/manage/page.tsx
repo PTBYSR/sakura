@@ -1,29 +1,9 @@
 "use client";
 import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Stack,
-  Grid,
-  Avatar,
-  IconButton,
-  Button,
-  Switch,
-  FormControlLabel,
-  ToggleButton,
-  ToggleButtonGroup,
-  Box,
-} from "@mui/material";
-import { useTheme } from "@mui/material/styles";
-import { Upload, Delete } from "@mui/icons-material";
 import WidgetCustomization from "../../components/dashboard/WidgetCustomization";
 import PreviewContainer from "../../components/dashboard/PreviewContainer";
 
 const Manage = () => {
-  const theme = useTheme();
-
   // States
   const [headerText, setHeaderText] = useState("👋 Our team is here for you");
   const [widgetIcon, setWidgetIcon] = useState("chat-bubble");
@@ -40,31 +20,18 @@ const Manage = () => {
   };
 
   return (
-     <Box sx={{ flexGrow: 1, p: 2 }}>
-      <Grid container spacing={4}>
-
-        {/* Customization - scrollable */}
-        <Grid size={{
-              xs: 12,
-              lg: 8,
-              md: 7,
-            }}>
+    <div className="p-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div>
           <WidgetCustomization />
-        </Grid>
-        {/* Preview - sticky */}
-        <Grid 
-         size={{
-              xs: 12,
-              lg: 8,
-              md: 7,
-            }}
-        >
-          <Box sx={{ position: "sticky", top: 16 }}>
+        </div>
+        <div>
+          <div className="sticky top-4">
             <PreviewContainer />
-          </Box>
-        </Grid>
-      </Grid>
-    </Box>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

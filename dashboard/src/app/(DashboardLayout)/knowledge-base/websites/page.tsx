@@ -1,37 +1,19 @@
 "use client";
 import React, { useState } from "react";
 import {
-  Box,
-  Typography,
-  Container,
-  Card,
-  CardContent,
-  TextField,
-  Button,
-  Grid,
-  Chip,
-  LinearProgress,
-  Alert,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from "@mui/material";
-import {
-  Add as AddIcon,
-  Delete as DeleteIcon,
-  Refresh as RefreshIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  Schedule as ScheduleIcon,
-} from "@mui/icons-material";
+  Plus,
+  Trash2,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Loader2,
+} from "lucide-react";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { authClient } from "@/lib/auth-client";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Chip } from "@/components/ui/chip";
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
@@ -48,7 +30,6 @@ interface WebsiteSource {
 }
 
 const KnowledgeBaseWebsitesPage = () => {
-  // Get logged-in user's ID from session
   const { data: session, isPending } = authClient.useSession();
   const userId = session?.user?.id || null;
   const [mounted, setMounted] = useState(false);
@@ -59,7 +40,6 @@ const KnowledgeBaseWebsitesPage = () => {
   const [deleteDialog, setDeleteDialog] = useState<string | null>(null);
   const [deletingWebsiteId, setDeletingWebsiteId] = useState<string | null>(null);
 
-  // Prevent hydration mismatch by only rendering after mount
   React.useEffect(() => {
     setMounted(true);
   }, []);
@@ -81,12 +61,8 @@ const KnowledgeBaseWebsitesPage = () => {
     if (userId) {
       refreshList();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  // Note: Website status updates via WebSocket can be added later
-  // For now, we'll keep a simplified polling only for specific website status checks
-  // This can be enhanced to use WebSocket when backend supports website_status subscription
   const pollWebsite = (id: string) => {
     const iv = setInterval(async () => {
       try {
@@ -162,10 +138,10 @@ const KnowledgeBaseWebsitesPage = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return <CheckCircleIcon color="success" />;
-      case 'error': return <ErrorIcon color="error" />;
-      case 'processing': return <ScheduleIcon color="primary" />;
-      default: return <ScheduleIcon color="action" />;
+      case 'completed': return <CheckCircle2 className="text-green-500 w-5 h-5" />;
+      case 'error': return <XCircle className="text-red-500 w-5 h-5" />;
+      case 'processing': return <Clock className="text-blue-500 w-5 h-5" />;
+      default: return <Clock className="text-gray-500 w-5 h-5" />;
     }
   };
 
@@ -174,172 +150,181 @@ const KnowledgeBaseWebsitesPage = () => {
       case 'completed': return 'success';
       case 'error': return 'error';
       case 'processing': return 'primary';
-      default: return 'default';
+      default: return 'secondary';
     }
   };
 
-  // Prevent hydration mismatch - don't render content until mounted
   if (!mounted) {
     return (
       <PageContainer title="Knowledge Base Websites" description="Manage website knowledge sources">
-        <Container maxWidth="lg">
-          <Box sx={{ py: 4 }}>
-            <Typography variant="h4" gutterBottom>
-              Loading...
-            </Typography>
-          </Box>
-        </Container>
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="py-8">
+            <p className="text-gray-300">Loading...</p>
+          </div>
+        </div>
       </PageContainer>
     );
   }
 
   return (
     <PageContainer title="Knowledge Base Websites" description="Manage website knowledge sources">
-      <Container maxWidth="lg">
-        <Box sx={{ py: 4 }}>
-          <Typography variant="h4" gutterBottom>
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="py-8">
+          <h1 className="text-3xl font-bold text-white mb-2">
             Website Knowledge Sources
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+          </h1>
+          <p className="text-gray-300 mb-8">
             Add websites to automatically extract and index their content into your knowledge base.
-          </Typography>
+          </p>
 
           {/* Add New Website Form */}
-          <Card sx={{ mb: 4 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+          <Card className="mb-8">
+            <CardContent className="p-6">
+              <h6 className="text-lg font-semibold text-white mb-4">
                 Add New Website
-              </Typography>
-              <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-                <TextField
-                  fullWidth
-                  label="Website URL"
-                  placeholder="https://example.com"
-                  value={newUrl}
-                  onChange={(e) => setNewUrl(e.target.value)}
-                  disabled={isSubmitting}
-                  helperText="Enter the full URL of the website you want to index"
-                />
+              </h6>
+              <form onSubmit={handleSubmit} className="flex gap-3 items-start">
+                <div className="flex-1">
+                  <Input
+                    placeholder="https://example.com"
+                    value={newUrl}
+                    onChange={(e) => setNewUrl(e.target.value)}
+                    disabled={isSubmitting}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Enter the full URL of the website you want to index
+                  </p>
+                </div>
                 <Button
                   type="submit"
                   variant="contained"
-                  startIcon={<AddIcon />}
+                  color="primary"
                   disabled={!newUrl.trim() || isSubmitting}
-                  sx={{ minWidth: 140 }}
+                  className="min-w-[140px]"
                 >
+                  <Plus size={16} className="mr-2" />
                   {isSubmitting ? 'Processing...' : 'Add Website'}
                 </Button>
-              </Box>
+              </form>
               {isSubmitting && (
-                <Box sx={{ mt: 2 }}>
-                  <LinearProgress />
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                <div className="mt-4">
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="bg-[#EE66AA] h-2 rounded-full animate-pulse" style={{ width: '50%' }} />
+                  </div>
+                  <p className="text-sm text-gray-300 mt-2">
                     Crawling website and extracting content...
-                  </Typography>
-                </Box>
+                  </p>
+                </div>
               )}
             </CardContent>
           </Card>
 
           {/* Website Sources List */}
           <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+            <CardContent className="p-6">
+              <h6 className="text-lg font-semibold text-white mb-4">
                 Website Sources ({websites.length})
-              </Typography>
+              </h6>
               
               {websites.length === 0 ? (
-                <Alert severity="info">
+                <div className="p-4 bg-blue-600/20 border border-blue-500 rounded-lg text-blue-400">
                   No websites added yet. Add your first website above to get started.
-                </Alert>
+                </div>
               ) : (
-                <List>
-                  {websites.map((website) => (
-                    <ListItem key={website.id} divider>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-                        {getStatusIcon(website.status)}
-                      </Box>
-                      <ListItemText
-                        primary={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="subtitle1">
-                              {website.title}
-                            </Typography>
-                            <Chip 
-                              label={website.status} 
-                              color={getStatusColor(website.status) as any}
-                              size="small"
-                            />
-                          </Box>
-                        }
-                        secondary={
-                          <>
-                            <Typography variant="body2" color="text.secondary" component="span" display="block">
+                <div className="space-y-0">
+                  {websites.map((website, index) => (
+                    <div key={website.id}>
+                      <div className="flex items-start gap-4 p-4 hover:bg-gray-800 rounded-lg transition-colors">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          {getStatusIcon(website.status)}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <h6 className="text-base font-semibold text-white">
+                                {website.title}
+                              </h6>
+                              <Chip 
+                                color={getStatusColor(website.status)}
+                                size="small"
+                                className="text-xs"
+                              >
+                                {website.status}
+                              </Chip>
+                            </div>
+                            <p className="text-sm text-gray-300 mb-2">
                               {website.url}
-                            </Typography>
-                            <Typography variant="caption" component="span" sx={{ display: 'block', mt: 1 }}>
+                            </p>
+                            <p className="text-xs text-gray-400">
                               Pages: {website.pagesExtracted} • Chunks: {website.totalChunks} • Updated: {website.lastUpdated}
-                            </Typography>
+                            </p>
                             {website.error && (
-                              <Typography variant="caption" component="span" color="error" sx={{ display: 'block', mt: 1 }}>
+                              <p className="text-xs text-red-400 mt-2">
                                 {website.error}
-                              </Typography>
+                              </p>
                             )}
-                          </>
-                        }
-                      />
-                      <ListItemSecondaryAction>
-                        <IconButton 
-                          edge="end" 
+                          </div>
+                        </div>
+                        <button
                           onClick={() => setDeleteDialog(website.id)}
-                          color="error"
                           disabled={deletingWebsiteId === website.id}
+                          className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
                         >
-                          <DeleteIcon />
-                        </IconButton>
-                      </ListItemSecondaryAction>
-                    </ListItem>
+                          <Trash2 size={20} />
+                        </button>
+                      </div>
+                      {index < websites.length - 1 && (
+                        <div className="border-t border-gray-700 my-2" />
+                      )}
+                    </div>
                   ))}
-                </List>
+                </div>
               )}
             </CardContent>
           </Card>
-        </Box>
+        </div>
 
         {/* Delete Confirmation Dialog */}
-        <Dialog open={!!deleteDialog} onClose={() => !deletingWebsiteId && setDeleteDialog(null)}>
-          <DialogTitle>Delete Website Source</DialogTitle>
-          <DialogContent>
-            <Typography>
-              Are you sure you want to delete this website source? This will remove all associated content from your knowledge base, including all indexed chunks from the vector store.
-            </Typography>
-            {deletingWebsiteId && (
-              <Box sx={{ mt: 2 }}>
-                <LinearProgress />
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Deleting website and removing chunks from index...
-                </Typography>
-              </Box>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button 
-              onClick={() => setDeleteDialog(null)} 
-              disabled={!!deletingWebsiteId}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={() => deleteDialog && handleDelete(deleteDialog)} 
-              color="error"
-              variant="contained"
-              disabled={!!deletingWebsiteId}
-            >
-              {deletingWebsiteId ? 'Deleting...' : 'Delete'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Container>
+        {deleteDialog && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-[#1e1e1e] border border-gray-700 rounded-lg p-6 max-w-md w-full mx-4">
+              <h6 className="text-lg font-semibold text-white mb-4">
+                Delete Website Source
+              </h6>
+              <p className="text-gray-300 mb-6">
+                Are you sure you want to delete this website source? This will remove all associated content from your knowledge base, including all indexed chunks from the vector store.
+              </p>
+              {deletingWebsiteId && (
+                <div className="mb-4">
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="bg-[#EE66AA] h-2 rounded-full animate-pulse" style={{ width: '50%' }} />
+                  </div>
+                  <p className="text-sm text-gray-300 mt-2">
+                    Deleting website and removing chunks from index...
+                  </p>
+                </div>
+              )}
+              <div className="flex gap-3 justify-end">
+                <Button 
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => setDeleteDialog(null)} 
+                  disabled={!!deletingWebsiteId}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="contained"
+                  color="error"
+                  onClick={() => deleteDialog && handleDelete(deleteDialog)} 
+                  disabled={!!deletingWebsiteId}
+                >
+                  {deletingWebsiteId ? 'Deleting...' : 'Delete'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </PageContainer>
   );
 };

@@ -1,39 +1,24 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import {
-  Box,
-  Typography,
-  TextField,
-  IconButton,
-  Avatar,
-  Chip,
-  Collapse,
-  Badge,
-  InputAdornment,
-  Button,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Divider,
-  Paper,
-  Switch,
-  FormControlLabel,
-  Tooltip,
-} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Chip } from "@/components/ui/chip";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Collapse } from "@/components/ui/collapse";
+import { Switch as TSwitch } from "@/components/ui/switch";
 import {
   Send,
-  ChatBubbleOutline,
-  Public,
-  ExpandMore,
-  Warning as AlertCircle,
+  MessageSquare,
+  Globe2,
+  ChevronDown,
+  AlertCircle,
   CheckCircle,
-  SmartToy as Robot,
+  Bot,
   Search,
-  Email,
-  Person as PersonIcon,
-} from "@mui/icons-material";
+  Mail,
+  User as PersonIcon,
+} from "lucide-react";
 import { useUnifiedChatData } from "../hooks/useUnifiedChatData";
 import { useSidebar } from "@/contexts/SidebarContext";
 
@@ -262,254 +247,136 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", height: "100vh", backgroundColor: "#1a1a1a" }}>
-        <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Typography sx={{ color: "white" }}>Loading...</Typography>
-        </Box>
-      </Box>
+      <div className="flex h-screen bg-[#1a1a1a]">
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-white">Loading...</p>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Box sx={{ display: "flex", height: "100vh", backgroundColor: "#1a1a1a" }}>
-        <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Typography sx={{ color: "red" }}>Error: {error}</Typography>
-        </Box>
-      </Box>
+      <div className="flex h-screen bg-[#1a1a1a]">
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-red-500">Error: {error}</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ 
-      display: "flex", 
-      flexDirection: "column",
-      height: "100vh", 
-      width: `calc(100vw - ${currentSidebarWidth}px)`,
-      position: "fixed", 
-      top: 0, 
-      left: `${currentSidebarWidth}px`,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "#1a1a1a",
-      overflow: "hidden",
-      transition: "left 0.3s ease-in-out, width 0.3s ease-in-out",
-      zIndex: 1100
-    }}>
+    <div
+      className="flex flex-col h-screen bg-[#1a1a1a] overflow-hidden"
+      style={{
+        width: `calc(100vw - ${currentSidebarWidth}px)`,
+        position: "fixed",
+        top: 0,
+        left: `${currentSidebarWidth}px`,
+        right: 0,
+        bottom: 0,
+        transition: "left 0.3s ease-in-out, width 0.3s ease-in-out",
+        zIndex: 1100,
+      }}
+    >
       {/* Top Global Navigation Bar */}
-      <Box sx={{ 
-        height: 52, 
-        backgroundColor: "#2a2a2a", 
-        borderBottom: "1px solid #333",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        px: 2.5,
-        flexShrink: 0,
-        zIndex: 1000
-      }}>
+      <div className="h-[52px] bg-[#2a2a2a] border-b border-[#333] flex items-center justify-between px-3.5 z-50">
         {/* Search Bar */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <TextField
-            placeholder="Search"
-            size="small"
-            sx={{
-              width: 280,
-              "& .MuiOutlinedInput-root": {
-                backgroundColor: "#1a1a1a",
-                color: "white",
-                "& fieldset": { borderColor: "#333" },
-                "&:hover fieldset": { borderColor: "#555" },
-                "&.Mui-focused fieldset": { borderColor: "#4caf50" },
-              },
-              "& .MuiInputBase-input": { color: "white", fontSize: "0.875rem" },
-              "& .MuiInputBase-input::placeholder": { color: "#ccc", fontSize: "0.875rem" },
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search sx={{ color: "#ccc", fontSize: "1rem" }} />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Chip label="ctrl K" size="small" sx={{ backgroundColor: "#333", color: "#ccc", fontSize: "0.65rem", height: "20px" }} />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Box>
-
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
+              <Input
+                placeholder="Search"
+                className="w-72 pl-9 text-sm"
+              />
+            </div>
+            <Chip size="small" className="text-[0.65rem] h-5 bg-gray-800 text-gray-300">ctrl K</Chip>
+          </div>
+        </div>
         {/* Right side - Logo */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <Typography sx={{ color: "white", fontWeight: 600, fontSize: "1rem" }}>
-            páse
-          </Typography>
-        </Box>
-      </Box>
+        <div className="flex items-center gap-3">
+          <div className="text-white font-semibold text-base">páse</div>
+        </div>
+      </div>
 
       {/* Main Content Area */}
-      <Box sx={{ 
-        display: "flex", 
-        flex: 1,
-        height: "calc(100vh - 52px)",
-        overflow: "hidden"
-      }}>
+      <div className="flex flex-1 overflow-hidden" style={{ height: "calc(100vh - 52px)" }}>
         {/* Left Sidebar - Chat List */}
-        <Box sx={{ 
-          width: 300, 
-          backgroundColor: "#2a2a2a", 
-          borderRight: "1px solid #333", 
-          display: "flex", 
-          flexDirection: "column",
-          flexShrink: 0,
-          overflow: "hidden"
-        }}>
+        <div className="w-[300px] bg-[#2a2a2a] border-r border-[#333] flex flex-col overflow-hidden flex-shrink-0">
           {/* Header */}
-          <Box sx={{ p: 2, borderBottom: "1px solid #333" }}>
-            <Typography sx={{ color: "white", fontWeight: 600, fontSize: "0.95rem", mb: 0.75 }}>
-              All chats
-            </Typography>
-            <Typography sx={{ color: "#999", fontSize: "0.8rem", fontWeight: 400 }}>
-              {chats.length} {chats.length === 1 ? 'chat' : 'chats'}
-              </Typography>
-          </Box>
-
+          <div className="p-2 border-b border-[#333]">
+            <div className="text-white font-semibold text-[0.95rem] mb-1">All chats</div>
+            <div className="text-[#999] text-[0.8rem] font-normal">{chats.length} {chats.length === 1 ? 'chat' : 'chats'}</div>
+          </div>
           {/* Chat List */}
-          <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden">
             {chats.length === 0 ? (
-              <Box sx={{ p: 2, textAlign: "center" }}>
-                <Typography sx={{ color: "#888", fontSize: "0.8rem" }}>
+              <div className="p-2 text-center">
+                <div className="text-[#888] text-[0.8rem]">
                   No active chats found. {loading ? "Loading..." : "Chats will appear here when customers start conversations."}
-                </Typography>
+                </div>
                 {process.env.NODE_ENV === "development" && (
-                  <Typography sx={{ color: "#666", fontSize: "0.7rem", mt: 1.5 }}>
-                    Debug: Section=&quot;{section}&quot;, Chats={chats.length}, Loading={loading ? "Yes" : "No"}, Error={error || "None"}
-                  </Typography>
+                  <div className="text-[#666] text-[0.7rem] mt-1.5">
+                    Debug: Section="{section}", Chats={chats.length}, Loading={loading ? "Yes" : "No"}, Error={error || "None"}
+                  </div>
                 )}
-              </Box>
+              </div>
             ) : (
               chats.map((chat) => (
-              <ListItemButton
-                key={chat.chat.id}
-                onClick={() => setSelectedChat(chat)}
-                sx={{
-                  backgroundColor: selectedChat?.chat.id === chat.chat.id ? "#3a3a3a" : "transparent",
-                  borderRadius: 0,
-                  px: 2.5,
-                  py: 1.5,
-                  "&:hover": { backgroundColor: "#3a3a3a" },
-                }}
-              >
-                <ListItemIcon sx={{ minWidth: 44 }}>
-                  <Badge
-                    badgeContent={chat.chat.unreadCount}
-                    color="error"
-                    invisible={chat.chat.unreadCount === 0}
-                  >
-                    <Avatar
-                      sx={{
-                        width: 36,
-                        height: 36,
-                        bgcolor: "#ff6b35",
-                        color: "white",
-                        fontSize: "0.9rem",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {chat.chat.avatar}
-                    </Avatar>
-                  </Badge>
-                </ListItemIcon>
-                <ListItemText
-                  primary={
-                    <Typography component="div" sx={{ color: "white", fontSize: "0.875rem", fontWeight: 500, mb: 0.25 }}>
-                      {chat.chat.name}
-                    </Typography>
-                  }
-                  secondaryTypographyProps={{ component: "div" }}
-                  secondary={
-                    <Box>
-                      <Typography component="div" sx={{ color: "#999", fontSize: "0.8rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", mb: 0.25 }}>
-                        {chat.chat.lastMessage}
-                      </Typography>
-                      <Typography component="div" sx={{ color: "#666", fontSize: "0.7rem", fontWeight: 400 }}>
-                        {chat.chat.timestamp}
-                      </Typography>
-                    </Box>
-                  }
-                />
-              </ListItemButton>
+                <button
+                  key={chat.chat.id}
+                  onClick={() => setSelectedChat(chat)}
+                  className={`w-full flex items-start gap-3 px-2.5 py-1.5 hover:bg-[#3a3a3a] ${selectedChat?.chat.id === chat.chat.id ? 'bg-[#3a3a3a]' : ''}`}
+                >
+                  <div className="min-w-[44px]">
+                    <Badge content={chat.chat.unreadCount} invisible={chat.chat.unreadCount === 0}>
+                      <Avatar size={36} fallback={chat.chat.avatar} />
+                    </Badge>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-white text-[0.875rem] font-medium mb-0.5">{chat.chat.name}</div>
+                    <div className="text-[#999] text-[0.8rem] truncate mb-0.5">{chat.chat.lastMessage}</div>
+                    <div className="text-[#666] text-[0.7rem] font-normal">{chat.chat.timestamp}</div>
+                  </div>
+                </button>
               ))
             )}
-          </Box>
-        </Box>
+          </div>
+        </div>
 
         {/* Center Panel - Chat Messages */}
-        <Box sx={{ 
-          flex: 1, 
-          display: "flex", 
-          flexDirection: "column", 
-          backgroundColor: "#1a1a1a",
-          overflow: "hidden"
-        }}>
+        <div className="flex-1 flex flex-col bg-[#1a1a1a] overflow-hidden">
           {/* Chat Header */}
-          <Box sx={{ 
-            p: 2, 
-            borderBottom: "1px solid #333", 
-            backgroundColor: "#2a2a2a", 
-            display: "flex", 
-            justifyContent: "space-between", 
-            alignItems: "flex-start",
-            flexShrink: 0
-          }}>
-            <Box sx={{ flex: 1 }}>
-            <Typography sx={{ color: "white", fontWeight: 600, fontSize: "0.95rem", mb: 0.5 }}>
-              {currentContactInfo?.name || "Select a chat"}
-            </Typography>
-            {currentContactInfo?.email && (
-              <Box sx={{ mt: 0.5 }}>
-                <Typography component="div" sx={{ color: "#999", fontSize: "0.8rem" }}>
-                  E-mail: <Typography component="span" sx={{ color: "#2196f3", cursor: "pointer", fontWeight: 400 }}>{currentContactInfo.email}</Typography>
-                </Typography>
-              </Box>
+          <div className="p-2 border-b border-[#333] bg-[#2a2a2a] flex items-start justify-between">
+            <div className="flex-1">
+              <div className="text-white font-semibold text-[0.95rem] mb-1">{currentContactInfo?.name || "Select a chat"}</div>
+              {currentContactInfo?.email && (
+                <div className="mt-1 text-[#999] text-[0.8rem]">
+                  E-mail: <span className="text-[#2196f3] cursor-pointer font-normal">{currentContactInfo.email}</span>
+                </div>
               )}
-            </Box>
+            </div>
             {selectedChat && (
-              <Tooltip title={aiAgentEnabled ? "AI Agent is responding automatically" : "AI Agent responses are disabled"}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={aiAgentEnabled}
-                      onChange={(e) => handleToggleAiAgent(e.target.checked)}
-                      disabled={loading}
-                      size="small"
-                      sx={{
-                        "& .MuiSwitch-switchBase.Mui-checked": {
-                          color: "#4caf50",
-                        },
-                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                          backgroundColor: "#4caf50",
-                        },
-                      }}
-                    />
-                  }
-                  label={
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                      <Robot sx={{ fontSize: "0.9rem", color: aiAgentEnabled ? "#4caf50" : "#888" }} />
-                      <Typography sx={{ color: "#999", fontSize: "0.8rem", ml: 0.5, fontWeight: 400 }}>
-                        AI Agent
-                      </Typography>
-                    </Box>
-                  }
-                  sx={{ ml: 1.5, mr: 0 }}
-                />
-              </Tooltip>
+              <div className="ml-4 flex items-center">
+                <div className="flex items-center gap-2" title={aiAgentEnabled ? "AI Agent is responding automatically" : "AI Agent responses are disabled"}>
+                  <TSwitch
+                    checked={aiAgentEnabled}
+                    onChange={(checked) => handleToggleAiAgent(checked)}
+                    disabled={loading}
+                    size="sm"
+                  />
+                  <div className="flex items-center gap-1">
+                    <Bot className={`h-4 w-4 ${aiAgentEnabled ? 'text-green-500' : 'text-gray-400'}`} />
+                    <span className="text-[#999] text-[0.8rem]">AI Agent</span>
+                  </div>
+                </div>
+              </div>
             )}
-          </Box>
+          </div>
 
           {/* Messages Area */}
-          <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", p: 2 }}>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-2">
             {selectedChat?.messages.map((message) => {
               const isAI = isAIMessage(message);
               const isHumanAgent = isHumanAgentMessage(message);
@@ -517,268 +384,149 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
               const isCustomerMessage = !isAgentMessage;
               const formattedTime = formatTimestamp(message.timestamp);
 
+              const bubbleBg = isAI ? '#4caf50' : isHumanAgent ? '#1976d2' : '#2a2a2a';
+              const bubbleBorder = isAI ? '#66bb6a' : isHumanAgent ? '#42a5f5' : '#333';
+
               return (
-              <Box
-                key={message.id}
-                sx={{
-                  display: "flex",
-                    justifyContent: isAgentMessage ? "flex-end" : "flex-start",
-                    mb: 2,
-                  }}
-                >
-                  <Box sx={{ maxWidth: "70%", display: "flex", flexDirection: "column", alignItems: isAgentMessage ? "flex-end" : "flex-start" }}>
-                    {/* Sender label and timestamp */}
-                    <Box sx={{ display: "flex", alignItems: "center", mb: 0.4, gap: 0.5 }}>
+                <div key={message.id} className={`flex ${isAgentMessage ? 'justify-end' : 'justify-start'} mb-2`}>
+                  <div className={`max-w-[70%] flex flex-col ${isAgentMessage ? 'items-end' : 'items-start'}`}>
+                    <div className="flex items-center gap-1 mb-1">
                       {isCustomerMessage && (
-                        <Avatar sx={{ width: 20, height: 20, bgcolor: "#ff6b35", color: "white", fontSize: "0.7rem" }}>
-                        {message.avatar}
-                      </Avatar>
-                    )}
-                      {isAgentMessage && (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                          {isAI ? (
-                            <Chip
-                              icon={<Robot sx={{ fontSize: "0.75rem !important" }} />}
-                              label="AI Agent"
-                              size="small"
-                              sx={{
-                                height: 20,
-                                fontSize: "0.7rem",
-                                backgroundColor: "#4caf50",
-                                color: "white",
-                                "& .MuiChip-icon": { color: "white" },
-                              }}
-                            />
-                          ) : (
-                            <Chip
-                              icon={<PersonIcon sx={{ fontSize: "0.75rem !important" }} />}
-                              label="Agent"
-                              size="small"
-                              sx={{
-                                height: 20,
-                                fontSize: "0.7rem",
-                                backgroundColor: "#1976d2",
-                                color: "white",
-                                "& .MuiChip-icon": { color: "white" },
-                              }}
-                            />
-                          )}
-                        </Box>
+                        <Avatar size={20} colorClassName="bg-[#ff6b35] text-white" fallback={message.avatar} className="text-[0.7rem]" />
                       )}
-                      <Typography sx={{ color: "#999", fontSize: "0.75rem", fontWeight: 400 }}>
-                        {formattedTime}
-                    </Typography>
-                  </Box>
-                    
-                    {/* Message bubble */}
-                  <Paper
-                    sx={{
-                        p: 1.5,
-                        backgroundColor: isAI 
-                          ? "#4caf50" 
-                          : isHumanAgent 
-                          ? "#1976d2" 
-                          : "#2a2a2a",
-                      color: "white",
-                        borderRadius: 1.5,
-                        border: isAI 
-                          ? "1px solid #66bb6a" 
-                          : isHumanAgent 
-                          ? "1px solid #42a5f5" 
-                          : "1px solid #333",
-                        boxShadow: isAgentMessage ? "0 2px 4px rgba(0,0,0,0.2)" : "none",
-                      }}
+                      {isAgentMessage && (
+                        <div className="flex items-center gap-1">
+                          {isAI ? (
+                            <Chip size="small" className="h-5 text-[0.7rem] bg-green-600 text-white">
+                              <span className="inline-flex items-center gap-1"><Bot className="h-3 w-3" /> AI Agent</span>
+                            </Chip>
+                          ) : (
+                            <Chip size="small" className="h-5 text-[0.7rem] bg-blue-600 text-white">
+                              <span className="inline-flex items-center gap-1"><PersonIcon className="h-3 w-3" /> Agent</span>
+                            </Chip>
+                          )}
+                        </div>
+                      )}
+                      <span className="text-[#999] text-[0.75rem] font-normal">{formattedTime}</span>
+                    </div>
+                    <div
+                      className="text-white rounded-xl shadow"
+                      style={{ backgroundColor: bubbleBg, border: `1px solid ${bubbleBorder}` }}
                     >
-                      <Typography sx={{ fontSize: "0.85rem", lineHeight: 1.5, fontWeight: 400 }}>
-                        {message.content}
-                      </Typography>
-                  </Paper>
-                    
-                    {/* Status text */}
-                    <Typography sx={{ fontSize: "0.65rem", color: "#666", mt: 0.4, fontWeight: 400 }}>
+                      <div className="p-3 text-[0.85rem] leading-relaxed font-normal">{message.content}</div>
+                    </div>
+                    <div className="text-[0.65rem] text-[#666] mt-1 font-normal">
                       {isAgentMessage ? (message.isRead !== false ? "Read" : "Sent") : (message.isRead !== false ? "Read" : "Unread")}
-                    </Typography>
-                </Box>
-              </Box>
+                    </div>
+                  </div>
+                </div>
               );
             })}
-          </Box>
+          </div>
 
           {/* Message Input Area */}
-          <Box sx={{ 
-            p: 2, 
-            borderTop: "1px solid #333", 
-            backgroundColor: "#2a2a2a",
-            flexShrink: 0
-          }}>
-            {/* Message Input */}
-            <TextField
-              fullWidth
+          <div className="p-2 border-t border-[#333] bg-[#2a2a2a]">
+            <Input
               placeholder="Enter message"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              size="small"
-              sx={{
-                mb: 1.5,
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "#1a1a1a",
-                  color: "white",
-                  "& fieldset": { borderColor: "#333" },
-                  "&:hover fieldset": { borderColor: "#555" },
-                  "&.Mui-focused fieldset": { borderColor: "#4caf50" },
-                },
-                "& .MuiInputBase-input": { color: "white", fontSize: "0.875rem" },
-                "& .MuiInputBase-input::placeholder": { color: "#999", fontSize: "0.875rem" },
-              }}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              className="mb-3"
             />
-
-            {/* Controls */}
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-              <Button
-                onClick={handleSendMessage}
-                size="small"
-                disabled={!newMessage.trim()}
-                sx={{
-                  backgroundColor: "#333",
-                  color: "white",
-                  px: 2,
-                  fontSize: "0.875rem",
-                  fontWeight: 500,
-                  "&:hover": { backgroundColor: "#444" },
-                  "&:disabled": { backgroundColor: "#222", color: "#666" },
-                }}
-                endIcon={<Send sx={{ fontSize: "1rem" }} />}
-              >
-                Send
+            <div className="flex items-center justify-end">
+              <Button onClick={handleSendMessage} size="small" disabled={!newMessage.trim()} className="px-3 py-1.5 text-sm bg-[#333] hover:bg-[#444] disabled:bg-[#222] disabled:text-[#666]">
+                <span className="inline-flex items-center gap-2">
+                  Send <Send className="h-4 w-4" />
+                </span>
               </Button>
-            </Box>
-          </Box>
-        </Box>
+            </div>
+          </div>
+        </div>
 
         {/* Right Sidebar - Contact Info */}
-        <Box sx={{ 
-          width: 300, 
-          backgroundColor: "#2a2a2a", 
-          borderLeft: "1px solid #333", 
-          p: 2,
-          flexShrink: 0,
-          overflowY: "auto",
-          overflowX: "hidden"
-        }}>
+        <div className="w-[300px] bg-[#2a2a2a] border-l border-[#333] p-2 overflow-y-auto overflow-x-hidden flex-shrink-0">
           {currentContactInfo ? (
             <>
               {/* Contact Profile */}
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-                <Avatar sx={{ bgcolor: "#ff6b35", color: "white", width: 40, height: 40, fontSize: "0.95rem", fontWeight: 600 }}>
-                  {currentContactInfo.avatar}
-                </Avatar>
-                <Box>
-                  <Typography sx={{ color: "white", fontWeight: 600, fontSize: "0.95rem", mb: 0.25 }}>
-                    {currentContactInfo.name}
-                  </Typography>
-                  <Typography sx={{ color: "#999", fontSize: "0.8rem", fontWeight: 400 }}>
-                    {currentContactInfo.status}
-                  </Typography>
-                </Box>
-              </Box>
+              <div className="flex items-center gap-4 mb-2">
+                <Avatar size={40} colorClassName="bg-[#ff6b35] text-white" fallback={currentContactInfo.avatar} className="text-[0.95rem]" />
+                <div>
+                  <div className="text-white font-semibold text-[0.95rem] mb-0.5">{currentContactInfo.name}</div>
+                  <div className="text-[#999] text-[0.8rem] font-normal">{currentContactInfo.status}</div>
+                </div>
+              </div>
 
               {/* Contact Details */}
-              <Box sx={{ mb: 2 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 1.5 }}>
-                  <Email sx={{ color: "#999", fontSize: "0.9rem" }} />
-                  <Typography sx={{ color: "#999", fontSize: "0.8rem", fontWeight: 400 }}>
-                    {currentContactInfo.email}
-                  </Typography>
-                </Box>
-
+              <div className="mb-2">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Mail className="h-4 w-4 text-[#999]" />
+                  <div className="text-[#999] text-[0.8rem] font-normal">{currentContactInfo.email}</div>
+                </div>
                 {/* Stats */}
-                <Box sx={{ display: "flex", gap: 1.5, mb: 2, flexWrap: "wrap" }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <ChatBubbleOutline sx={{ color: "#999", fontSize: "0.9rem" }} />
-                    <Typography sx={{ color: "white", fontSize: "0.8rem", fontWeight: 500 }}>
-                      {currentContactInfo.totalMessages} messages
-                    </Typography>
-                  </Box>
+                <div className="flex gap-4 mb-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4 text-[#999]" />
+                    <div className="text-white text-[0.8rem] font-medium">{currentContactInfo.totalMessages} messages</div>
+                  </div>
                   {currentContactInfo.visitedPagesCount > 0 && (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                      <Public sx={{ color: "#999", fontSize: "0.9rem" }} />
-                      <Typography sx={{ color: "white", fontSize: "0.8rem", fontWeight: 500 }}>
-                        {currentContactInfo.visitedPagesCount} pages
-                    </Typography>
-                  </Box>
+                    <div className="flex items-center gap-2">
+                      <Globe2 className="h-4 w-4 text-[#999]" />
+                      <div className="text-white text-[0.8rem] font-medium">{currentContactInfo.visitedPagesCount} pages</div>
+                    </div>
                   )}
-                </Box>
-              </Box>
+                </div>
+              </div>
 
               {/* Chat Info Section */}
-              <Box sx={{ mb: 2 }}>
-                <Button
-                  onClick={() => toggleSection("chatInfo")}
-                  sx={{ color: "white", justifyContent: "flex-start", width: "100%", textTransform: "none", fontSize: "0.85rem", fontWeight: 500, padding: "6px 8px", minHeight: "32px" }}
-                  endIcon={<ExpandMore sx={{ transform: expandedSections.chatInfo ? "rotate(180deg)" : "rotate(0deg)", fontSize: "1rem" }} />}
-                >
-                  Chat info
-                </Button>
+              <div className="mb-2">
+                <button onClick={() => toggleSection('chatInfo')} className="w-full flex items-center justify-between text-white text-[0.85rem] font-medium py-1 px-2 hover:bg-white/5 rounded">
+                  <span>Chat info</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${expandedSections.chatInfo ? 'rotate-180' : ''}`} />
+                </button>
                 <Collapse in={expandedSections.chatInfo}>
-                  <Box sx={{ pl: 1.5, mt: 0.75 }}>
-                    <Typography sx={{ color: "#999", fontSize: "0.75rem", mb: 0.75, fontWeight: 400 }}>
-                      Chat ID {currentContactInfo.chatId}
-                    </Typography>
-                    <Typography sx={{ color: "#999", fontSize: "0.75rem", fontWeight: 400 }}>
-                      Chat duration {currentContactInfo.chatDuration}
-                    </Typography>
-                  </Box>
+                  <div className="pl-3 mt-2">
+                    <div className="text-[#999] text-[0.75rem] mb-2">Chat ID {currentContactInfo.chatId}</div>
+                    <div className="text-[#999] text-[0.75rem]">Chat duration {currentContactInfo.chatDuration}</div>
+                  </div>
                 </Collapse>
-              </Box>
+              </div>
 
               {/* Visited Pages Section */}
               {currentContactInfo.visitedPages && currentContactInfo.visitedPages.length > 0 && (
-                <Box sx={{ mb: 2 }}>
-                <Button
-                  onClick={() => toggleSection("visitedPages")}
-                    sx={{ color: "white", justifyContent: "flex-start", width: "100%", textTransform: "none", fontSize: "0.85rem", fontWeight: 500, padding: "6px 8px", minHeight: "32px" }}
-                  endIcon={
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                      <Badge badgeContent={currentContactInfo.visitedPagesCount} color="error" />
-                        <ExpandMore sx={{ transform: expandedSections.visitedPages ? "rotate(180deg)" : "rotate(0deg)", fontSize: "1rem" }} />
-                    </Box>
-                  }
-                >
-                  Visited pages
-                </Button>
-                <Collapse in={expandedSections.visitedPages}>
-                    <Box sx={{ pl: 1.5, mt: 0.75 }}>
-                    {currentContactInfo.visitedPages.map((page, index) => (
-                        <Box key={index} sx={{ mb: 0.75, display: "flex", alignItems: "center", gap: 0.75 }}>
-                          <Public sx={{ color: "#999", fontSize: "0.9rem" }} />
-                        <Box>
-                            <Typography sx={{ color: "white", fontSize: "0.75rem", fontWeight: 400 }}>
-                            {typeof page === 'string' ? page : page.title}
-                          </Typography>
+                <div className="mb-2">
+                  <button onClick={() => toggleSection('visitedPages')} className="w-full flex items-center justify-between text-white text-[0.85rem] font-medium py-1 px-2 hover:bg-white/5 rounded">
+                    <span>Visited pages</span>
+                    <span className="inline-flex items-center gap-2">
+                      <Badge content={currentContactInfo.visitedPagesCount} />
+                      <ChevronDown className={`h-4 w-4 transition-transform ${expandedSections.visitedPages ? 'rotate-180' : ''}`} />
+                    </span>
+                  </button>
+                  <Collapse in={expandedSections.visitedPages}>
+                    <div className="pl-3 mt-2">
+                      {currentContactInfo.visitedPages.map((page, index) => (
+                        <div key={index} className="mb-2 flex items-start gap-2">
+                          <Globe2 className="h-4 w-4 text-[#999] mt-0.5" />
+                          <div>
+                            <div className="text-white text-[0.75rem]">{typeof page === 'string' ? page : page.title}</div>
                             {typeof page !== 'string' && page.timestamp && (
-                              <Typography sx={{ color: "#999", fontSize: "0.65rem", fontWeight: 400 }}>
-                                {page.timestamp}
-                          </Typography>
+                              <div className="text-[#999] text-[0.65rem]">{page.timestamp}</div>
                             )}
-                        </Box>
-                      </Box>
-                    ))}
-                  </Box>
-                </Collapse>
-              </Box>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Collapse>
+                </div>
               )}
             </>
           ) : (
-            <Box sx={{ textAlign: "center", mt: 3 }}>
-              <Typography sx={{ color: "#999", fontSize: "0.8rem", fontWeight: 400 }}>
-                Select a chat to view contact information
-              </Typography>
-            </Box>
+            <div className="text-center mt-3">
+              <div className="text-[#999] text-[0.8rem] font-normal">Select a chat to view contact information</div>
+            </div>
           )}
-        </Box>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 };
 

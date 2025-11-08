@@ -1,15 +1,12 @@
 
 import dynamic from "next/dynamic";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
-import { useTheme } from '@mui/material/styles';
-import { Stack, Typography, Avatar, Fab } from '@mui/material';
 import { IconArrowDownRight, IconCurrencyDollar } from '@tabler/icons-react';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 
 const MonthlyEarnings = () => {
   // chart color
-  const theme = useTheme();
-  const secondary = theme.palette.secondary.main;
+  const secondary = '#EE66AA';
   const secondarylight = '#f5fcff';
   const errorlight = '#fdede8';
 
@@ -40,9 +37,7 @@ const MonthlyEarnings = () => {
     markers: {
       size: 0,
     },
-    tooltip: {
-      theme: theme.palette.mode === 'dark' ? 'dark' : 'light',
-    },
+    tooltip: { theme: 'dark' },
   };
   const seriescolumnchart: any = [
     {
@@ -56,29 +51,23 @@ const MonthlyEarnings = () => {
     <DashboardCard
       title="Monthly Earnings"
       action={
-        <Fab color="secondary" size="medium" sx={{color: '#ffffff'}}>
-          <IconCurrencyDollar width={24} />
-        </Fab>
+        <button className="w-10 h-10 rounded-full bg-[#EE66AA] text-white flex items-center justify-center">
+          <IconCurrencyDollar width={20} />
+        </button>
       }
       footer={
         <Chart options={optionscolumnchart} series={seriescolumnchart} type="area" height={60} width={"100%"} />
       }
     >
       <>
-        <Typography variant="h3" fontWeight="700" mt="-20px">
-          $6,820
-        </Typography>
-        <Stack direction="row" spacing={1} my={1} alignItems="center">
-          <Avatar sx={{ bgcolor: errorlight, width: 27, height: 27 }}>
-            <IconArrowDownRight width={20} color="#FA896B" />
-          </Avatar>
-          <Typography variant="subtitle2" fontWeight="600">
-            +9%
-          </Typography>
-          <Typography variant="subtitle2" color="textSecondary">
-            last year
-          </Typography>
-        </Stack>
+        <div className="text-2xl font-bold -mt-5 text-white">$6,820</div>
+        <div className="flex items-center gap-2 my-2">
+          <div className="w-[27px] h-[27px] rounded-full flex items-center justify-center" style={{ backgroundColor: errorlight }}>
+            <IconArrowDownRight width={18} color="#FA896B" />
+          </div>
+          <div className="text-sm font-semibold text-white">+9%</div>
+          <div className="text-sm text-gray-400">last year</div>
+        </div>
       </>
     </DashboardCard>
   );

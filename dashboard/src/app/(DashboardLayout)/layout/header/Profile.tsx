@@ -1,33 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Avatar,
-  Box,
-  Menu,
-  Button,
-  IconButton,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
-  Typography,
-} from "@mui/material";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { IconListCheck, IconMail, IconUser } from "@tabler/icons-react";
+import { User, Mail, ListChecks, LogOut } from "lucide-react";
 
 const Profile = () => {
   const router = useRouter();
-  const [anchorEl2, setAnchorEl2] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const { data: session } = authClient.useSession();
 
-  const handleClick2 = (event: any) => {
-    setAnchorEl2(event.currentTarget);
-  };
-  const handleClose2 = () => {
-    setAnchorEl2(null);
-  };
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   const handleLogout = async () => {
     await authClient.signOut({
@@ -38,10 +38,9 @@ const Profile = () => {
         },
       },
     });
-    handleClose2();
+    setIsOpen(false);
   };
 
-  // Get user info from session
   const user = session?.user;
   const userName = user?.name || user?.email?.split("@")[0] || "User";
   const userEmail = user?.email || "";
@@ -54,89 +53,79 @@ const Profile = () => {
     .slice(0, 2);
 
   return (
-    <Box>
-      <IconButton
-        size="large"
+    <div className="relative" ref={menuRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`relative inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
+          isOpen ? "text-[#EE66AA]" : "text-gray-300"
+        } hover:bg-gray-700`}
         aria-label="show user menu"
-        color="inherit"
         aria-controls="msgs-menu"
         aria-haspopup="true"
-        sx={{
-          ...(typeof anchorEl2 === "object" && {
-            color: "primary.main",
-          }),
-        }}
-        onClick={handleClick2}
       >
-        <Avatar
-          src={userImage}
-          alt={userName}
-          sx={{
-            width: 35,
-            height: 35,
-            bgcolor: "primary.main",
-          }}
-        >
-          {!userImage && userInitials}
-        </Avatar>
-      </IconButton>
-      {/* ------------------------------------------- */}
-      {/* Profile Dropdown */}
-      {/* ------------------------------------------- */}
-      <Menu
-        id="msgs-menu"
-        anchorEl={anchorEl2}
-        keepMounted
-        open={Boolean(anchorEl2)}
-        onClose={handleClose2}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-        transformOrigin={{ horizontal: "right", vertical: "top" }}
-        sx={{
-          "& .MuiMenu-paper": {
-            width: "220px",
-          },
-        }}
-      >
-        <Box px={2} py={1}>
-          <Typography variant="body1" fontWeight={600}>
-            {userName}
-          </Typography>
-          {userEmail && (
-            <Typography variant="caption" color="textSecondary">
-              {userEmail}
-            </Typography>
-          )}
-        </Box>
-        <MenuItem component={Link} href="/profile" onClick={handleClose2}>
-          <ListItemIcon>
-            <IconUser width={20} />
-          </ListItemIcon>
-          <ListItemText>My Profile</ListItemText>
-        </MenuItem>
-        <MenuItem component={Link} href="/settings" onClick={handleClose2}>
-          <ListItemIcon>
-            <IconMail width={20} />
-          </ListItemIcon>
-          <ListItemText>My Account</ListItemText>
-        </MenuItem>
-        <MenuItem component={Link} href="/tasks" onClick={handleClose2}>
-          <ListItemIcon>
-            <IconListCheck width={20} />
-          </ListItemIcon>
-          <ListItemText>My Tasks</ListItemText>
-        </MenuItem>
-        <Box mt={1} py={1} px={2}>
-          <Button
-            variant="outlined"
-            color="primary"
-            fullWidth
-            onClick={handleLogout}
-          >
-            Logout
-          </Button>
-        </Box>
-      </Menu>
-    </Box>
+        {userImage ? (
+          <Image
+            src={userImage}
+            alt={userName}
+            width={35}
+            height={35}
+            className="rounded-full"
+          />
+        ) : (
+          <div className="w-[35px] h-[35px] rounded-full bg-[#EE66AA] flex items-center justify-center text-white text-sm font-semibold">
+            {userInitials}
+          </div>
+        )}
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-2 w-[220px] bg-[#1e1e1e] border border-gray-700 rounded-lg shadow-lg z-[1300] overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-700">
+            <p className="text-sm font-semibold text-white">{userName}</p>
+            {userEmail && (
+              <p className="text-xs text-gray-400 mt-1">{userEmail}</p>
+            )}
+          </div>
+
+          <div className="py-1">
+            <Link
+              href="/profile"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+            >
+              <User className="w-5 h-5 mr-3" />
+              My Profile
+            </Link>
+            <Link
+              href="/settings"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+            >
+              <Mail className="w-5 h-5 mr-3" />
+              My Account
+            </Link>
+            <Link
+              href="/tasks"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+            >
+              <ListChecks className="w-5 h-5 mr-3" />
+              My Tasks
+            </Link>
+          </div>
+
+          <div className="mt-1 py-2 px-4 border-t border-gray-700">
+            <button
+              onClick={handleLogout}
+              className="w-full px-4 py-2 text-sm font-medium text-[#EE66AA] border-2 border-[#EE66AA] rounded-lg hover:bg-[#EE66AA]/10 transition-colors"
+            >
+              <LogOut className="w-4 h-4 inline mr-2" />
+              Logout
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Box, Typography, Button, Stack, Alert, Divider, InputAdornment, IconButton } from '@mui/material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import { IconEye, IconEyeOff } from '@tabler/icons-react';
 
 import CustomTextField from '@/app/(DashboardLayout)/components/forms/theme-elements/CustomTextField';
+import { Button } from '@/components/ui/button';
 
 interface registerType {
     title?: string;
@@ -89,40 +89,45 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
     return (
         <>
             {title ? (
-                <Typography fontWeight="700" variant="h2" mb={1}>
-                    {title}
-                </Typography>
+                <h2 className="text-2xl font-bold mb-2">{title}</h2>
             ) : null}
 
             {subtext}
 
             {error && (
-                <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
-                    {error}
-                </Alert>
+                <div className="mb-2 rounded-md border border-red-800/40 bg-red-900/30 text-red-200 p-3">
+                    <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm">{error}</p>
+                        <button
+                          type="button"
+                          className="text-red-300 hover:text-red-200"
+                          onClick={() => setError('')}
+                          aria-label="Dismiss error"
+                        >
+                          ×
+                        </button>
+                    </div>
+                </div>
             )}
 
             <form onSubmit={handleEmailSignUp}>
-                <Box>
-                    <Stack mb={3}>
-                        <Typography variant="subtitle1"
-                            fontWeight={600} component="label" htmlFor='name' mb="5px">Name</Typography>
+                <div>
+                    <div className="mb-6 space-y-6">
+                        <label htmlFor="name" className="block text-sm font-semibold mb-1">Name</label>
                         <CustomTextField
                             id="name"
-                            variant="outlined"
                             fullWidth
                             value={name}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
                             required
                             disabled={loading}
                             autoComplete="name"
+                            placeholder="Your full name"
                         />
 
-                        <Typography variant="subtitle1"
-                            fontWeight={600} component="label" htmlFor='email' mb="5px" mt="25px">Email Address</Typography>
+                        <label htmlFor="email" className="block text-sm font-semibold mb-1">Email Address</label>
                         <CustomTextField
                             id="email"
-                            variant="outlined"
                             fullWidth
                             type="email"
                             value={email}
@@ -130,104 +135,95 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
                             required
                             disabled={loading}
                             autoComplete="email"
+                            placeholder="you@example.com"
                         />
 
-                        <Typography variant="subtitle1"
-                            fontWeight={600} component="label" htmlFor='password' mb="5px" mt="25px">Password</Typography>
-                        <CustomTextField
-                            id="password"
-                            type={showPassword ? "text" : "password"}
-                            variant="outlined"
-                            fullWidth
-                            value={password}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                            required
+                        <label htmlFor="password" className="block text-sm font-semibold mb-1">Password</label>
+                        <div className="relative">
+                          <CustomTextField
+                              id="password"
+                              type={showPassword ? 'text' : 'password'}
+                              fullWidth
+                              value={password}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                              required
+                              disabled={loading}
+                              autoComplete="new-password"
+                              placeholder="At least 8 characters"
+                              className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
                             disabled={loading}
-                            helperText="Must be at least 8 characters"
-                            autoComplete="new-password"
-                            InputProps={{
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            aria-label="toggle password visibility"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            edge="end"
-                                            disabled={loading}
-                                            sx={{ color: 'text.secondary' }}
-                                        >
-                                            {showPassword ? <IconEyeOff size={20} /> : <IconEye size={20} />}
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
+                            className="absolute inset-y-0 right-0 px-3 text-gray-500 hover:text-gray-300 disabled:opacity-50"
+                            aria-label="Toggle password visibility"
+                          >
+                            {showPassword ? <IconEyeOff size={20} /> : <IconEye size={20} />}
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">Must be at least 8 characters</p>
 
-                        <Typography variant="subtitle1"
-                            fontWeight={600} component="label" htmlFor='confirmPassword' mb="5px" mt="25px">Confirm Password</Typography>
-                        <CustomTextField
-                            id="confirmPassword"
-                            type={showConfirmPassword ? "text" : "password"}
-                            variant="outlined"
-                            fullWidth
-                            value={confirmPassword}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
-                            required
+                        <label htmlFor="confirmPassword" className="block text-sm font-semibold mb-1">Confirm Password</label>
+                        <div className="relative">
+                          <CustomTextField
+                              id="confirmPassword"
+                              type={showConfirmPassword ? 'text' : 'password'}
+                              fullWidth
+                              value={confirmPassword}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
+                              required
+                              disabled={loading}
+                              autoComplete="new-password"
+                              className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             disabled={loading}
-                            autoComplete="new-password"
-                            InputProps={{
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            aria-label="toggle confirm password visibility"
-                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            edge="end"
-                                            disabled={loading}
-                                            sx={{ color: 'text.secondary' }}
-                                        >
-                                            {showConfirmPassword ? <IconEyeOff size={20} /> : <IconEye size={20} />}
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
-                    </Stack>
+                            className="absolute inset-y-0 right-0 px-3 text-gray-500 hover:text-gray-300 disabled:opacity-50"
+                            aria-label="Toggle confirm password visibility"
+                          >
+                            {showConfirmPassword ? <IconEyeOff size={20} /> : <IconEye size={20} />}
+                          </button>
+                        </div>
+                    </div>
                     <Button
-                        color="primary"
                         variant="contained"
+                        color="primary"
                         size="large"
-                        fullWidth
+                        className="w-full"
                         type="submit"
                         disabled={loading}
                     >
                         {loading ? 'Creating Account...' : 'Sign Up'}
                     </Button>
-                </Box>
+                </div>
             </form>
 
-            <Box sx={{ my: 3 }}>
-                <Divider>
-                    <Typography variant="body2" color="textSecondary">
-                        OR
-                    </Typography>
-                </Divider>
-            </Box>
+            <div className="my-6">
+                <div className="relative text-center">
+                  <hr className="border-gray-700" />
+                  <span className="absolute -translate-x-1/2 left-1/2 -top-3 bg-transparent px-2 text-gray-400 text-xs">OR</span>
+                </div>
+            </div>
 
-            <Box>
+            <div>
                 <Button
-                    color="primary"
                     variant="outlined"
+                    color="primary"
                     size="large"
-                    fullWidth
+                    className="w-full"
                     onClick={handleGoogleSignUp}
                     disabled={loading}
                 >
                     Sign Up with Google
                 </Button>
-            </Box>
+            </div>
 
             {subtitle}
         </>
     );
-};
+}
 
 export default AuthRegister;

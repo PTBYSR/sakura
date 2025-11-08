@@ -1,6 +1,4 @@
 import React from 'react';
-import { Select, MenuItem } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 import dynamic from "next/dynamic";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -16,9 +14,8 @@ const SalesOverview = () => {
     };
 
     // chart color
-    const theme = useTheme();
-    const primary = theme.palette.primary.main;
-    const secondary = theme.palette.secondary.main;
+    const primary = '#FDA4B8';
+    const secondary = '#EE66AA';
 
     // chart
     const optionscolumnchart: any = {
@@ -92,17 +89,11 @@ const SalesOverview = () => {
     return (
 
         <DashboardCard title="Sales Overview" action={
-            <Select
-                labelId="month-dd"
-                id="month-dd"
-                value={month}
-                size="small"
-                onChange={handleChange}
-            >
-                <MenuItem value={1}>March 2025</MenuItem>
-                <MenuItem value={2}>April 2025</MenuItem>
-                <MenuItem value={3}>May 2025</MenuItem>
-            </Select>
+            <select value={month} onChange={handleChange} className="bg-[#1e1e1e] border border-gray-700 text-white text-sm rounded-md px-3 py-2">
+                <option value={1}>March 2025</option>
+                <option value={2}>April 2025</option>
+                <option value={3}>May 2025</option>
+            </select>
         }>
             <Chart
                 options={optionscolumnchart}

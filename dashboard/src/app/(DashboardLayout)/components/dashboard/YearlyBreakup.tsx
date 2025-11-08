@@ -1,18 +1,15 @@
 
 import dynamic from "next/dynamic";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
-import { useTheme } from '@mui/material/styles';
-import { Grid, Stack, Typography, Avatar } from '@mui/material';
 import { IconArrowUpLeft } from '@tabler/icons-react';
 
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 
 const YearlyBreakup = () => {
   // chart color
-  const theme = useTheme();
-  const primary = theme.palette.primary.main;
+  const primary = '#FDA4B8';
   const primarylight = '#ecf2ff';
-  const successlight = theme.palette.success.light;
+  const successlight = '#E6FFFA';
 
   // chart
   const optionscolumnchart: any = {
@@ -36,10 +33,7 @@ const YearlyBreakup = () => {
         },
       },
     },
-    tooltip: {
-      theme: theme.palette.mode === 'dark' ? 'dark' : 'light',
-      fillSeriesColor: false,
-    },
+    tooltip: { theme: 'dark', fillSeriesColor: false },
     stroke: {
       show: false,
     },
@@ -64,60 +58,31 @@ const YearlyBreakup = () => {
 
   return (
     <DashboardCard title="Yearly Breakup">
-      <Grid container spacing={3}>
-        {/* column */}
-        <Grid
-          size={{
-            xs: 7,
-            sm: 7
-          }}>
-          <Typography variant="h3" fontWeight="700">
-            $36,358
-          </Typography>
-          <Stack direction="row" spacing={1} mt={1} alignItems="center">
-            <Avatar sx={{ bgcolor: successlight, width: 27, height: 27 }}>
-              <IconArrowUpLeft width={20} color="#39B69A" />
-            </Avatar>
-            <Typography variant="subtitle2" fontWeight="600">
-              +9%
-            </Typography>
-            <Typography variant="subtitle2" color="textSecondary">
-              last year
-            </Typography>
-          </Stack>
-          <Stack spacing={3} mt={5} direction="row">
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Avatar
-                sx={{ width: 9, height: 9, bgcolor: primary, svg: { display: 'none' } }}
-              ></Avatar>
-              <Typography variant="subtitle2" color="textSecondary">
-                2024
-              </Typography>
-            </Stack>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Avatar
-                sx={{ width: 9, height: 9, bgcolor: primarylight, svg: { display: 'none' } }}
-              ></Avatar>
-              <Typography variant="subtitle2" color="textSecondary">
-                2025
-              </Typography>
-            </Stack>
-          </Stack>
-        </Grid>
-        {/* column */}
-        <Grid
-          size={{
-            xs: 5,
-            sm: 5
-          }}>
-          <Chart
-            options={optionscolumnchart}
-            series={seriescolumnchart}
-            type="donut"
-            height={150} width={"100%"}
-          />
-        </Grid>
-      </Grid>
+      <div className="grid grid-cols-12 gap-3">
+        <div className="col-span-12 sm:col-span-7">
+          <div className="text-2xl font-bold text-white">$36,358</div>
+          <div className="flex items-center gap-2 mt-2">
+            <div className="w-[27px] h-[27px] rounded-full flex items-center justify-center" style={{ backgroundColor: successlight }}>
+              <IconArrowUpLeft width={18} color="#39B69A" />
+            </div>
+            <div className="text-sm font-semibold text-white">+9%</div>
+            <div className="text-sm text-gray-400">last year</div>
+          </div>
+          <div className="flex items-center gap-6 mt-6">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: primary }} />
+              <span className="text-sm text-gray-400">2024</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: primarylight }} />
+              <span className="text-sm text-gray-400">2025</span>
+            </div>
+          </div>
+        </div>
+        <div className="col-span-12 sm:col-span-5">
+          <Chart options={optionscolumnchart} series={seriescolumnchart} type="donut" height={150} width={"100%"} />
+        </div>
+      </div>
     </DashboardCard>
   );
 };

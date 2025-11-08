@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import { Box, Typography, Container } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { useAgents } from "@/contexts/AgentsContext";
 
@@ -9,27 +8,17 @@ const SalesAgentPage = () => {
 
   return (
     <PageContainer title="Sales Agent" description="Manage sales agent configuration">
-      <Container maxWidth="lg">
-        <Box sx={{ py: 4 }}>
-          <Typography variant="h4" gutterBottom>
-            Sales Agent Configuration
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            Agent Name: {agent.name}
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            Type: {agent.type}
-          </Typography>
+      <div className="max-w-5xl mx-auto py-6">
+        <div className="py-4">
+          <div className="text-2xl font-semibold text-white mb-2">Sales Agent Configuration</div>
+          <div className="text-sm text-gray-300 mb-2">Agent Name: {agent.name}</div>
+          <div className="text-sm text-gray-300 mb-2">Type: {agent.type}</div>
           {agent.description && (
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-              Description: {agent.description}
-            </Typography>
+            <div className="text-sm text-gray-300 mb-2">Description: {agent.description}</div>
           )}
-          <Typography variant="body1" color="text.secondary">
-            This is the Sales Agent configuration page at /ai-agent/sales-agent
-          </Typography>
-        </Box>
-      </Container>
+          <div className="text-sm text-gray-300">This is the Sales Agent configuration page at /ai-agent/sales-agent</div>
+        </div>
+      </div>
     </PageContainer>
   );
 };

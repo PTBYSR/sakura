@@ -1,27 +1,11 @@
 "use client";
 import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Stack,
-  Avatar,
-  IconButton,
-  Button,
-  Switch,
-  FormControlLabel,
-  ToggleButton,
-  ToggleButtonGroup,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Checkbox,
-  FormGroup,
-} from "@mui/material";
-import { useTheme } from "@mui/material/styles";
-import { Upload, Delete } from "@mui/icons-material";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Avatar } from "@/components/ui/avatar";
+import { IconButton } from "@/components/ui/icon-button";
+import { Upload, Trash2 } from "lucide-react";
 
 
 // 🔹 Reusable Section Card
@@ -35,27 +19,15 @@ function SectionCard({
   onConfigure: () => void;
 }) {
   return (
-    <Card variant="outlined" sx={{ mb: 3 }}>
-      <CardContent>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Stack spacing={0.5}>
-            <Typography variant="subtitle1" fontWeight={600}>
-              {title}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {description}
-            </Typography>
-          </Stack>
-          <Button variant="outlined" onClick={onConfigure}>
-            Configure
-          </Button>
-        </Stack>
-      </CardContent>
-    </Card>
+    <div className="border border-[#333] rounded-lg mb-3">
+      <div className="p-4 flex items-center justify-between">
+        <div>
+          <div className="text-white font-semibold">{title}</div>
+          <div className="text-sm text-gray-400">{description}</div>
+        </div>
+        <Button variant="outlined" onClick={onConfigure} className="border-gray-600 text-gray-200 hover:bg-white/5">Configure</Button>
+      </div>
+    </div>
   );
 }
 
@@ -67,10 +39,8 @@ function AdvancedCustomization() {
   const handleClose = () => setOpenDialog(null);
 
   return (
-    <Stack spacing={3} mt={4}>
-      <Typography variant="h6" fontWeight={600}>
-        Advanced Customization
-      </Typography>
+    <div className="space-y-3 mt-4">
+      <div className="text-white font-semibold text-lg">Advanced Customization</div>
 
       <SectionCard
         title="Collect Visitor's Info"
@@ -102,98 +72,123 @@ function AdvancedCustomization() {
         onConfigure={() => handleOpen("visibility")}
       />
 
-      {/* ===================== Dialogs ===================== */}
+      {/* ===================== Modals ===================== */}
 
-      {/* Collect Info */}
-      <Dialog open={openDialog === "collectInfo"} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Collect Visitor`&lsquo`s Info</DialogTitle>
-        <DialogContent dividers>
-          <FormGroup>
-            {["Name", "Email", "Phone", "Company"].map((field) => (
-              <FormControlLabel key={field} control={<Checkbox defaultChecked />} label={field} />
-            ))}
-          </FormGroup>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button variant="contained" onClick={handleClose}>Save</Button>
-        </DialogActions>
-      </Dialog>
+      {openDialog === "collectInfo" && (
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/60" onClick={handleClose} />
+          <div className="relative max-w-md mx-auto mt-24 rounded-lg border border-[#333] bg-[#2a2a2a] shadow-lg">
+            <div className="p-4 border-b border-[#333] text-white font-semibold">Collect Visitor's Info</div>
+            <div className="p-4 space-y-2 text-sm text-gray-200">
+              {["Name", "Email", "Phone", "Company"].map((field) => (
+                <label key={field} className="flex items-center gap-2">
+                  <input type="checkbox" defaultChecked className="w-4 h-4 accent-[#EE66AA]" />
+                  <span>{field}</span>
+                </label>
+              ))}
+            </div>
+            <div className="p-3 pt-0 flex justify-end gap-2">
+              <Button onClick={handleClose} className="bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white">Cancel</Button>
+              <Button onClick={handleClose} className="bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white">Save</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Select Fields */}
-      <Dialog open={openDialog === "selectFields"} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Select Fields</DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={2}>
-            <TextField fullWidth label="Custom Field Name" />
-            <TextField fullWidth label="Placeholder" />
-            <FormControlLabel control={<Switch />} label="Required" />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button variant="contained" onClick={handleClose}>Save</Button>
-        </DialogActions>
-      </Dialog>
+      {openDialog === "selectFields" && (
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/60" onClick={handleClose} />
+          <div className="relative max-w-md mx-auto mt-24 rounded-lg border border-[#333] bg-[#2a2a2a] shadow-lg">
+            <div className="p-4 border-b border-[#333] text-white font-semibold">Select Fields</div>
+            <div className="p-4 space-y-3">
+              <Input placeholder="Custom Field Name" />
+              <Input placeholder="Placeholder" />
+              <label className="flex items-center gap-2 text-sm text-gray-200">
+                <Switch checked={true} onChange={() => {}} />
+                <span>Required</span>
+              </label>
+            </div>
+            <div className="p-3 pt-0 flex justify-end gap-2">
+              <Button onClick={handleClose} className="bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white">Cancel</Button>
+              <Button onClick={handleClose} className="bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white">Save</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* FAQs */}
-      <Dialog open={openDialog === "faqs"} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Frequently Asked Questions</DialogTitle>
-        <DialogContent dividers>
-          <FormControlLabel control={<Switch defaultChecked />} label="Enable FAQs" />
-          <Stack spacing={2} mt={2}>
-            <TextField fullWidth label="Question" />
-            <TextField fullWidth multiline rows={3} label="Answer" />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button variant="contained" onClick={handleClose}>Save</Button>
-        </DialogActions>
-      </Dialog>
+      {openDialog === "faqs" && (
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/60" onClick={handleClose} />
+          <div className="relative max-w-md mx-auto mt-24 rounded-lg border border-[#333] bg-[#2a2a2a] shadow-lg">
+            <div className="p-4 border-b border-[#333] text-white font-semibold">Frequently Asked Questions</div>
+            <div className="p-4 space-y-3 text-sm text-gray-200">
+              <label className="flex items-center gap-2">
+                <Switch checked={true} onChange={() => {}} />
+                <span>Enable FAQs</span>
+              </label>
+              <Input placeholder="Question" />
+              <textarea rows={3} placeholder="Answer" className="w-full px-4 py-2 rounded-lg bg-[#1e1e1e] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#EE66AA] focus:border-transparent" />
+            </div>
+            <div className="p-3 pt-0 flex justify-end gap-2">
+              <Button onClick={handleClose} className="bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white">Cancel</Button>
+              <Button onClick={handleClose} className="bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white">Save</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Social Channels */}
-      <Dialog open={openDialog === "social"} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Social Chat Channels</DialogTitle>
-        <DialogContent dividers>
-          <FormGroup>
-            <FormControlLabel control={<Switch />} label="WhatsApp" />
-            <FormControlLabel control={<Switch />} label="Messenger" />
-            <FormControlLabel control={<Switch />} label="Telegram" />
-            <FormControlLabel control={<Switch />} label="Instagram" />
-          </FormGroup>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button variant="contained" onClick={handleClose}>Save</Button>
-        </DialogActions>
-      </Dialog>
+      {openDialog === "social" && (
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/60" onClick={handleClose} />
+          <div className="relative max-w-md mx-auto mt-24 rounded-lg border border-[#333] bg-[#2a2a2a] shadow-lg">
+            <div className="p-4 border-b border-[#333] text-white font-semibold">Social Chat Channels</div>
+            <div className="p-4 space-y-2 text-sm text-gray-200">
+              {["WhatsApp","Messenger","Telegram","Instagram"].map((name) => (
+                <label key={name} className="flex items-center gap-2">
+                  <Switch checked={false} onChange={() => {}} />
+                  <span>{name}</span>
+                </label>
+              ))}
+            </div>
+            <div className="p-3 pt-0 flex justify-end gap-2">
+              <Button onClick={handleClose} className="bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white">Cancel</Button>
+              <Button onClick={handleClose} className="bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white">Save</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Visibility */}
-      <Dialog open={openDialog === "visibility"} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Custom Visibility</DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={2}>
-            <FormControlLabel control={<Switch defaultChecked />} label="Show on Desktop" />
-            <FormControlLabel control={<Switch defaultChecked />} label="Show on Mobile" />
-            <TextField fullWidth label="Pages to Include (comma separated)" />
-            <TextField fullWidth label="Pages to Exclude (comma separated)" />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button variant="contained" onClick={handleClose}>Save</Button>
-        </DialogActions>
-      </Dialog>
-    </Stack>
+      {openDialog === "visibility" && (
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/60" onClick={handleClose} />
+          <div className="relative max-w-md mx-auto mt-24 rounded-lg border border-[#333] bg-[#2a2a2a] shadow-lg">
+            <div className="p-4 border-b border-[#333] text-white font-semibold">Custom Visibility</div>
+            <div className="p-4 space-y-3">
+              <label className="flex items-center gap-2 text-sm text-gray-200">
+                <Switch checked={true} onChange={() => {}} />
+                <span>Show on Desktop</span>
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-200">
+                <Switch checked={true} onChange={() => {}} />
+                <span>Show on Mobile</span>
+              </label>
+              <Input placeholder="Pages to Include (comma separated)" />
+              <Input placeholder="Pages to Exclude (comma separated)" />
+            </div>
+            <div className="p-3 pt-0 flex justify-end gap-2">
+              <Button onClick={handleClose} className="bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white">Cancel</Button>
+              <Button onClick={handleClose} className="bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white">Save</Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
 
 // 🔹 Main Widget Customization Page
 export default function WidgetCustomization() {
-  const theme = useTheme();
-
   // States
   const [headerText, setHeaderText] = useState("👋 Our team is here for you");
   const [widgetIcon, setWidgetIcon] = useState("chat-bubble");
@@ -212,157 +207,76 @@ export default function WidgetCustomization() {
   return (
     <>
       {/* 🔹 Basic Customization */}
-      <Card sx={{ mt: 4 }}>
-        <CardContent>
-          <Typography variant="h6" fontWeight={600} gutterBottom>
-            Widget Customization
-          </Typography>
-          <Stack spacing={4}>
+      <div className="mt-4 border border-[#333] rounded-lg">
+        <div className="p-4">
+          <div className="text-white font-semibold text-lg mb-4">Widget Customization</div>
+          <div className="space-y-4">
             {/* Header Text */}
-            <Stack spacing={1}>
-              <Typography variant="subtitle2" color="textSecondary">
-                Header Text
-              </Typography>
-              <TextField
-                fullWidth
-                multiline
-                rows={2}
-                value={headerText}
-                onChange={(e) => setHeaderText(e.target.value)}
-              />
-            </Stack>
+            <div className="space-y-1">
+              <div className="text-sm text-gray-300">Header Text</div>
+              <textarea rows={2} value={headerText} onChange={(e) => setHeaderText(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-[#1e1e1e] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#EE66AA] focus:border-transparent" />
+            </div>
 
             {/* Widget Icon */}
-            <Stack spacing={1}>
-              <Typography variant="subtitle2" color="textSecondary">
-                Widget Icon
-              </Typography>
-              <ToggleButtonGroup
-                value={widgetIcon}
-                exclusive
-                onChange={(_, val) => val && setWidgetIcon(val)}
-                sx={{ flexWrap: "wrap", gap: 1 }}
-              >
-                {["chat-smile", "chat-base", "chat-bubble", "chat-db"].map(
-                  (icon) => (
-                    <ToggleButton
-                      key={icon}
-                      value={icon}
-                      sx={{ width: 60, height: 60 }}
-                    >
-                      <Avatar sx={{ bgcolor: theme.palette.grey[200] }}>
-                        {icon.slice(-1)}
-                      </Avatar>
-                    </ToggleButton>
-                  )
-                )}
-              </ToggleButtonGroup>
-              <Button
-                component="label"
-                variant="outlined"
-                startIcon={<Upload />}
-              >
-                Upload Custom Icon
-                <input
-                  hidden
-                  accept="image/*"
-                  type="file"
-                  onChange={handleLogoUpload}
-                />
-              </Button>
-            </Stack>
+            <div className="space-y-2">
+              <div className="text-sm text-gray-300">Widget Icon</div>
+              <div className="flex flex-wrap gap-2">
+                {["chat-smile", "chat-base", "chat-bubble", "chat-db"].map((icon) => (
+                  <button key={icon} onClick={() => setWidgetIcon(icon)} className={`w-14 h-14 rounded-md flex items-center justify-center ${widgetIcon === icon ? 'bg-white text-black' : 'bg-white/10 text-white'}`}>
+                    <div className="w-8 h-8 rounded-full bg-gray-200 text-black flex items-center justify-center">{icon.slice(-1)}</div>
+                  </button>
+                ))}
+              </div>
+              <label className="inline-flex items-center gap-2 text-gray-200 border border-gray-600 px-3 py-2 rounded-md hover:bg-white/5 cursor-pointer">
+                <Upload className="w-4 h-4" /> Upload Custom Icon
+                <input hidden accept="image/*" type="file" onChange={handleLogoUpload} />
+              </label>
+            </div>
 
             {/* Company Logo */}
-            <Stack spacing={1}>
-              <Typography variant="subtitle2" color="textSecondary">
-                Company Logo
-              </Typography>
+            <div className="space-y-2">
+              <div className="text-sm text-gray-300">Company Logo</div>
               {logo ? (
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Avatar src={logo} sx={{ width: 48, height: 48 }} />
-                  <IconButton onClick={() => setLogo(null)} color="error">
-                    <Delete />
-                  </IconButton>
-                </Stack>
+                <div className="flex items-center gap-3">
+                  <Avatar src={logo} size={48 as any} />
+                  <IconButton onClick={() => setLogo(null)} className="text-red-400"><Trash2 className="w-4 h-4" /></IconButton>
+                </div>
               ) : (
-                <Button
-                  component="label"
-                  variant="outlined"
-                  startIcon={<Upload />}
-                >
-                  Upload Logo
-                  <input
-                    hidden
-                    accept="image/*"
-                    type="file"
-                    onChange={handleLogoUpload}
-                  />
-                </Button>
+                <label className="inline-flex items-center gap-2 text-gray-200 border border-gray-600 px-3 py-2 rounded-md hover:bg-white/5 cursor-pointer">
+                  <Upload className="w-4 h-4" /> Upload Logo
+                  <input hidden accept="image/*" type="file" onChange={handleLogoUpload} />
+                </label>
               )}
-            </Stack>
+            </div>
 
             {/* Widget Colors */}
-            <Stack spacing={1}>
-              <Typography variant="subtitle2" color="textSecondary">
-                Widget Color
-              </Typography>
-              <Stack direction="row" spacing={2} alignItems="center">
+            <div className="space-y-2">
+              <div className="text-sm text-gray-300">Widget Color</div>
+              <div className="flex items-center gap-3">
                 {["#1976d2", "#f44336", "#4caf50", "#ff9800"].map((c) => (
-                  <Avatar
-                    key={c}
-                    sx={{
-                      bgcolor: c,
-                      cursor: "pointer",
-                      border:
-                        c === color ? "2px solid black" : "2px solid transparent",
-                    }}
-                    onClick={() => setColor(c)}
-                  />
+                  <button key={c} onClick={() => setColor(c)} className={`w-9 h-9 rounded-full border ${c === color ? 'border-white' : 'border-transparent'}`} style={{ backgroundColor: c }} />
                 ))}
-                <input
-                  type="color"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0,
-                  }}
-                />
-              </Stack>
-            </Stack>
+                <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="w-10 h-10 p-0 border-none cursor-pointer" />
+              </div>
+            </div>
 
             {/* Collect Visitor Info */}
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={collectInfo}
-                  onChange={(e) => setCollectInfo(e.target.checked)}
-                />
-              }
-              label="Collect Visitor Info"
-            />
+            <label className="flex items-center gap-2 text-sm text-gray-200">
+              <Switch checked={collectInfo} onChange={(v) => setCollectInfo(v)} />
+              <span>Collect Visitor Info</span>
+            </label>
 
             {/* FAQs */}
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={faqsEnabled}
-                  onChange={(e) => setFaqsEnabled(e.target.checked)}
-                />
-              }
-              label="Enable FAQs"
-            />
+            <label className="flex items-center gap-2 text-sm text-gray-200">
+              <Switch checked={faqsEnabled} onChange={(v) => setFaqsEnabled(v)} />
+              <span>Enable FAQs</span>
+            </label>
 
             {/* Save Button */}
-            <Button variant="contained" size="large" sx={{ alignSelf: "flex-start" }}>
-              Save Customizations
-            </Button>
-          </Stack>
-        </CardContent>
-      </Card>
+            <Button className="bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white w-fit">Save Customizations</Button>
+          </div>
+        </div>
+      </div>
 
       {/* 🔹 Advanced Customization Sections */}
       <AdvancedCustomization />

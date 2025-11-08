@@ -1,33 +1,19 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import {
-  Box,
-  Typography,
-  Container,
-  Card,
-  CardContent,
-  Button,
-  Chip,
-  Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  ListItemSecondaryAction,
-  Badge,
-  Divider,
-} from "@mui/material";
-import {
-  ChatBubbleOutline,
-  Person,
+  MessageSquare,
+  User,
   TrendingUp,
-  Schedule,
-  CheckCircle,
-  Warning as AlertCircle,
-  SmartToy as Robot,
-} from "@mui/icons-material";
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Bot,
+} from "lucide-react";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { useRouter } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
 
 const InboxPage = () => {
   const router = useRouter();
@@ -79,14 +65,14 @@ const InboxPage = () => {
     {
       title: "My Inbox",
       description: "Manage your personal conversations",
-      icon: <Person />,
+      icon: <User size={20} />,
       color: "#4caf50",
       href: "/inbox/my-inbox",
     },
     {
       title: "Agent Inbox",
       description: "Monitor AI agent conversations",
-      icon: <Robot />,
+      icon: <Bot size={20} />,
       color: "#ff6b35",
       href: "/inbox/agent-inbox",
     },
@@ -96,301 +82,248 @@ const InboxPage = () => {
   if (!mounted) {
     return (
       <PageContainer title="Inbox" description="Manage your conversations">
-        <Container maxWidth="lg">
-          <Box sx={{ py: 4, display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
-            <Typography>Loading...</Typography>
-          </Box>
-        </Container>
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="py-8 flex justify-center items-center min-h-[400px]">
+            <p className="text-gray-300">Loading...</p>
+          </div>
+        </div>
       </PageContainer>
     );
   }
 
   return (
     <PageContainer title="Inbox" description="Manage your conversations">
-      <Container maxWidth="lg">
-        <Box sx={{ py: 4 }}>
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="py-8">
           {/* Header */}
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h4" gutterBottom sx={{ color: "white", fontWeight: "bold" }}>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">
               Inbox Dashboard
-            </Typography>
-            <Typography variant="body1" sx={{ color: "#ccc" }}>
+            </h1>
+            <p className="text-gray-300">
               Overview of all conversations and support metrics
-            </Typography>
-          </Box>
+            </p>
+          </div>
 
           {/* Stats Cards */}
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mb: 4 }}>
-            <Box sx={{ flex: "1 1 200px", minWidth: "200px" }}>
-              <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-                <CardContent sx={{ textAlign: "center" }}>
-                  <ChatBubbleOutline sx={{ color: "#4caf50", fontSize: 40, mb: 1 }} />
-                  <Typography variant="h4" sx={{ color: "white", fontWeight: "bold" }}>
+          <div className="flex flex-wrap gap-6 mb-8">
+            <div className="flex-1 min-w-[200px]">
+              <Card className="bg-[#2a2a2a] border border-gray-700">
+                <CardContent className="text-center py-6">
+                  <MessageSquare className="text-green-500 w-10 h-10 mx-auto mb-2" />
+                  <h4 className="text-2xl font-bold text-white">
                     {stats.totalChats}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "#ccc" }}>
+                  </h4>
+                  <p className="text-sm text-gray-300 mt-1">
                     Total Chats
-                  </Typography>
+                  </p>
                 </CardContent>
               </Card>
-            </Box>
-            <Box sx={{ flex: "1 1 200px", minWidth: "200px" }}>
-              <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-                <CardContent sx={{ textAlign: "center" }}>
-                  <AlertCircle sx={{ color: "#ff9800", fontSize: 40, mb: 1 }} />
-                  <Typography variant="h4" sx={{ color: "white", fontWeight: "bold" }}>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <Card className="bg-[#2a2a2a] border border-gray-700">
+                <CardContent className="text-center py-6">
+                  <AlertCircle className="text-orange-500 w-10 h-10 mx-auto mb-2" />
+                  <h4 className="text-2xl font-bold text-white">
                     {stats.activeChats}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "#ccc" }}>
+                  </h4>
+                  <p className="text-sm text-gray-300 mt-1">
                     Active Chats
-                  </Typography>
+                  </p>
                 </CardContent>
               </Card>
-            </Box>
-            <Box sx={{ flex: "1 1 200px", minWidth: "200px" }}>
-              <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-                <CardContent sx={{ textAlign: "center" }}>
-                  <CheckCircle sx={{ color: "#4caf50", fontSize: 40, mb: 1 }} />
-                  <Typography variant="h4" sx={{ color: "white", fontWeight: "bold" }}>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <Card className="bg-[#2a2a2a] border border-gray-700">
+                <CardContent className="text-center py-6">
+                  <CheckCircle2 className="text-green-500 w-10 h-10 mx-auto mb-2" />
+                  <h4 className="text-2xl font-bold text-white">
                     {stats.resolvedToday}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "#ccc" }}>
+                  </h4>
+                  <p className="text-sm text-gray-300 mt-1">
                     Resolved Today
-                  </Typography>
+                  </p>
                 </CardContent>
               </Card>
-            </Box>
-            <Box sx={{ flex: "1 1 200px", minWidth: "200px" }}>
-              <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-                <CardContent sx={{ textAlign: "center" }}>
-                  <Schedule sx={{ color: "#2196f3", fontSize: 40, mb: 1 }} />
-                  <Typography variant="h4" sx={{ color: "white", fontWeight: "bold" }}>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <Card className="bg-[#2a2a2a] border border-gray-700">
+                <CardContent className="text-center py-6">
+                  <Clock className="text-blue-500 w-10 h-10 mx-auto mb-2" />
+                  <h4 className="text-2xl font-bold text-white">
                     {stats.avgResponseTime}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "#ccc" }}>
+                  </h4>
+                  <p className="text-sm text-gray-300 mt-1">
                     Avg Response
-                  </Typography>
+                  </p>
                 </CardContent>
               </Card>
-            </Box>
-            <Box sx={{ flex: "1 1 200px", minWidth: "200px" }}>
-              <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-                <CardContent sx={{ textAlign: "center" }}>
-                  <TrendingUp sx={{ color: "#9c27b0", fontSize: 40, mb: 1 }} />
-                  <Typography variant="h4" sx={{ color: "white", fontWeight: "bold" }}>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <Card className="bg-[#2a2a2a] border border-gray-700">
+                <CardContent className="text-center py-6">
+                  <TrendingUp className="text-purple-500 w-10 h-10 mx-auto mb-2" />
+                  <h4 className="text-2xl font-bold text-white">
                     {stats.satisfaction}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "#ccc" }}>
+                  </h4>
+                  <p className="text-sm text-gray-300 mt-1">
                     Satisfaction
-                  </Typography>
+                  </p>
                 </CardContent>
               </Card>
-            </Box>
-          </Box>
+            </div>
+          </div>
 
           {/* Quick Actions */}
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mb: 4 }}>
-            <Box sx={{ flex: "1 1 400px", minWidth: "400px" }}>
-              <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-                <CardContent>
-                  <Typography variant="h6" sx={{ color: "white", mb: 2 }}>
+          <div className="flex flex-wrap gap-6 mb-8">
+            <div className="flex-1 min-w-[400px]">
+              <Card className="bg-[#2a2a2a] border border-gray-700">
+                <CardContent className="p-6">
+                  <h6 className="text-lg font-semibold text-white mb-4">
                     Quick Actions
-                  </Typography>
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  </h6>
+                  <div className="flex flex-col gap-3">
                     {quickActions.map((action, index) => (
                       <Button
                         key={index}
                         variant="outlined"
-                        startIcon={action.icon}
+                        color="primary"
                         onClick={() => router.push(action.href)}
-                        sx={{
-                          justifyContent: "flex-start",
-                          textAlign: "left",
+                        className="justify-start text-left border-2 hover:bg-opacity-20 transition-colors"
+                        style={{
                           borderColor: action.color,
                           color: action.color,
-                          "&:hover": {
-                            borderColor: action.color,
-                            backgroundColor: `${action.color}20`,
-                          },
                         }}
                       >
-                        <Box sx={{ textAlign: "left" }}>
-                          <Typography 
-                            variant="body1" 
-                            component="div" 
-                            sx={{ fontWeight: "medium" }}
-                          >
-                            {action.title}
-                          </Typography>
-                          <Typography 
-                            variant="body2" 
-                            component="div" 
-                            sx={{ color: "#ccc" }}
-                          >
-                            {action.description}
-                          </Typography>
-                        </Box>
+                        <div className="flex items-center gap-3 text-left w-full">
+                          {action.icon}
+                          <div>
+                            <p className="font-medium">{action.title}</p>
+                            <p className="text-sm text-gray-300">{action.description}</p>
+                          </div>
+                        </div>
                       </Button>
                     ))}
-                  </Box>
+                  </div>
                 </CardContent>
               </Card>
-            </Box>
+            </div>
 
             {/* Recent Chats */}
-            <Box sx={{ flex: "1 1 400px", minWidth: "400px" }}>
-              <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-                <CardContent>
-                  <Typography variant="h6" sx={{ color: "white", mb: 2 }}>
+            <div className="flex-1 min-w-[400px]">
+              <Card className="bg-[#2a2a2a] border border-gray-700">
+                <CardContent className="p-6">
+                  <h6 className="text-lg font-semibold text-white mb-4">
                     Recent Chats
-                  </Typography>
-                  <List>
+                  </h6>
+                  <div className="space-y-0">
                     {recentChats.map((chat, index) => (
                       <React.Fragment key={chat.id}>
-                        <ListItem
-                          sx={{
-                            cursor: "pointer",
-                            "&:hover": {
-                              backgroundColor: "#3a3a3a",
-                            },
-                          }}
+                        <div
+                          className="flex items-center gap-4 p-3 cursor-pointer hover:bg-[#3a3a3a] rounded-lg transition-colors"
                         >
-                          <ListItemAvatar>
-                            <Avatar
-                              sx={{
-                                bgcolor: chat.status === "active" ? "#ff6b35" : "#4caf50",
-                                color: "white",
-                              }}
-                            >
-                              {chat.avatar}
-                            </Avatar>
-                          </ListItemAvatar>
-                          <ListItemText
-                            primary={
-                              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                <Typography 
-                                  variant="body1" 
-                                  component="span" 
-                                  sx={{ color: "white" }}
-                                >
-                                  {chat.name}
-                                </Typography>
-                                <Chip
-                                  label={chat.status}
-                                  size="small"
-                                  sx={{
-                                    backgroundColor: chat.status === "active" ? "#ff6b35" : "#4caf50",
-                                    color: "white",
-                                    fontSize: "0.75rem",
-                                  }}
-                                />
-                              </Box>
-                            }
-                            secondaryTypographyProps={{ component: "div" }}
-                            secondary={
-                              <Typography 
-                                variant="body2" 
-                                component="div" 
-                                sx={{ color: "#ccc" }}
+                          <div
+                            className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
+                              chat.status === "active" ? "bg-[#ff6b35]" : "bg-green-500"
+                            }`}
+                          >
+                            {chat.avatar}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="text-base text-white font-medium truncate">
+                                {chat.name}
+                              </p>
+                              <Chip
+                                size="small"
+                                color={chat.status === "active" ? "error" : "success"}
+                                className="text-xs"
                               >
-                                {chat.lastMessage}
-                              </Typography>
-                            }
-                          />
-                          <ListItemSecondaryAction>
-                            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                              <Typography variant="caption" sx={{ color: "#ccc" }}>
-                                {chat.timestamp}
-                              </Typography>
-                              {chat.unreadCount > 0 && (
-                                <Badge badgeContent={chat.unreadCount} color="error" />
-                              )}
-                            </Box>
-                          </ListItemSecondaryAction>
-                        </ListItem>
-                        {index < recentChats.length - 1 && <Divider sx={{ backgroundColor: "#333" }} />}
+                                {chat.status}
+                              </Chip>
+                            </div>
+                            <p className="text-sm text-gray-300 truncate">
+                              {chat.lastMessage}
+                            </p>
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            <p className="text-xs text-gray-300">
+                              {chat.timestamp}
+                            </p>
+                            {chat.unreadCount > 0 && (
+                              <span className="w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-semibold">
+                                {chat.unreadCount}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {index < recentChats.length - 1 && (
+                          <div className="border-t border-gray-700 my-2" />
+                        )}
                       </React.Fragment>
                     ))}
-                  </List>
+                  </div>
                 </CardContent>
               </Card>
-            </Box>
-          </Box>
+            </div>
+          </div>
 
           {/* Navigation Cards */}
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-            <Box sx={{ flex: "1 1 300px", minWidth: "300px" }}>
-              <Card 
-                sx={{ 
-                  backgroundColor: "#2a2a2a", 
-                  border: "1px solid #333",
-                  cursor: "pointer",
-                  "&:hover": {
-                    backgroundColor: "#3a3a3a",
-                  },
-                }}
-                onClick={() => router.push("/inbox/my-inbox")}
+          <div className="flex flex-wrap gap-6">
+            <div className="flex-1 min-w-[300px]">
+              <Card
+                className="bg-[#2a2a2a] border border-gray-700 cursor-pointer hover:bg-[#3a3a3a] transition-colors"
               >
-                <CardContent sx={{ textAlign: "center" }}>
-                  <Person sx={{ color: "#4caf50", fontSize: 60, mb: 2 }} />
-                  <Typography variant="h5" sx={{ color: "white", mb: 1 }}>
+                <div onClick={() => router.push("/inbox/my-inbox")}>
+                <CardContent className="text-center py-6">
+                  <User className="text-green-500 w-15 h-15 mx-auto mb-4" size={60} />
+                  <h5 className="text-xl font-semibold text-white mb-2">
                     My Inbox
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "#ccc" }}>
+                  </h5>
+                  <p className="text-sm text-gray-300">
                     Manage your personal conversations and handle customer inquiries
-                  </Typography>
+                  </p>
                 </CardContent>
+                </div>
               </Card>
-            </Box>
-            <Box sx={{ flex: "1 1 300px", minWidth: "300px" }}>
-              <Card 
-                sx={{ 
-                  backgroundColor: "#2a2a2a", 
-                  border: "1px solid #333",
-                  cursor: "pointer",
-                  "&:hover": {
-                    backgroundColor: "#3a3a3a",
-                  },
-                }}
-                onClick={() => router.push("/inbox/agent-inbox")}
+            </div>
+            <div className="flex-1 min-w-[300px]">
+              <Card
+                className="bg-[#2a2a2a] border border-gray-700 cursor-pointer hover:bg-[#3a3a3a] transition-colors"
               >
-                <CardContent sx={{ textAlign: "center" }}>
-                  <Robot sx={{ color: "#ff6b35", fontSize: 60, mb: 2 }} />
-                  <Typography variant="h5" sx={{ color: "white", mb: 1 }}>
+                <div onClick={() => router.push("/inbox/agent-inbox")}>
+                <CardContent className="text-center py-6">
+                  <Bot className="text-orange-500 w-15 h-15 mx-auto mb-4" size={60} />
+                  <h5 className="text-xl font-semibold text-white mb-2">
                     Agent Inbox
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "#ccc" }}>
+                  </h5>
+                  <p className="text-sm text-gray-300">
                     Monitor AI agent conversations and automated workflows
-                  </Typography>
+                  </p>
                 </CardContent>
+                </div>
               </Card>
-            </Box>
-            <Box sx={{ flex: "1 1 300px", minWidth: "300px" }}>
-              <Card 
-                sx={{ 
-                  backgroundColor: "#2a2a2a", 
-                  border: "1px solid #333",
-                  cursor: "pointer",
-                  "&:hover": {
-                    backgroundColor: "#3a3a3a",
-                  },
-                }}
-                onClick={() => router.push("/reports")}
+            </div>
+            <div className="flex-1 min-w-[300px]">
+              <Card
+                className="bg-[#2a2a2a] border border-gray-700 cursor-pointer hover:bg-[#3a3a3a] transition-colors"
               >
-                <CardContent sx={{ textAlign: "center" }}>
-                  <TrendingUp sx={{ color: "#2196f3", fontSize: 60, mb: 2 }} />
-                  <Typography variant="h5" sx={{ color: "white", mb: 1 }}>
+                <div onClick={() => router.push("/reports")}>
+                <CardContent className="text-center py-6">
+                  <TrendingUp className="text-blue-500 w-15 h-15 mx-auto mb-4" size={60} />
+                  <h5 className="text-xl font-semibold text-white mb-2">
                     Reports
-          </Typography>
-                  <Typography variant="body2" sx={{ color: "#ccc" }}>
+                  </h5>
+                  <p className="text-sm text-gray-300">
                     View analytics and performance metrics for your conversations
-          </Typography>
+                  </p>
                 </CardContent>
+                </div>
               </Card>
-            </Box>
-          </Box>
-        </Box>
-      </Container>
+            </div>
+          </div>
+        </div>
+      </div>
     </PageContainer>
   );
 };

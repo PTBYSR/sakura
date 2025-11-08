@@ -1,47 +1,24 @@
 "use client";
 import React, { useState } from "react";
 
-// Force dynamic rendering to avoid SSG issues with MUI theme
+// Force dynamic rendering to avoid SSG issues
 export const dynamic = 'force-dynamic';
 import {
-  Box,
-  Typography,
-  Container,
-  Card,
-  CardContent,
-  CardHeader,
-  Avatar,
-  Chip,
-  LinearProgress,
-  Tabs,
-  Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider,
-} from "@mui/material";
-import {
-  TrendingUp as TrendingUpIcon,
-  Assessment as AssessmentIcon,
-  Speed as SpeedIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  Schedule as ScheduleIcon,
-  Person as PersonIcon,
-  Message as MessageIcon,
-  Star as StarIcon,
-  Timeline as TimelineIcon,
-} from "@mui/icons-material";
+  TrendingUp,
+  BarChart3,
+  Gauge,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  User,
+  MessageSquare,
+  Star,
+  Activity,
+} from "lucide-react";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { useAgents } from "@/contexts/AgentsContext";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Chip } from "@/components/ui/chip";
 
 const AIAgentPerformancePage = () => {
   const { agent } = useAgents();
@@ -92,298 +69,293 @@ const AIAgentPerformancePage = () => {
     { issue: "Returns & Refunds", count: 18, resolution: 88 },
   ];
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (newValue: number) => {
     setActiveTab(newValue);
   };
 
   return (
     <PageContainer title="AI Agent Performance" description="Detailed performance metrics and analytics">
-      <Container maxWidth="xl">
-        <Box sx={{ py: 4 }}>
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="py-8">
           {/* Header */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-            <Box>
-              <Typography variant="h4" gutterBottom>
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h4 className="text-2xl font-semibold text-white mb-2">
                 AI Agent Performance
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
+              </h4>
+              <p className="text-gray-300">
                 Detailed analytics for {agent.name}
-              </Typography>
-            </Box>
+              </p>
+            </div>
             <Chip 
               label="Last 24 Hours" 
               color="primary" 
               variant="outlined"
             />
-          </Box>
+          </div>
 
           {/* Key Performance Indicators */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 4 }}>
-            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <SpeedIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
-                  <Typography variant="h6">{performanceMetrics.responseTime.average}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Avg Response Time
-                  </Typography>
-                  <Typography variant="caption" color="error">
-                    {performanceMetrics.responseTime.trend}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Box>
-            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <CheckCircleIcon color="success" sx={{ fontSize: 40, mb: 1 }} />
-                  <Typography variant="h6">{performanceMetrics.accuracy.rate}%</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Accuracy Rate
-                  </Typography>
-                  <Typography variant="caption" color="success.main">
-                    {performanceMetrics.accuracy.trend}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Box>
-            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <StarIcon color="warning" sx={{ fontSize: 40, mb: 1 }} />
-                  <Typography variant="h6">{performanceMetrics.satisfaction.score}/5.0</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Satisfaction Score
-                  </Typography>
-                  <Typography variant="caption" color="success.main">
-                    {performanceMetrics.satisfaction.trend}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Box>
-            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <TrendingUpIcon color="info" sx={{ fontSize: 40, mb: 1 }} />
-                  <Typography variant="h6">{performanceMetrics.resolution.rate}%</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Resolution Rate
-                  </Typography>
-                  <Typography variant="caption" color="success.main">
-                    {performanceMetrics.resolution.trend}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Box>
-          </Box>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <Card>
+              <CardContent className="text-center py-6">
+                <Gauge className="text-[#EE66AA] w-10 h-10 mx-auto mb-2" />
+                <h6 className="text-xl font-semibold text-white">{performanceMetrics.responseTime.average}</h6>
+                <p className="text-sm text-gray-300 mb-1">
+                  Avg Response Time
+                </p>
+                <p className="text-xs text-red-400">
+                  {performanceMetrics.responseTime.trend}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="text-center py-6">
+                <CheckCircle2 className="text-green-500 w-10 h-10 mx-auto mb-2" />
+                <h6 className="text-xl font-semibold text-white">{performanceMetrics.accuracy.rate}%</h6>
+                <p className="text-sm text-gray-300 mb-1">
+                  Accuracy Rate
+                </p>
+                <p className="text-xs text-green-400">
+                  {performanceMetrics.accuracy.trend}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="text-center py-6">
+                <Star className="text-yellow-500 w-10 h-10 mx-auto mb-2" />
+                <h6 className="text-xl font-semibold text-white">{performanceMetrics.satisfaction.score}/5.0</h6>
+                <p className="text-sm text-gray-300 mb-1">
+                  Satisfaction Score
+                </p>
+                <p className="text-xs text-green-400">
+                  {performanceMetrics.satisfaction.trend}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="text-center py-6">
+                <TrendingUp className="text-blue-500 w-10 h-10 mx-auto mb-2" />
+                <h6 className="text-xl font-semibold text-white">{performanceMetrics.resolution.rate}%</h6>
+                <p className="text-sm text-gray-300 mb-1">
+                  Resolution Rate
+                </p>
+                <p className="text-xs text-green-400">
+                  {performanceMetrics.resolution.trend}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Performance Tabs */}
-          <Card sx={{ mb: 4 }}>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-              <Tabs value={activeTab} onChange={handleTabChange}>
-                <Tab label="Hourly Analytics" />
-                <Tab label="Issue Analysis" />
-                <Tab label="Response Times" />
-                <Tab label="Quality Metrics" />
-              </Tabs>
-            </Box>
+          <Card className="mb-8">
+            <div className="border-b border-gray-700">
+              <div className="flex">
+                {["Hourly Analytics", "Issue Analysis", "Response Times", "Quality Metrics"].map((label, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleTabChange(index)}
+                    className={`px-6 py-3 text-sm font-medium transition-colors ${
+                      activeTab === index
+                        ? "text-[#EE66AA] border-b-2 border-[#EE66AA]"
+                        : "text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Tab Content */}
-            <Box sx={{ p: 3 }}>
+            <div className="p-6">
               {activeTab === 0 && (
-                <Box>
-                  <Typography variant="h6" gutterBottom>
+                <div>
+                  <h6 className="text-lg font-semibold text-white mb-4">
                     Hourly Performance Breakdown
-                  </Typography>
-                  <TableContainer component={Paper} variant="outlined">
-                    <Table>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Hour</TableCell>
-                          <TableCell align="right">Conversations</TableCell>
-                          <TableCell align="right">Resolved</TableCell>
-                          <TableCell align="right">Avg Response Time</TableCell>
-                          <TableCell align="right">Success Rate</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
+                  </h6>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b border-gray-700">
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Hour</th>
+                          <th className="text-right py-3 px-4 text-sm font-semibold text-gray-300">Conversations</th>
+                          <th className="text-right py-3 px-4 text-sm font-semibold text-gray-300">Resolved</th>
+                          <th className="text-right py-3 px-4 text-sm font-semibold text-gray-300">Avg Response Time</th>
+                          <th className="text-right py-3 px-4 text-sm font-semibold text-gray-300">Success Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody>
                         {hourlyData.map((row) => (
-                          <TableRow key={row.hour}>
-                            <TableCell>{row.hour}</TableCell>
-                            <TableCell align="right">{row.conversations}</TableCell>
-                            <TableCell align="right">{row.resolved}</TableCell>
-                            <TableCell align="right">{row.avgTime}</TableCell>
-                            <TableCell align="right">
-                              <Chip 
+                          <tr key={row.hour} className="border-b border-gray-800 hover:bg-gray-800/50">
+                            <td className="py-3 px-4 text-sm text-white">{row.hour}</td>
+                            <td className="py-3 px-4 text-sm text-white text-right">{row.conversations}</td>
+                            <td className="py-3 px-4 text-sm text-white text-right">{row.resolved}</td>
+                            <td className="py-3 px-4 text-sm text-white text-right">{row.avgTime}</td>
+                            <td className="py-3 px-4 text-right">
+                              <Chip
                                 label={`${Math.round((row.resolved / row.conversations) * 100)}%`}
                                 color={row.resolved / row.conversations > 0.8 ? "success" : "warning"}
                                 size="small"
+                                className="text-xs"
                               />
-                            </TableCell>
-                          </TableRow>
+                            </td>
+                          </tr>
                         ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Box>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               )}
 
               {activeTab === 1 && (
-                <Box>
-                  <Typography variant="h6" gutterBottom>
+                <div>
+                  <h6 className="text-lg font-semibold text-white mb-4">
                     Top Issues & Resolution Rates
-                  </Typography>
-                  <List>
+                  </h6>
+                  <div className="space-y-0">
                     {topIssues.map((issue, index) => (
-                      <React.Fragment key={issue.issue}>
-                        <ListItem>
-                          <ListItemIcon>
-                            <AssessmentIcon />
-                          </ListItemIcon>
-                          <ListItemText 
-                            primary={issue.issue}
-                            secondary={`${issue.count} conversations`}
-                          />
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Box sx={{ width: 100 }}>
-                              <LinearProgress 
-                                variant="determinate" 
-                                value={issue.resolution} 
-                                color={issue.resolution > 90 ? "success" : issue.resolution > 80 ? "warning" : "error"}
-                              />
-                            </Box>
-                            <Typography variant="body2">{issue.resolution}%</Typography>
-                          </Box>
-                        </ListItem>
-                        {index < topIssues.length - 1 && <Divider />}
-                      </React.Fragment>
+                      <div key={issue.issue}>
+                        <div className="flex items-center gap-4 py-4">
+                          <BarChart3 className="text-gray-400 w-5 h-5" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-base font-semibold text-white">{issue.issue}</p>
+                            <p className="text-sm text-gray-400">{issue.count} conversations</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="w-24">
+                              <div className="w-full bg-gray-700 rounded-full h-2">
+                                <div
+                                  className={`h-2 rounded-full ${
+                                    issue.resolution > 90 ? "bg-green-500" : issue.resolution > 80 ? "bg-yellow-500" : "bg-red-500"
+                                  }`}
+                                  style={{ width: `${issue.resolution}%` }}
+                                />
+                              </div>
+                            </div>
+                            <p className="text-sm text-white w-12 text-right">{issue.resolution}%</p>
+                          </div>
+                        </div>
+                        {index < topIssues.length - 1 && (
+                          <div className="border-t border-gray-700" />
+                        )}
+                      </div>
                     ))}
-                  </List>
-                </Box>
+                  </div>
+                </div>
               )}
 
               {activeTab === 2 && (
-                <Box>
-                  <Typography variant="h6" gutterBottom>
+                <div>
+                  <h6 className="text-lg font-semibold text-white mb-4">
                     Response Time Analysis
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                    <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(33.333% - 16px)' }, minWidth: 0 }}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Typography variant="subtitle2" gutterBottom>
-                            Average Response Time
-                          </Typography>
-                          <Typography variant="h4" color="primary">
-                            {performanceMetrics.responseTime.average}
-                          </Typography>
-                          <Typography variant="caption" color="error">
-                            {performanceMetrics.responseTime.trend} vs yesterday
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </Box>
-                    <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(33.333% - 16px)' }, minWidth: 0 }}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Typography variant="subtitle2" gutterBottom>
-                            Median Response Time
-                          </Typography>
-                          <Typography variant="h4" color="success.main">
-                            {performanceMetrics.responseTime.median}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            Most common response time
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </Box>
-                    <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(33.333% - 16px)' }, minWidth: 0 }}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Typography variant="subtitle2" gutterBottom>
-                            95th Percentile
-                          </Typography>
-                          <Typography variant="h4" color="warning.main">
-                            {performanceMetrics.responseTime.p95}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            Slowest 5% of responses
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </Box>
-                  </Box>
-                </Box>
+                  </h6>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card>
+                      <CardContent className="p-4">
+                        <p className="text-sm text-gray-400 mb-2">Average Response Time</p>
+                        <h4 className="text-2xl font-semibold text-[#EE66AA] mb-1">
+                          {performanceMetrics.responseTime.average}
+                        </h4>
+                        <p className="text-xs text-red-400">
+                          {performanceMetrics.responseTime.trend} vs yesterday
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <p className="text-sm text-gray-400 mb-2">Median Response Time</p>
+                        <h4 className="text-2xl font-semibold text-green-500 mb-1">
+                          {performanceMetrics.responseTime.median}
+                        </h4>
+                        <p className="text-xs text-gray-400">
+                          Most common response time
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <p className="text-sm text-gray-400 mb-2">95th Percentile</p>
+                        <h4 className="text-2xl font-semibold text-yellow-500 mb-1">
+                          {performanceMetrics.responseTime.p95}
+                        </h4>
+                        <p className="text-xs text-gray-400">
+                          Slowest 5% of responses
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
               )}
 
               {activeTab === 3 && (
-                <Box>
-                  <Typography variant="h6" gutterBottom>
+                <div>
+                  <h6 className="text-lg font-semibold text-white mb-4">
                     Quality Metrics
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                    <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' }, minWidth: 0 }}>
-                      <Card variant="outlined">
-                        <CardHeader 
-                          title="Accuracy Metrics"
-                          avatar={<Avatar sx={{ bgcolor: 'success.main' }}><CheckCircleIcon /></Avatar>}
-                        />
-                        <CardContent>
-                          <Box sx={{ mb: 2 }}>
-                            <Typography variant="body2" gutterBottom>
-                              Correct Responses
-                            </Typography>
-                            <LinearProgress 
-                              variant="determinate" 
-                              value={performanceMetrics.accuracy.rate} 
-                              color="success"
+                  </h6>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card>
+                      <CardHeader className="pb-2 pt-4">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white">
+                            <CheckCircle2 size={16} />
+                          </div>
+                          <h6 className="text-base font-semibold text-white">Accuracy Metrics</h6>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-2">
+                        <div className="mb-4">
+                          <p className="text-sm text-gray-300 mb-2">Correct Responses</p>
+                          <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+                            <div
+                              className="bg-green-500 h-2 rounded-full"
+                              style={{ width: `${performanceMetrics.accuracy.rate}%` }}
                             />
-                            <Typography variant="caption">
-                              {performanceMetrics.accuracy.rate}% accuracy
-                            </Typography>
-                          </Box>
-                          <Typography variant="body2" color="text.secondary">
-                            The AI agent correctly understands and responds to customer inquiries
-                            {performanceMetrics.accuracy.rate}% of the time.
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </Box>
-                    <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' }, minWidth: 0 }}>
-                      <Card variant="outlined">
-                        <CardHeader 
-                          title="Customer Satisfaction"
-                          avatar={<Avatar sx={{ bgcolor: 'warning.main' }}><StarIcon /></Avatar>}
-                        />
-                        <CardContent>
-                          <Box sx={{ mb: 2 }}>
-                            <Typography variant="body2" gutterBottom>
-                              Satisfaction Rating
-                            </Typography>
-                            <LinearProgress 
-                              variant="determinate" 
-                              value={(performanceMetrics.satisfaction.score / 5) * 100} 
-                              color="warning"
+                          </div>
+                          <p className="text-xs text-gray-400">
+                            {performanceMetrics.accuracy.rate}% accuracy
+                          </p>
+                        </div>
+                        <p className="text-sm text-gray-300">
+                          The AI agent correctly understands and responds to customer inquiries
+                          {performanceMetrics.accuracy.rate}% of the time.
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="pb-2 pt-4">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-white">
+                            <Star size={16} />
+                          </div>
+                          <h6 className="text-base font-semibold text-white">Customer Satisfaction</h6>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-2">
+                        <div className="mb-4">
+                          <p className="text-sm text-gray-300 mb-2">Satisfaction Rating</p>
+                          <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+                            <div
+                              className="bg-yellow-500 h-2 rounded-full"
+                              style={{ width: `${(performanceMetrics.satisfaction.score / 5) * 100}%` }}
                             />
-                            <Typography variant="caption">
-                              {performanceMetrics.satisfaction.score}/5.0 stars
-                            </Typography>
-                          </Box>
-                          <Typography variant="body2" color="text.secondary">
-                            Customers rate their experience with the AI agent an average of
-                            {performanceMetrics.satisfaction.score} out of 5 stars.
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </Box>
-                  </Box>
-                </Box>
+                          </div>
+                          <p className="text-xs text-gray-400">
+                            {performanceMetrics.satisfaction.score}/5.0 stars
+                          </p>
+                        </div>
+                        <p className="text-sm text-gray-300">
+                          Customers rate their experience with the AI agent an average of
+                          {performanceMetrics.satisfaction.score} out of 5 stars.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
               )}
-            </Box>
+            </div>
           </Card>
-        </Box>
-      </Container>
+        </div>
+      </div>
     </PageContainer>
   );
 };

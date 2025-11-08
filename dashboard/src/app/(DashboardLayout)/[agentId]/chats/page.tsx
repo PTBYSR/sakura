@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import { Box, Typography, Container } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { useAgents } from "@/contexts/AgentsContext";
 import { useParams } from "next/navigation";
@@ -16,32 +15,24 @@ const AgentChatsPage = () => {
   if (!isAgentMatch) {
     return (
       <PageContainer title="Agent Not Found" description="The requested agent was not found">
-        <Container maxWidth="lg">
-          <Box sx={{ py: 4 }}>
-            <Typography variant="h4" gutterBottom>
-              Agent Not Found
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              The agent you&apos;re looking for doesn&apos;t exist.
-            </Typography>
-          </Box>
-        </Container>
+        <div className="max-w-5xl mx-auto py-6">
+          <div className="py-4">
+            <div className="text-2xl font-semibold text-white mb-2">Agent Not Found</div>
+            <div className="text-sm text-gray-300">The agent you&apos;re looking for doesn&apos;t exist.</div>
+          </div>
+        </div>
       </PageContainer>
     );
   }
 
   return (
     <PageContainer title={`${agent.name} Chats`} description={`View ${agent.name} conversations`}>
-      <Container maxWidth="lg">
-        <Box sx={{ py: 4 }}>
-          <Typography variant="h4" gutterBottom>
-            {agent.name} Chats
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            This is the {agent.name} Chats page at /{agent.id}/chats
-          </Typography>
-        </Box>
-      </Container>
+      <div className="max-w-5xl mx-auto py-6">
+        <div className="py-4">
+          <div className="text-2xl font-semibold text-white mb-2">{agent.name} Chats</div>
+          <div className="text-sm text-gray-300">This is the {agent.name} Chats page at /{agent.id}/chats</div>
+        </div>
+      </div>
     </PageContainer>
   );
 };

@@ -1,24 +1,29 @@
 "use client";
 
-import { ThemeProvider } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
-import { ReactNode } from "react";
-import { baseDarkTheme } from "@/utils/theme/DarkTheme";
-import AppRouterCacheProvider from "./AppRouterCacheProvider";
+import { ReactNode, useState, useEffect } from "react";
 
 interface ProvidersProps {
   children: ReactNode;
 }
 
+// Optional MUI providers - only render when client-side mounted
+// This prevents useContext errors during SSG
+export function MUIProviders({ children }: { children: ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <>{children}</>;
+  }
+
+  return <>{children}</>;
+}
+
+// Main providers - now just passes through (Tailwind handles styling)
 export function Providers({ children }: ProvidersProps) {
-  // Always render providers - pages using this layout are dynamic, so context is available
-  return (
-    <AppRouterCacheProvider>
-      <ThemeProvider theme={baseDarkTheme}>
-        <CssBaseline />
-        {children}
-      </ThemeProvider>
-    </AppRouterCacheProvider>
-  );
+  return <>{children}</>;
 }
 

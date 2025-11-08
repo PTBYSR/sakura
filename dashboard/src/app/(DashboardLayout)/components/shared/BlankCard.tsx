@@ -1,18 +1,13 @@
-import { Card } from "@mui/material";
+import { Card } from "@/components/ui/card";
 
 type Props = {
   className?: string;
   children: React.ReactNode;
 };
 
-const BlankCard = ({ children, className }: Props) => {
+const BlankCard = ({ children, className = "" }: Props) => {
   return (
-    <Card
-      sx={{ p: 0, position: "relative" }}
-      className={className}
-      elevation={9}
-      variant={undefined}
-    >
+    <Card className={`p-0 relative shadow-2xl ${className}`}>
       {children}
     </Card>
   );

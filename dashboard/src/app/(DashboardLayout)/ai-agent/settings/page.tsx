@@ -1,54 +1,23 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
+import { Avatar } from "@/components/ui/avatar";
+import { Collapse } from "@/components/ui/collapse";
+import { IconButton } from "@/components/ui/icon-button";
 import {
-  Box,
-  Typography,
-  Container,
-  Card,
-  CardContent,
-  CardHeader,
-  Avatar,
-  TextField,
-  Button,
-  Alert,
-  CircularProgress,
-  Snackbar,
-  InputAdornment,
-  Checkbox,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  ListItemButton,
-  IconButton,
-  Divider,
-  ToggleButton,
-  ToggleButtonGroup,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Paper,
-} from "@mui/material";
-import {
-  Save as SaveIcon,
-  SmartToy as SmartToyIcon,
-  Search as SearchIcon,
-  Book as BookIcon,
-  Language as WebsiteIcon,
-  QuestionAnswer as FAQIcon,
-  Description as FileIcon,
-  Code as SOPIcon,
-  CheckBox as CheckBoxIcon,
-  CheckBoxOutlineBlank as CheckBoxOutlineBlankIcon,
-  Close as CloseIcon,
-} from "@mui/icons-material";
+  Save,
+  Bot,
+  Search,
+  BookOpen,
+  Globe2,
+  HelpCircle,
+  FileText,
+  Workflow,
+  X,
+  ChevronDown,
+} from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { useAgents } from "@/contexts/AgentsContext";
@@ -697,27 +666,16 @@ const AIAgentSettingsPage = () => {
     return filtered;
   };
 
-  const getKbIcon = (type: string) => {
-    switch (type) {
-      case "website":
-        return <WebsiteIcon sx={{ fontSize: "1rem" }} />;
-      case "faq":
-        return <FAQIcon sx={{ fontSize: "1rem" }} />;
-      case "file":
-        return <FileIcon sx={{ fontSize: "1rem" }} />;
-      default:
-        return <BookIcon sx={{ fontSize: "1rem" }} />;
-    }
-  };
+  // no-op
 
   if (loading) {
     return (
       <PageContainer title="AI Agent Settings" description="Configure your AI agent">
-        <Container maxWidth="lg">
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
-            <CircularProgress />
-          </Box>
-        </Container>
+        <div className="max-w-5xl mx-auto">
+          <div className="flex justify-center items-center min-h-[400px]">
+            <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          </div>
+        </div>
       </PageContainer>
     );
   }
@@ -727,441 +685,300 @@ const AIAgentSettingsPage = () => {
 
   return (
     <PageContainer title="AI Agent Settings" description="Configure your AI agent">
-      <Container maxWidth="lg">
-        <Box sx={{ py: 2 }}>
+      <div className="max-w-5xl mx-auto py-2">
           {/* Changes Banner */}
           {hasChanges && (
-            <Paper
-              elevation={3}
-              sx={{
-                position: "sticky",
-                top: 0,
-                zIndex: 1000,
-                mb: 2,
-                p: 2,
-                bgcolor: "warning.light",
-                borderRadius: 1,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Alert severity="warning" sx={{ flex: 1, py: 0 }}>
-                    <Typography variant="body2" sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
-                      You have unsaved changes
-                    </Typography>
-                  </Alert>
-                </Box>
-                <Box sx={{ display: "flex", gap: 1 }}>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={handleDiscard}
-                    disabled={saving}
-                    sx={{ fontSize: "0.875rem" }}
-                  >
+            <div className="sticky top-0 z-50 mb-2 p-2 rounded-md bg-yellow-500/20 border border-yellow-600">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium text-yellow-200">You have unsaved changes</div>
+                <div className="flex gap-2">
+                  <Button variant="outlined" size="small" onClick={handleDiscard} disabled={saving} className="border-yellow-400 text-yellow-300 hover:bg-yellow-500/10 px-3 py-1 text-sm">
                     Discard
                   </Button>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    startIcon={saving ? <CircularProgress size={16} /> : <SaveIcon sx={{ fontSize: "1rem" }} />}
-                    onClick={handleSave}
-                    disabled={saving}
-                    sx={{ fontSize: "0.875rem" }}
-                  >
-                    {saving ? "Saving..." : "Save Changes"}
+                  <Button size="small" onClick={handleSave} disabled={saving} className="bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white px-3 py-1 text-sm inline-flex items-center gap-2">
+                    {saving ? (
+                      <>
+                        <span className="inline-block w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        Save Changes
+                      </>
+                    )}
                   </Button>
-                </Box>
-              </Box>
-            </Paper>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Header */}
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-            <Box>
-              <Typography variant="h5" sx={{ fontWeight: 600, fontSize: "1.25rem", mb: 0.5 }}>
-                AI Agent Settings
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
-                Configure your AI agent&apos;s name, behavior, knowledge sources, and SOPs
-              </Typography>
-            </Box>
-          </Box>
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <div className="text-white font-semibold text-xl mb-1">AI Agent Settings</div>
+              <div className="text-[#bbb] text-sm">Configure your AI agent's name, behavior, knowledge sources, and SOPs</div>
+            </div>
+          </div>
 
           {/* Agent Settings Card */}
-          <Card sx={{ mb: 2 }}>
-                <CardHeader 
-              avatar={
-                <Avatar sx={{ bgcolor: "primary.main", width: 32, height: 32 }}>
-                  <SmartToyIcon sx={{ fontSize: "1rem" }} />
-                </Avatar>
-              }
-              title="Agent Configuration"
-              titleTypographyProps={{ variant: "h6", sx: { fontSize: "0.95rem", fontWeight: 600 } }}
-              sx={{ pb: 1, pt: 2 }}
-            />
-            <CardContent sx={{ pt: 1 }}>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-                <TextField
-                  label="AI Agent Name"
-                  fullWidth
-                  size="small"
+          <div className="mb-2 rounded-lg border border-[#333] bg-[#2a2a2a]">
+            <div className="flex items-center gap-3 p-3 border-b border-[#333]">
+              <Avatar size={32} className="bg-indigo-600 text-white">
+                <Bot className="h-4 w-4" />
+              </Avatar>
+              <div className="text-white font-semibold text-[0.95rem]">Agent Configuration</div>
+            </div>
+            <div className="p-3 space-y-3">
+              <div>
+                <label className="block text-sm text-gray-300 mb-1">AI Agent Name</label>
+                <Input
                   value={agentName}
                   onChange={(e) => setAgentName(e.target.value)}
                   placeholder="Enter your AI agent name"
-                  sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
+                  className="text-sm"
                 />
-
-                      <TextField
-                  label="System Prompt"
-                        fullWidth
-                        multiline
+              </div>
+              <div>
+                <label className="block text-sm text-gray-300 mb-1">System Prompt</label>
+                <textarea
                   rows={12}
-                  size="small"
                   value={systemPrompt}
                   onChange={(e) => setSystemPrompt(e.target.value)}
                   placeholder="Enter the system prompt that defines your AI agent's behavior and personality..."
-                  helperText="This prompt defines how your AI agent responds to users. Be specific about tone, style, and behavior."
-                  sx={{
-                    "& .MuiInputBase-input": {
-                      fontSize: "0.875rem",
-                      fontFamily: "monospace",
-                      lineHeight: 1.5,
-                    },
-                    "& .MuiFormHelperText-root": { fontSize: "0.75rem" },
-                  }}
+                  className="w-full px-4 py-2 rounded-lg bg-[#1e1e1e] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#EE66AA] focus:border-transparent font-mono text-sm leading-6"
                 />
-
-                <Alert severity="info" sx={{ fontSize: "0.875rem" }}>
-                  The system prompt is used to guide your AI agent&apos;s responses. Changes will take effect immediately after saving.
-                </Alert>
-                            </Box>
-                </CardContent>
-              </Card>
+                <div className="text-xs text-gray-400 mt-1">This prompt defines how your AI agent responds to users. Be specific about tone, style, and behavior.</div>
+              </div>
+              <div className="text-sm text-blue-200 bg-blue-900/30 border border-blue-700 rounded-md p-2">
+                The system prompt is used to guide your AI agent's responses. Changes will take effect immediately after saving.
+              </div>
+            </div>
+          </div>
 
           {/* Knowledge Base Section */}
-          <Card sx={{ mb: 2 }}>
-                <CardHeader 
-              avatar={
-                <Avatar sx={{ bgcolor: "info.main", width: 32, height: 32 }}>
-                  <BookIcon sx={{ fontSize: "1rem" }} />
-                </Avatar>
-              }
-              title="Knowledge Base Sources"
-              titleTypographyProps={{ variant: "h6", sx: { fontSize: "0.95rem", fontWeight: 600 } }}
-              sx={{ pb: 1, pt: 2 }}
-            />
-            <CardContent sx={{ pt: 1 }}>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {/* Search and Filters */}
-                <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
-                  <TextField
+          <div className="mb-2 rounded-lg border border-[#333] bg-[#2a2a2a]">
+            <div className="flex items-center gap-3 p-3 border-b border-[#333]">
+              <Avatar size={32} className="bg-sky-600 text-white">
+                <BookOpen className="h-4 w-4" />
+              </Avatar>
+              <div className="text-white font-semibold text-[0.95rem]">Knowledge Base Sources</div>
+            </div>
+            <div className="p-3 space-y-2">
+              {/* Search and Filters */}
+              <div className="flex gap-3 flex-wrap">
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
+                  <Input
                     placeholder="Search knowledge sources..."
-                    size="small"
                     value={kbSearchQuery}
                     onChange={(e) => setKbSearchQuery(e.target.value)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon sx={{ fontSize: "1rem" }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{ flex: 1, minWidth: 200, "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
+                    className="pl-9 text-sm"
                   />
-                  <FormControl size="small" sx={{ minWidth: 120 }}>
-                    <InputLabel sx={{ fontSize: "0.875rem" }}>Filter</InputLabel>
-                    <Select
-                      value={kbFilter}
-                      label="Filter"
-                      onChange={(e) => setKbFilter(e.target.value as any)}
-                      sx={{ fontSize: "0.875rem" }}
-                    >
-                      <MenuItem value="all" sx={{ fontSize: "0.875rem" }}>All</MenuItem>
-                      <MenuItem value="website" sx={{ fontSize: "0.875rem" }}>Websites</MenuItem>
-                      <MenuItem value="faq" sx={{ fontSize: "0.875rem" }}>FAQs</MenuItem>
-                      <MenuItem value="file" sx={{ fontSize: "0.875rem" }}>Files</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Filter</label>
+                  <select
+                    value={kbFilter}
+                    onChange={(e) => setKbFilter(e.target.value as any)}
+                    className="px-3 py-2 rounded-lg bg-[#1e1e1e] border border-gray-700 text-white text-sm"
+                  >
+                    <option value="all">All</option>
+                    <option value="website">Websites</option>
+                    <option value="faq">FAQs</option>
+                    <option value="file">Files</option>
+                  </select>
+                </div>
+              </div>
 
                 {/* Bulk Actions */}
-                {selectedKbItems.size > 0 && (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1.5, bgcolor: "action.selected", borderRadius: 1 }}>
-                    <Typography variant="body2" sx={{ fontSize: "0.875rem" }}>
-                      {selectedKbItems.size} selected
-                    </Typography>
-                    <Button size="small" onClick={handleKbSelectAll} sx={{ fontSize: "0.8rem" }}>
-                      Select All
-                    </Button>
-                    <Button size="small" onClick={handleKbUnselectAll} sx={{ fontSize: "0.8rem" }}>
-                      Unselect All
-                    </Button>
-                  </Box>
-                )}
+              {selectedKbItems.size > 0 && (
+                <div className="flex items-center gap-3 p-2 rounded-md bg-white/5">
+                  <div className="text-sm">{selectedKbItems.size} selected</div>
+                  <Button size="small" onClick={handleKbSelectAll} className="px-2 py-1 text-sm bg-[#3a3a3a] hover:bg-[#4a4a4a]">Select All</Button>
+                  <Button size="small" onClick={handleKbUnselectAll} className="px-2 py-1 text-sm bg-[#3a3a3a] hover:bg-[#4a4a4a]">Unselect All</Button>
+                </div>
+              )}
 
                 {/* Select All Checkbox */}
-                {filteredKbItems.length > 0 && (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                    <Checkbox
-                      checked={filteredKbItems.length > 0 && filteredKbItems.every((item) => selectedKbItems.has(item.id))}
-                      indeterminate={selectedKbItems.size > 0 && selectedKbItems.size < filteredKbItems.length}
-                      onChange={handleKbSelectAll}
-                      size="small"
-                    />
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
-                      Select all ({filteredKbItems.length} items)
-                      </Typography>
-                  </Box>
-                )}
+              {filteredKbItems.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 accent-[#EE66AA]"
+                    checked={filteredKbItems.length > 0 && filteredKbItems.every((item) => selectedKbItems.has(item.id))}
+                    ref={el => {
+                      if (el) el.indeterminate = selectedKbItems.size > 0 && selectedKbItems.size < filteredKbItems.length;
+                    }}
+                    onChange={handleKbSelectAll}
+                  />
+                  <div className="text-sm text-gray-300">Select all ({filteredKbItems.length} items)</div>
+                </div>
+              )}
 
-                {/* Knowledge Base Items List */}
-                <Box sx={{ maxHeight: 400, overflowY: "auto" }}>
-                  {filteredKbItems.length === 0 ? (
-                    <Box sx={{ p: 2, textAlign: "center" }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
-                        {kbSearchQuery ? "No knowledge sources match your search." : "No knowledge sources available."}
-                      </Typography>
-                    </Box>
-                  ) : (
-                    <List dense sx={{ py: 0 }}>
-                      {filteredKbItems.map((item, index) => (
-                        <React.Fragment key={item.id}>
-                          <ListItem
-                            secondaryAction={
-                              <Checkbox
-                                checked={selectedKbItems.has(item.id)}
-                                onChange={() => handleKbToggle(item.id)}
-                                size="small"
-                              />
-                            }
-                            sx={{ py: 0.75 }}
-                          >
-                            <ListItemIcon sx={{ minWidth: 32 }}>
-                              {getKbIcon(item.type)}
-                          </ListItemIcon>
-                          <ListItemText 
-                              primary={
-                                <Typography variant="body2" sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
-                                  {item.name}
-                                </Typography>
-                              }
-                              secondary={
-                                <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
-                                  {item.type === "website" && item.url}
-                                  {item.type === "faq" && item.question}
-                                  {item.type === "file" && item.filename}
-                                </Typography>
-                              }
-                            />
-                            <Chip
-                              label={item.type}
-                              size="small"
-                              variant="outlined"
-                              sx={{ fontSize: "0.7rem", height: 20, ml: 1 }}
-                            />
-                        </ListItem>
-                          {index < filteredKbItems.length - 1 && <Divider />}
-                      </React.Fragment>
+              {/* Knowledge Base Items List */}
+              <div className="max-h-[400px] overflow-y-auto">
+                {filteredKbItems.length === 0 ? (
+                  <div className="p-2 text-center text-sm text-gray-300">
+                    {kbSearchQuery ? "No knowledge sources match your search." : "No knowledge sources available."}
+                  </div>
+                ) : (
+                  <div className="divide-y divide-[#333]">
+                    {filteredKbItems.map((item) => (
+                      <div key={item.id} className="flex items-start gap-3 py-2">
+                        <div className="min-w-6 mt-0.5">
+                          {item.type === 'website' && <Globe2 className="h-4 w-4" />}
+                          {item.type === 'faq' && <HelpCircle className="h-4 w-4" />}
+                          {item.type === 'file' && <FileText className="h-4 w-4" />}
+                          {!['website','faq','file'].includes(item.type) && <BookOpen className="h-4 w-4" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-white font-medium">{item.name}</div>
+                          <div className="text-xs text-gray-400">
+                            {item.type === 'website' && item.url}
+                            {item.type === 'faq' && item.question}
+                            {item.type === 'file' && item.filename}
+                          </div>
+                        </div>
+                        <Chip size="small" variant="outlined" className="ml-2 text-xs">{item.type}</Chip>
+                        <input
+                          type="checkbox"
+                          className="ml-2 mt-1 w-4 h-4 accent-[#EE66AA]"
+                          checked={selectedKbItems.has(item.id)}
+                          onChange={() => handleKbToggle(item.id)}
+                        />
+                      </div>
                     ))}
-                  </List>
-                  )}
-                </Box>
+                  </div>
+                )}
+              </div>
 
-                <Alert severity="info" sx={{ fontSize: "0.875rem" }}>
-                  Selected knowledge sources will be used by the AI agent to answer questions.
-                </Alert>
-                  </Box>
-                </CardContent>
-              </Card>
+              <div className="text-sm text-blue-200 bg-blue-900/30 border border-blue-700 rounded-md p-2">
+                Selected knowledge sources will be used by the AI agent to answer questions.
+              </div>
+            </div>
+          </div>
 
           {/* SOPs Section */}
-          <Card sx={{ mb: 2 }}>
-                <CardHeader 
-              avatar={
-                <Avatar sx={{ bgcolor: "secondary.main", width: 32, height: 32 }}>
-                  <SOPIcon sx={{ fontSize: "1rem" }} />
-                </Avatar>
-              }
-              title="Standard Operating Procedures (SOPs)"
-              titleTypographyProps={{ variant: "h6", sx: { fontSize: "0.95rem", fontWeight: 600 } }}
-              sx={{ pb: 1, pt: 2 }}
-            />
-            <CardContent sx={{ pt: 1 }}>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {/* Search */}
-                <TextField
+          <div className="mb-2 rounded-lg border border-[#333] bg-[#2a2a2a]">
+            <div className="flex items-center gap-3 p-3 border-b border-[#333]">
+              <Avatar size={32} className="bg-purple-600 text-white">
+                <Workflow className="h-4 w-4" />
+              </Avatar>
+              <div className="text-white font-semibold text-[0.95rem]">Standard Operating Procedures (SOPs)</div>
+            </div>
+            <div className="p-3 space-y-2">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
+                <Input
                   placeholder="Search SOPs..."
-                  size="small"
                   value={sopSearchQuery}
                   onChange={(e) => setSopSearchQuery(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon sx={{ fontSize: "1rem" }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
+                  className="pl-9 text-sm"
                 />
+              </div>
 
-                {/* Bulk Actions */}
-                {selectedSopItems.size > 0 && (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1.5, bgcolor: "action.selected", borderRadius: 1 }}>
-                    <Typography variant="body2" sx={{ fontSize: "0.875rem" }}>
-                      {selectedSopItems.size} selected
-                          </Typography>
-                    <Button size="small" onClick={handleSopSelectAll} sx={{ fontSize: "0.8rem" }}>
-                      Select All
-                    </Button>
-                    <Button size="small" onClick={handleSopUnselectAll} sx={{ fontSize: "0.8rem" }}>
-                      Unselect All
-                    </Button>
-                        </Box>
+              {/* Bulk Actions */}
+              {selectedSopItems.size > 0 && (
+                <div className="flex items-center gap-3 p-2 rounded-md bg-white/5">
+                  <div className="text-sm">{selectedSopItems.size} selected</div>
+                  <Button size="small" onClick={handleSopSelectAll} className="px-2 py-1 text-sm bg-[#3a3a3a] hover:bg-[#4a4a4a]">Select All</Button>
+                  <Button size="small" onClick={handleSopUnselectAll} className="px-2 py-1 text-sm bg-[#3a3a3a] hover:bg-[#4a4a4a]">Unselect All</Button>
+                </div>
+              )}
+
+              {/* Select All Checkbox */}
+              {filteredSopItems.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 accent-[#EE66AA]"
+                    checked={filteredSopItems.length > 0 && filteredSopItems.every((item) => selectedSopItems.has(item.id))}
+                    ref={el => {
+                      if (el) el.indeterminate = selectedSopItems.size > 0 && selectedSopItems.size < filteredSopItems.length;
+                    }}
+                    onChange={handleSopSelectAll}
+                  />
+                  <div className="text-sm text-gray-300">Select all ({filteredSopItems.length} items)</div>
+                </div>
+              )}
+
+              {/* SOPs List */}
+              <div className="max-h-[400px] overflow-y-auto">
+                {filteredSopItems.length === 0 ? (
+                  <div className="p-2 text-center text-sm text-gray-300">
+                    {sopSearchQuery ? "No SOPs match your search." : "No SOPs available."}
+                  </div>
+                ) : (
+                  <div className="divide-y divide-[#333]">
+                    {filteredSopItems.map((item) => (
+                      <div key={item.id} className="flex items-start gap-3 py-2">
+                        <div className="min-w-6 mt-0.5">
+                          <Workflow className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-white font-medium">{item.name}</div>
+                          <div className="text-xs text-gray-400">{item.description}</div>
+                          <div className="flex gap-2 mt-1">
+                            <Chip size="small" variant="outlined" className="text-xs">{item.category}</Chip>
+                            <Chip size="small" className={`text-xs ${item.status === 'active' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-200'}`}>{item.status}</Chip>
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          className="ml-2 mt-1 w-4 h-4 accent-[#EE66AA]"
+                          checked={selectedSopItems.has(item.id)}
+                          onChange={() => handleSopToggle(item.id)}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 )}
+              </div>
 
-                {/* Select All Checkbox */}
-                {filteredSopItems.length > 0 && (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                    <Checkbox
-                      checked={filteredSopItems.length > 0 && filteredSopItems.every((item) => selectedSopItems.has(item.id))}
-                      indeterminate={selectedSopItems.size > 0 && selectedSopItems.size < filteredSopItems.length}
-                      onChange={handleSopSelectAll}
-                      size="small"
-                    />
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
-                      Select all ({filteredSopItems.length} items)
-                    </Typography>
-                  </Box>
-                )}
-
-                {/* SOPs List */}
-                <Box sx={{ maxHeight: 400, overflowY: "auto" }}>
-                  {filteredSopItems.length === 0 ? (
-                    <Box sx={{ p: 2, textAlign: "center" }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
-                        {sopSearchQuery ? "No SOPs match your search." : "No SOPs available."}
-                    </Typography>
-                    </Box>
-                  ) : (
-                    <List dense sx={{ py: 0 }}>
-                      {filteredSopItems.map((item, index) => (
-                        <React.Fragment key={item.id}>
-                          <ListItem
-                            secondaryAction={
-                              <Checkbox
-                                checked={selectedSopItems.has(item.id)}
-                                onChange={() => handleSopToggle(item.id)}
-                        size="small" 
-                              />
-                            }
-                            sx={{ py: 0.75 }}
-                          >
-                            <ListItemIcon sx={{ minWidth: 32 }}>
-                              <SOPIcon sx={{ fontSize: "1rem" }} />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={
-                                <Typography variant="body2" sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
-                                  {item.name}
-                                </Typography>
-                              }
-                              secondary={
-                                <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
-                                  {item.description}
-                                </Typography>
-                              }
-                            />
-                            <Box sx={{ display: "flex", gap: 0.5, ml: 1 }}>
-                      <Chip 
-                                label={item.category}
-                        size="small" 
-                                variant="outlined"
-                                sx={{ fontSize: "0.7rem", height: 20 }}
-                      />
-                      <Chip 
-                                label={item.status}
-                        size="small" 
-                                color={item.status === "active" ? "success" : "default"}
-                                sx={{ fontSize: "0.7rem", height: 20 }}
-                      />
-                    </Box>
-                          </ListItem>
-                          {index < filteredSopItems.length - 1 && <Divider />}
-                        </React.Fragment>
-                      ))}
-                    </List>
-                  )}
-                </Box>
-
-                <Alert severity="info" sx={{ fontSize: "0.875rem" }}>
-                  Selected SOPs will be used by the AI agent to follow standard procedures.
-                </Alert>
-                  </Box>
-                </CardContent>
-              </Card>
+              <div className="text-sm text-blue-200 bg-blue-900/30 border border-blue-700 rounded-md p-2">
+                Selected SOPs will be used by the AI agent to follow standard procedures.
+              </div>
+            </div>
+          </div>
 
           {/* Snackbar for notifications */}
-          <Snackbar
-            open={snackbar.open}
-            autoHideDuration={6000}
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
-            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          >
-            <Alert
-              onClose={() => setSnackbar({ ...snackbar, open: false })}
-              severity={snackbar.severity}
-              sx={{ width: "100%" }}
-            >
-              {snackbar.message}
-            </Alert>
-          </Snackbar>
+          {snackbar.open && (
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999]">
+              <div className={`px-4 py-2 rounded-md shadow border ${snackbar.severity === 'success' ? 'bg-green-900/70 border-green-700 text-green-200' : 'bg-red-900/70 border-red-700 text-red-200'}`}>
+                <div className="flex items-center gap-2">
+                  {snackbar.severity === 'success' ? (
+                    <span className="inline-block w-2 h-2 rounded-full bg-green-400" />
+                  ) : (
+                    <span className="inline-block w-2 h-2 rounded-full bg-red-400" />
+                  )}
+                  <span className="text-sm">{snackbar.message}</span>
+                  <button className="ml-2 text-xs opacity-80 hover:opacity-100" onClick={() => setSnackbar({ ...snackbar, open: false })}>Dismiss</button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Navigation Confirmation Dialog */}
-          <Dialog
-            open={showNavigationDialog}
-            onClose={handleNavigationCancel}
-            aria-labelledby="navigation-dialog-title"
-            aria-describedby="navigation-dialog-description"
-          >
-            <DialogTitle id="navigation-dialog-title" sx={{ fontSize: "1.125rem", fontWeight: 600 }}>
-              Unsaved Changes
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText id="navigation-dialog-description" sx={{ fontSize: "0.875rem" }}>
-                You have unsaved changes. What would you like to do?
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions sx={{ p: 2, pt: 1.5 }}>
-              <Button
-                onClick={handleNavigationCancel}
-                size="small"
-                sx={{ fontSize: "0.875rem" }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => handleNavigationConfirm(false)}
-                variant="outlined"
-                color="error"
-                size="small"
-                sx={{ fontSize: "0.875rem" }}
-              >
-                Discard Changes
-              </Button>
-              <Button
-                onClick={() => handleNavigationConfirm(true)}
-                variant="contained"
-                size="small"
-                startIcon={<SaveIcon sx={{ fontSize: "1rem" }} />}
-                sx={{ fontSize: "0.875rem" }}
-              >
-                Save & Continue
-              </Button>
-            </DialogActions>
-          </Dialog>
-        </Box>
-      </Container>
+          {showNavigationDialog && (
+            <div className="fixed inset-0 z-[10000]">
+              <div className="absolute inset-0 bg-black/60" onClick={handleNavigationCancel} />
+              <div className="relative max-w-md mx-auto mt-40 rounded-lg border border-[#333] bg-[#2a2a2a] shadow-lg">
+                <div className="flex items-center justify-between p-3 border-b border-[#333]">
+                  <div className="text-white font-semibold text-base">Unsaved Changes</div>
+                  <IconButton onClick={handleNavigationCancel} className="text-gray-300"><X className="h-4 w-4" /></IconButton>
+                </div>
+                <div className="p-3 text-sm text-gray-200">You have unsaved changes. What would you like to do?</div>
+                <div className="p-3 pt-0 flex gap-2 justify-end">
+                  <Button onClick={handleNavigationCancel} size="small" className="px-3 py-1 text-sm bg-[#3a3a3a] hover:bg-[#4a4a4a]">Cancel</Button>
+                  <Button onClick={() => handleNavigationConfirm(false)} size="small" className="px-3 py-1 text-sm border border-red-600 text-red-400 hover:bg-red-600/10" variant="outlined">Discard Changes</Button>
+                  <Button onClick={() => handleNavigationConfirm(true)} size="small" className="px-3 py-1 text-sm inline-flex items-center gap-2 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white"><Save className="h-4 w-4" /> Save & Continue</Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
     </PageContainer>
   );
 };

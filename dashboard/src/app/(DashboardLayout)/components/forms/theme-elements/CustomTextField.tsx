@@ -1,19 +1,24 @@
 import React from 'react';
-import { styled } from '@mui/material/styles';
-import { TextField } from '@mui/material';
+type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
+  fullWidth?: boolean;
+};
 
-const CustomTextField = styled((props: any) => <TextField {...props} />)(({ theme }) => ({
-  '& .MuiOutlinedInput-input::-webkit-input-placeholder': {
-    color: theme.palette.text.secondary,
-    opacity: '0.8',
-  },
-  '& .MuiOutlinedInput-input.Mui-disabled::-webkit-input-placeholder': {
-    color: theme.palette.text.secondary,
-    opacity: '1',
-  },
-  '& .Mui-disabled .MuiOutlinedInput-notchedOutline': {
-    borderColor: theme.palette.grey[200],
-  },
-}));
+const CustomTextField: React.FC<InputProps> = ({ className, fullWidth = true, ...props }) => {
+  return (
+    <input
+      {...props}
+      className={`
+        ${fullWidth ? 'w-full' : ''}
+        rounded-md border border-gray-300 dark:border-gray-700
+        bg-white dark:bg-dark-surface/80
+        px-3 py-2 text-sm text-gray-900 dark:text-white
+        placeholder:text-gray-500 dark:placeholder:text-gray-400
+        focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
+        disabled:cursor-not-allowed disabled:opacity-60
+        ${className || ''}
+      `}
+    />
+  );
+};
 
 export default CustomTextField;

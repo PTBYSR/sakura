@@ -1,41 +1,24 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  Box,
-  Container,
-  Typography,
-  TextField,
-  Button,
-  Card,
-  CardContent,
-  IconButton,
-  Stack,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Chip,
-  InputAdornment,
-  ToggleButton,
-  ToggleButtonGroup,
-  Checkbox,
-  Pagination,
-  Divider,
-  Toolbar,
-  CircularProgress,
-} from "@mui/material";
-import {
-  Add,
+  Plus,
   Edit,
-  Delete,
+  Trash2,
   Search,
-  Clear,
-} from "@mui/icons-material";
+  X,
+  Loader2,
+} from "lucide-react";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import DashboardCard from "@/app/(DashboardLayout)/components/shared/DashboardCard";
 import ChatbotTester from "./components/ChatbotTester";
 import { faqService, FAQ as FAQType } from "./services/faqService";
 import { authClient } from "@/lib/auth-client";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Chip } from "@/components/ui/chip";
+import { Modal } from "@/components/ui/modal";
+import { Pagination } from "@/components/ui/pagination";
 
 // Use FAQ type from service
 type FAQ = FAQType;
@@ -72,7 +55,6 @@ export default function FAQsPage() {
 
   // Load FAQs from API on mount and when userId changes
   useEffect(() => {
-    // Load FAQs regardless of userId (can be null/undefined)
     loadFAQs();
   }, [userId]);
 
@@ -122,7 +104,7 @@ export default function FAQsPage() {
     }
   }, [searchQuery, sortFilter, page]);
 
-  // Filter and sort FAQs (client-side filtering for sorting, search is done server-side)
+  // Filter and sort FAQs
   const filteredAndSortedFaqs = useMemo(() => {
     let filtered = faqs.filter((faq) =>
       faq.question.toLowerCase().includes(searchQuery.toLowerCase())
@@ -186,7 +168,7 @@ export default function FAQsPage() {
     try {
       setError(null);
       await faqService.deleteMultipleFAQs(Array.from(selectedFaqs));
-      await loadFAQs(); // Reload FAQs from API
+      await loadFAQs();
       setSelectedFaqs(new Set());
     } catch (err: any) {
       console.error("Failed to delete FAQs:", err);
@@ -199,7 +181,7 @@ export default function FAQsPage() {
       try {
         setError(null);
         await faqService.deleteFAQ(faqToDelete.id);
-        await loadFAQs(); // Reload FAQs from API
+        await loadFAQs();
         setSelectedFaqs((prev) => {
           const newSet = new Set(prev);
           newSet.delete(faqToDelete.id);
@@ -228,7 +210,7 @@ export default function FAQsPage() {
           .filter((tag) => tag.length > 0),
         dashboard_user_id: userId || undefined,
       });
-      await loadFAQs(); // Reload FAQs from API
+      await loadFAQs();
       setOpenAddModal(false);
       setFormQuestion("");
       setFormAnswer("");
@@ -253,7 +235,7 @@ export default function FAQsPage() {
           .filter((tag) => tag.length > 0),
         dashboard_user_id: userId || undefined,
       });
-      await loadFAQs(); // Reload FAQs from API
+      await loadFAQs();
       setOpenEditModal(false);
       setEditingFaq(null);
     } catch (err: any) {
@@ -283,548 +265,458 @@ export default function FAQsPage() {
   };
 
   const clearChat = () => {
-    // Force re-render of chatbot component by changing key
     setClearChatKey((prev) => prev + 1);
   };
-
-  // Show error message
-  if (error && !loading) {
-    // Error will be shown in the UI below
-  }
 
   // Show loading state
   if (loading && faqs.length === 0) {
     return (
       <PageContainer title="FAQs" description="Manage your Frequently Asked Questions">
-        <Container maxWidth={false} sx={{ py: 2 }}>
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
-            <Box sx={{ textAlign: "center" }}>
-              <CircularProgress />
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontSize: "0.875rem" }}>
-                Loading FAQs...
-              </Typography>
-            </Box>
-          </Box>
-        </Container>
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-[#EE66AA] mx-auto mb-4" />
+            <p className="text-sm text-gray-300">Loading FAQs...</p>
+          </div>
+        </div>
       </PageContainer>
     );
   }
 
   return (
     <PageContainer title="FAQs" description="Manage your Frequently Asked Questions">
-      <Container maxWidth={false} sx={{ py: 2 }}>
+      <div className="py-4">
         {/* Error Message */}
         {error && (
-          <Box
-            sx={{
-              mb: 1.5,
-              p: 1.5,
-              bgcolor: "error.light",
-              color: "error.contrastText",
-              borderRadius: 1,
-            }}
-          >
-            <Typography variant="body2" sx={{ fontSize: "0.85rem" }}>{error}</Typography>
-            <Button
-              size="small"
-              onClick={() => setError(null)}
-              sx={{ mt: 0.75, fontSize: "0.8rem" }}
-            >
-              Dismiss
-            </Button>
-          </Box>
+          <div className="mb-4 p-4 bg-red-600/20 border border-red-500 rounded-lg text-red-400">
+            <div className="flex items-center justify-between">
+              <p className="text-sm">{error}</p>
+              <button
+                onClick={() => setError(null)}
+                className="ml-4 text-red-400 hover:text-red-300"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Top Bar */}
-        <Toolbar
-          sx={{
-            mb: 2,
-            px: 0,
-            minHeight: "48px !important",
-            justifyContent: "space-between",
-          }}
-        >
-          <Typography variant="h5" sx={{ fontWeight: 600, fontSize: "1.25rem" }}>
+        <div className="flex justify-between items-center mb-6">
+          <h5 className="text-xl font-semibold text-white">
             FAQs Management
-          </Typography>
+          </h5>
           <Button
             variant="contained"
+            color="primary"
             size="small"
-            startIcon={<Add sx={{ fontSize: "1rem" }} />}
             onClick={handleAddFaq}
-            sx={{ borderRadius: "8px", fontSize: "0.875rem" }}
+            className="text-sm"
           >
+            <Plus size={16} className="mr-2" />
             Add FAQ
           </Button>
-        </Toolbar>
+        </div>
 
-        <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", md: "row" } }}>
+        <div className="flex flex-col md:flex-row gap-4">
           {/* Left Panel - FAQs Editor */}
-          <Box sx={{ flex: { xs: 1, md: "0 0 calc(58.333% - 12px)" }, minWidth: 0 }}>
+          <div className="flex-1 md:flex-[0_0_calc(58.333%-12px)] min-w-0">
             <DashboardCard>
-              <Stack spacing={2}>
+              <div className="space-y-4">
                 {/* Search Bar */}
-                <TextField
-                  fullWidth
-                  placeholder="Search FAQs by question..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  size="small"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Search sx={{ fontSize: "1rem" }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: searchQuery ? (
-                      <InputAdornment position="end">
-                        <IconButton
-                          size="small"
-                          onClick={() => setSearchQuery("")}
-                        >
-                          <Clear sx={{ fontSize: "1rem" }} />
-                        </IconButton>
-                      </InputAdornment>
-                    ) : null,
-                  }}
-                  sx={{ 
-                    borderRadius: "7px",
-                    "& .MuiInputBase-input": { fontSize: "0.875rem" }
-                  }}
-                />
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Input
+                    placeholder="Search FAQs by question..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-10"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-white"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
 
                 {/* Filter Options */}
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary" mb={0.75} sx={{ fontSize: "0.875rem" }}>
-                    Sort by:
-                  </Typography>
-                  <ToggleButtonGroup
-                    value={sortFilter}
-                    exclusive
-                    onChange={(_, value) => value && setSortFilter(value)}
-                    size="small"
-                  >
-                    <ToggleButton value="recently-added" sx={{ fontSize: "0.8rem", px: 1.5 }}>
-                      Recently Added
-                    </ToggleButton>
-                    <ToggleButton value="largest" sx={{ fontSize: "0.8rem", px: 1.5 }}>Largest</ToggleButton>
-                    <ToggleButton value="a-z" sx={{ fontSize: "0.8rem", px: 1.5 }}>A–Z</ToggleButton>
-                  </ToggleButtonGroup>
-                </Box>
+                <div>
+                  <p className="text-sm text-gray-300 mb-2">Sort by:</p>
+                  <div className="flex gap-2">
+                    {[
+                      { value: "recently-added", label: "Recently Added" },
+                      { value: "largest", label: "Largest" },
+                      { value: "a-z", label: "A–Z" },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setSortFilter(option.value as SortFilter)}
+                        className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                          sortFilter === option.value
+                            ? "bg-[#EE66AA] border-[#EE66AA] text-white"
+                            : "border-gray-700 text-gray-300 hover:bg-gray-700"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Bulk Actions */}
                 {selectedFaqs.size > 0 && (
-                  <Box
-                    sx={{
-                      p: 1.5,
-                      bgcolor: "action.selected",
-                      borderRadius: "7px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <Typography variant="body2" sx={{ fontSize: "0.85rem" }}>
-                      {selectedFaqs.size} FAQ{selectedFaqs.size > 1 ? "s" : ""}{" "}
-                      selected
-                    </Typography>
+                  <div className="p-3 bg-gray-800 rounded-lg flex items-center justify-between">
+                    <p className="text-sm text-white">
+                      {selectedFaqs.size} FAQ{selectedFaqs.size > 1 ? "s" : ""} selected
+                    </p>
                     <Button
                       variant="outlined"
                       color="error"
-                      startIcon={<Delete sx={{ fontSize: "1rem" }} />}
-                      onClick={handleBulkDelete}
                       size="small"
-                      sx={{ fontSize: "0.8rem" }}
+                      onClick={handleBulkDelete}
+                      className="text-xs"
                     >
+                      <Trash2 size={14} className="mr-2" />
                       Delete Selected
                     </Button>
-                  </Box>
+                  </div>
                 )}
 
                 {/* FAQ Cards */}
-                <Stack spacing={1.5}>
+                <div className="space-y-3">
                   {loading ? (
-                    <Box
-                      sx={{
-                        p: 3,
-                        textAlign: "center",
-                        color: "text.secondary",
-                      }}
-                    >
-                      <Typography variant="body2" sx={{ fontSize: "0.85rem" }}>Loading FAQs...</Typography>
-                    </Box>
+                    <div className="p-6 text-center text-gray-400">
+                      <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                      <p className="text-sm">Loading FAQs...</p>
+                    </div>
                   ) : paginatedFaqs.length === 0 ? (
-                    <Box
-                      sx={{
-                        p: 3,
-                        textAlign: "center",
-                        color: "text.secondary",
-                      }}
-                    >
-                      <Typography variant="body2" sx={{ fontSize: "0.85rem" }}>
+                    <div className="p-6 text-center text-gray-400">
+                      <p className="text-sm">
                         {searchQuery
                           ? "No FAQs match your search."
                           : "No FAQs yet. Click 'Add FAQ' to get started."}
-                      </Typography>
-                    </Box>
+                      </p>
+                    </div>
                   ) : (
                     paginatedFaqs.map((faq) => (
                       <Card
                         key={faq.id}
-                        variant="outlined"
-                        sx={{
-                          "&:hover": {
-                            boxShadow: 2,
-                          },
-                          transition: "box-shadow 0.2s",
-                        }}
+                        className="border border-gray-700 hover:shadow-lg transition-shadow"
                       >
-                        <CardContent sx={{ p: 2 }}>
-                          <Stack
-                            direction="row"
-                            spacing={1.5}
-                            alignItems="flex-start"
-                          >
-                            <Checkbox
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <input
+                              type="checkbox"
                               checked={selectedFaqs.has(faq.id)}
                               onChange={() => handleSelectFaq(faq.id)}
-                              size="small"
+                              className="mt-1 w-4 h-4 rounded border-gray-600 bg-[#1e1e1e] text-[#EE66AA] focus:ring-[#EE66AA]"
                             />
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                              <Typography
-                                variant="subtitle1"
-                                fontWeight={600}
-                                gutterBottom
-                                sx={{ fontSize: "0.95rem", mb: 0.75 }}
-                              >
+                            <div className="flex-1 min-w-0">
+                              <h6 className="text-base font-semibold text-white mb-2">
                                 {faq.question}
-                              </Typography>
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{
-                                  display: "-webkit-box",
-                                  WebkitLineClamp: 3,
-                                  WebkitBoxOrient: "vertical",
-                                  overflow: "hidden",
-                                  mb: 0.75,
-                                  fontSize: "0.85rem",
-                                }}
-                              >
+                              </h6>
+                              <p className="text-sm text-gray-300 mb-2 line-clamp-3">
                                 {faq.answer}
-                              </Typography>
+                              </p>
                               {faq.tags.length > 0 && (
-                                <Stack
-                                  direction="row"
-                                  spacing={0.5}
-                                  flexWrap="wrap"
-                                  gap={0.5}
-                                >
+                                <div className="flex flex-wrap gap-1">
                                   {faq.tags.map((tag, idx) => (
                                     <Chip
                                       key={idx}
-                                      label={tag}
                                       size="small"
                                       variant="outlined"
-                                      sx={{ fontSize: "0.7rem", height: 22 }}
-                                    />
+                                      className="text-xs"
+                                    >
+                                      {tag}
+                                    </Chip>
                                   ))}
-                                </Stack>
+                                </div>
                               )}
-                            </Box>
-                            <Stack direction="row" spacing={0.5}>
-                              <IconButton
-                                size="small"
+                            </div>
+                            <div className="flex gap-1">
+                              <button
                                 onClick={() => handleEditFaq(faq)}
-                                color="primary"
-                                sx={{ padding: "6px" }}
+                                className="p-2 text-[#EE66AA] hover:bg-[#EE66AA]/10 rounded-lg transition-colors"
+                                title="Edit"
                               >
-                                <Edit sx={{ fontSize: "1rem" }} />
-                              </IconButton>
-                              <IconButton
-                                size="small"
+                                <Edit size={16} />
+                              </button>
+                              <button
                                 onClick={() => handleDeleteClick(faq)}
-                                sx={{ padding: "6px" }}
-                                color="error"
+                                className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                title="Delete"
                               >
-                                <Delete sx={{ fontSize: "1rem" }} />
-                              </IconButton>
-                            </Stack>
-                          </Stack>
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
                         </CardContent>
                       </Card>
                     ))
                   )}
-                </Stack>
+                </div>
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "center",
-                      pt: 1.5,
-                    }}
-                  >
+                  <div className="flex justify-center pt-4">
                     <Pagination
                       count={totalPages}
                       page={page}
-                      onChange={(_, value) => setPage(value)}
+                      onChange={setPage}
                       color="primary"
                       size="small"
                     />
-                  </Box>
+                  </div>
                 )}
 
                 {/* Select All Checkbox */}
                 {paginatedFaqs.length > 0 && (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                    <Checkbox
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
                       checked={
                         paginatedFaqs.length > 0 &&
-                        paginatedFaqs.every((faq) =>
-                          selectedFaqs.has(faq.id)
-                        )
-                      }
-                      indeterminate={
-                        selectedFaqs.size > 0 &&
-                        selectedFaqs.size < paginatedFaqs.length
+                        paginatedFaqs.every((faq) => selectedFaqs.has(faq.id))
                       }
                       onChange={handleSelectAll}
-                      size="small"
+                      className="w-4 h-4 rounded border-gray-600 bg-[#1e1e1e] text-[#EE66AA] focus:ring-[#EE66AA]"
                     />
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.85rem" }}>
+                    <p className="text-sm text-gray-300">
                       Select all on this page
-                    </Typography>
-                  </Box>
+                    </p>
+                  </div>
                 )}
-              </Stack>
+              </div>
             </DashboardCard>
-          </Box>
+          </div>
 
           {/* Right Panel - Chatbot Tester */}
-          <Box sx={{ flex: { xs: 1, md: "0 0 calc(41.667% - 12px)" }, minWidth: 0 }}>
+          <div className="flex-1 md:flex-[0_0_calc(41.667%-12px)] min-w-0">
             <DashboardCard>
-              <Stack spacing={1.5}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "0.95rem" }}>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h6 className="text-base font-semibold text-white">
                     Chatbot Tester
-                  </Typography>
+                  </h6>
                   <Button
                     size="small"
                     variant="outlined"
+                    color="primary"
                     onClick={clearChat}
-                    startIcon={<Clear sx={{ fontSize: "1rem" }} />}
-                    sx={{ fontSize: "0.8rem" }}
+                    className="text-xs"
                   >
+                    <X size={14} className="mr-2" />
                     Clear Chat
                   </Button>
-                </Box>
-                <Divider />
+                </div>
+                <div className="border-t border-gray-700" />
                 {/* Chatbot Widget Embed */}
-                <Box
-                  sx={{
-                    border: "1px solid",
-                    borderColor: "divider",
-                    borderRadius: "7px",
-                    overflow: "hidden",
-                    bgcolor: "background.default",
-                  }}
+                <div
+                  className="border border-gray-700 rounded-lg overflow-hidden bg-[#1a1a1a]"
                   key={clearChatKey}
                 >
                   <ChatbotTester faqs={faqs} />
-                </Box>
-              </Stack>
+                </div>
+              </div>
             </DashboardCard>
-          </Box>
-        </Box>
+          </div>
+        </div>
 
         {/* Add FAQ Modal */}
-        <Dialog
+        <Modal
           open={openAddModal}
           onClose={() => setOpenAddModal(false)}
-          maxWidth="sm"
-          fullWidth
+          title="Add New FAQ"
+          maxWidth="md"
         >
-          <DialogTitle sx={{ fontSize: "1.125rem", fontWeight: 600, pb: 1 }}>Add New FAQ</DialogTitle>
-          <DialogContent dividers sx={{ pt: 2 }}>
-            <Stack spacing={2}>
-              <TextField
-                fullWidth
-                label="Question"
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Question *
+              </label>
+              <textarea
                 value={formQuestion}
                 onChange={(e) => setFormQuestion(e.target.value)}
                 required
-                multiline
                 rows={2}
-                size="small"
-                sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
+                className="w-full px-4 py-2 rounded-lg bg-[#1e1e1e] border border-gray-700 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#EE66AA] focus:border-transparent resize-none"
+                placeholder="Enter the question"
               />
-              <TextField
-                fullWidth
-                label="Answer"
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Answer *
+              </label>
+              <textarea
                 value={formAnswer}
                 onChange={(e) => setFormAnswer(e.target.value)}
                 required
-                multiline
                 rows={6}
-                size="small"
-                sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
+                className="w-full px-4 py-2 rounded-lg bg-[#1e1e1e] border border-gray-700 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#EE66AA] focus:border-transparent resize-none"
+                placeholder="Enter the answer"
               />
-              <TextField
-                fullWidth
-                label="Tags (comma-separated)"
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Tags (comma-separated)
+              </label>
+              <Input
                 value={formTags}
                 onChange={(e) => setFormTags(e.target.value)}
                 placeholder="e.g., billing, technical, account"
                 helperText="Separate multiple tags with commas"
-                size="small"
-                sx={{ 
-                  "& .MuiInputBase-input": { fontSize: "0.875rem" },
-                  "& .MuiFormHelperText-root": { fontSize: "0.75rem" }
-                }}
+                className="text-sm"
               />
-            </Stack>
-          </DialogContent>
-          <DialogActions sx={{ p: 2, pt: 1.5 }}>
-            <Button onClick={() => setOpenAddModal(false)} size="small" sx={{ fontSize: "0.875rem" }}>Cancel</Button>
-            <Button
-              variant="contained"
-              onClick={handleSaveAdd}
-              disabled={!formQuestion.trim() || !formAnswer.trim()}
-              size="small"
-              sx={{ fontSize: "0.875rem" }}
-            >
-              Save
-            </Button>
-          </DialogActions>
-        </Dialog>
+            </div>
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
+              <Button
+                variant="outlined"
+                color="primary"
+                size="small"
+                onClick={() => setOpenAddModal(false)}
+                className="text-sm"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={handleSaveAdd}
+                disabled={!formQuestion.trim() || !formAnswer.trim()}
+                className="text-sm"
+              >
+                Save
+              </Button>
+            </div>
+          </div>
+        </Modal>
 
         {/* Edit FAQ Modal */}
-        <Dialog
+        <Modal
           open={openEditModal}
           onClose={() => {
             setOpenEditModal(false);
             setEditingFaq(null);
           }}
-          maxWidth="sm"
-          fullWidth
+          title="Edit FAQ"
+          maxWidth="md"
         >
-          <DialogTitle sx={{ fontSize: "1.125rem", fontWeight: 600, pb: 1 }}>Edit FAQ</DialogTitle>
-          <DialogContent dividers sx={{ pt: 2 }}>
-            <Stack spacing={2}>
-              <TextField
-                fullWidth
-                label="Question"
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Question *
+              </label>
+              <textarea
                 value={formQuestion}
                 onChange={(e) => setFormQuestion(e.target.value)}
                 required
-                multiline
                 rows={2}
-                size="small"
-                sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
+                className="w-full px-4 py-2 rounded-lg bg-[#1e1e1e] border border-gray-700 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#EE66AA] focus:border-transparent resize-none"
+                placeholder="Enter the question"
               />
-              <TextField
-                fullWidth
-                label="Answer"
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Answer *
+              </label>
+              <textarea
                 value={formAnswer}
                 onChange={(e) => setFormAnswer(e.target.value)}
                 required
-                multiline
                 rows={6}
-                size="small"
-                sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
+                className="w-full px-4 py-2 rounded-lg bg-[#1e1e1e] border border-gray-700 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#EE66AA] focus:border-transparent resize-none"
+                placeholder="Enter the answer"
               />
-              <TextField
-                fullWidth
-                label="Tags (comma-separated)"
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Tags (comma-separated)
+              </label>
+              <Input
                 value={formTags}
                 onChange={(e) => setFormTags(e.target.value)}
                 placeholder="e.g., billing, technical, account"
                 helperText="Separate multiple tags with commas"
-                size="small"
-                sx={{ 
-                  "& .MuiInputBase-input": { fontSize: "0.875rem" },
-                  "& .MuiFormHelperText-root": { fontSize: "0.75rem" }
-                }}
+                className="text-sm"
               />
-            </Stack>
-          </DialogContent>
-          <DialogActions sx={{ p: 2, pt: 1.5 }}>
-            <Button
-              onClick={() => {
-                setOpenEditModal(false);
-                setEditingFaq(null);
-              }}
-              size="small"
-              sx={{ fontSize: "0.875rem" }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              onClick={handleSaveEdit}
-              disabled={!formQuestion.trim() || !formAnswer.trim()}
-              size="small"
-              sx={{ fontSize: "0.875rem" }}
-            >
-              Save Changes
-            </Button>
-          </DialogActions>
-        </Dialog>
+            </div>
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
+              <Button
+                variant="outlined"
+                color="primary"
+                size="small"
+                onClick={() => {
+                  setOpenEditModal(false);
+                  setEditingFaq(null);
+                }}
+                className="text-sm"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={handleSaveEdit}
+                disabled={!formQuestion.trim() || !formAnswer.trim()}
+                className="text-sm"
+              >
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </Modal>
 
         {/* Delete Confirmation Dialog */}
-        <Dialog
+        <Modal
           open={openDeleteDialog}
           onClose={() => {
             setOpenDeleteDialog(false);
             setFaqToDelete(null);
           }}
+          title="Delete FAQ"
+          maxWidth="sm"
         >
-          <DialogTitle sx={{ fontSize: "1.125rem", fontWeight: 600, pb: 1 }}>Delete FAQ</DialogTitle>
-          <DialogContent sx={{ pt: 2 }}>
-            <Typography sx={{ fontSize: "0.875rem" }}>
-              Are you sure you want to delete this FAQ? This action cannot be
-              undone.
-            </Typography>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-300">
+              Are you sure you want to delete this FAQ? This action cannot be undone.
+            </p>
             {faqToDelete && (
-              <Box sx={{ mt: 1.5, p: 1.5, bgcolor: "action.hover", borderRadius: 1 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: "0.875rem" }}>
+              <div className="p-3 bg-gray-800 rounded-lg">
+                <p className="text-sm font-semibold text-white">
                   {faqToDelete.question}
-                </Typography>
-              </Box>
+                </p>
+              </div>
             )}
-          </DialogContent>
-          <DialogActions sx={{ p: 2, pt: 1.5 }}>
-            <Button
-              onClick={() => {
-                setOpenDeleteDialog(false);
-                setFaqToDelete(null);
-              }}
-              size="small"
-              sx={{ fontSize: "0.875rem" }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              color="error"
-              size="small"
-              sx={{ fontSize: "0.875rem" }}
-              onClick={confirmDelete}
-            >
-              Yes, Delete
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Container>
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
+              <Button
+                variant="outlined"
+                color="primary"
+                size="small"
+                onClick={() => {
+                  setOpenDeleteDialog(false);
+                  setFaqToDelete(null);
+                }}
+                className="text-sm"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                color="error"
+                size="small"
+                onClick={confirmDelete}
+                className="text-sm"
+              >
+                Yes, Delete
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      </div>
     </PageContainer>
   );
 }
-

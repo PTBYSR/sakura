@@ -1,22 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Stack,
-  Button,
-  Alert,
-  Box,
-  Avatar,
-  Chip,
-  CircularProgress,
-  Snackbar,
-} from "@mui/material";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Chip } from "@/components/ui/chip";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
+import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 
 export default function AccountSettingsPage() {
   const { data: session, isPending } = authClient.useSession();
@@ -150,9 +141,9 @@ export default function AccountSettingsPage() {
   if (isPending) {
     return (
       <PageContainer title="Account Settings" description="Manage your account">
-        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
-          <CircularProgress />
-        </Box>
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-[#EE66AA]" />
+        </div>
       </PageContainer>
     );
   }
@@ -161,193 +152,189 @@ export default function AccountSettingsPage() {
   if (!session) {
     return (
       <PageContainer title="Account Settings" description="Manage your account">
-        <Box sx={{ p: 3 }}>
-          <Alert severity="warning">Please log in to view account settings.</Alert>
-        </Box>
+        <div className="p-6">
+          <div className="p-4 bg-yellow-600/20 border border-yellow-500 rounded-lg text-yellow-400">
+            Please log in to view account settings.
+          </div>
+        </div>
       </PageContainer>
     );
   }
 
   return (
     <PageContainer title="Account Settings" description="Manage your account">
-      <Stack spacing={4} sx={{ 
-        p: 3,
-        display: "flex",
-        alignItems: "center",
-        flexDirection: "column",
-        minWidth: 400,
-        maxWidth: 700,
-        width: "100%", 
-      }}>
-        <Typography variant="h5" fontWeight={600}>
+      <div className="flex flex-col items-center p-6 min-w-[400px] max-w-[700px] w-full gap-8">
+        <h2 className="text-2xl font-semibold text-white">
           Account Settings
-        </Typography>
+        </h2>
 
         {/* Account Details Section */}
-        <Card sx={{ width: "100%" }}>
-          <CardContent>
-            <Stack spacing={3}>
-              <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600 }}>
+        <Card className="w-full">
+          <CardContent className="p-6">
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-white">
                 Account Details
-              </Typography>
+              </h3>
               
               {/* User Avatar and Info */}
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2, pb: 2, borderBottom: 1, borderColor: "divider" }}>
-                <Avatar
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    bgcolor: "primary.main",
-                    fontSize: "20px",
-                  }}
-                >
+              <div className="flex items-center gap-4 pb-4 border-b border-gray-700">
+                <div className="w-14 h-14 rounded-full bg-[#EE66AA] flex items-center justify-center text-white text-xl font-semibold">
                   {session?.user?.name?.charAt(0).toUpperCase() || session?.user?.email?.charAt(0).toUpperCase() || "U"}
-                </Avatar>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6" sx={{ fontSize: "1rem", fontWeight: 600 }}>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-base font-semibold text-white">
                     {session?.user?.name || "User"}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
+                  </h4>
+                  <p className="text-sm text-gray-300">
                     {session?.user?.email || "No email"}
-                  </Typography>
-                </Box>
+                  </p>
+                </div>
                 <Chip
                   label="Active"
                   color="success"
                   size="small"
-                  sx={{ fontSize: "0.75rem" }}
+                  className="text-xs"
                 />
-              </Box>
+              </div>
 
               {/* User ID Info */}
-              <Box>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
+              <div>
+                <p className="text-sm text-gray-300">
                   User ID: {session?.user?.id || "N/A"}
-                </Typography>
-              </Box>
-            </Stack>
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
       {/* Profile Information */}
-      <Card sx={{ width: "100%" }}>
-        <CardContent>
-          <Stack spacing={2.5}>
-            <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600 }}>
+      <Card className="w-full">
+        <CardContent className="p-6">
+          <div className="space-y-5">
+            <h3 className="text-lg font-semibold text-white">
               Profile Information
-            </Typography>
+            </h3>
 
-            <TextField
-              label="Full Name"
-              fullWidth
-              size="small"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Full Name
+              </label>
+              <Input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full"
+              />
+            </div>
 
-            <TextField
-              label="Email"
-              fullWidth
-              size="small"
-              value={email}
-              disabled
-              helperText="Email cannot be changed"
-              sx={{ 
-                "& .MuiInputBase-input": { fontSize: "0.875rem" },
-                "& .MuiFormHelperText-root": { fontSize: "0.75rem" }
-              }}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Email
+              </label>
+              <Input
+                value={email}
+                disabled
+                className="w-full"
+              />
+              <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
+            </div>
 
             <Button
               variant="contained"
+              color="primary"
               size="small"
               onClick={handleSave}
               disabled={saving}
-              sx={{ 
-                alignSelf: "flex-start",
-                fontSize: "0.875rem",
-                mt: 1
-              }}
+              className="self-start text-sm mt-2"
             >
-              {saving ? <CircularProgress size={20} /> : "Save Changes"}
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Save Changes
             </Button>
-          </Stack>
+          </div>
         </CardContent>
       </Card>
 
       {/* Change Password */}
-      <Card sx={{ width: "100%" }}>
-        <CardContent>
-          <Stack spacing={2.5}>
-            <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600 }}>
+      <Card className="w-full">
+        <CardContent className="p-6">
+          <div className="space-y-5">
+            <h3 className="text-lg font-semibold text-white">
               Change Password
-            </Typography>
-            <TextField
-              type="password"
-              label="Current Password"
-              fullWidth
-              size="small"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
-            />
-            <TextField
-              type="password"
-              label="New Password"
-              fullWidth
-              size="small"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              helperText="Password must be at least 8 characters long"
-              sx={{ 
-                "& .MuiInputBase-input": { fontSize: "0.875rem" },
-                "& .MuiFormHelperText-root": { fontSize: "0.75rem" }
-              }}
-            />
-            <TextField
-              type="password"
-              label="Confirm New Password"
-              fullWidth
-              size="small"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              sx={{ "& .MuiInputBase-input": { fontSize: "0.875rem" } }}
-            />
+            </h3>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Current Password
+              </label>
+              <Input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                New Password
+              </label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-400 mt-1">Password must be at least 8 characters long</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Confirm New Password
+              </label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full"
+              />
+            </div>
             <Button
               variant="contained"
               color="primary"
               size="small"
               onClick={handleChangePassword}
               disabled={passwordChanging}
-              sx={{ 
-                alignSelf: "flex-start",
-                fontSize: "0.875rem",
-                mt: 1
-              }}
+              className="self-start text-sm mt-2"
             >
-              {passwordChanging ? <CircularProgress size={20} /> : "Update Password"}
+              {passwordChanging ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Update Password
             </Button>
-          </Stack>
+          </div>
         </CardContent>
       </Card>
 
       {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert 
-          onClose={() => setSnackbar({ ...snackbar, open: false })} 
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-      </Stack>
+      {snackbar.open && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+          <div className={`p-4 rounded-lg shadow-lg ${
+            snackbar.severity === "success" 
+              ? "bg-green-600/20 border border-green-500 text-green-400" 
+              : "bg-red-600/20 border border-red-500 text-red-400"
+          }`}>
+            <div className="flex items-center gap-3">
+              {snackbar.severity === "success" ? (
+                <CheckCircle2 className="w-5 h-5" />
+              ) : (
+                <XCircle className="w-5 h-5" />
+              )}
+              <span>{snackbar.message}</span>
+              <button
+                onClick={() => setSnackbar({ ...snackbar, open: false })}
+                className="ml-4 text-gray-400 hover:text-white"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
     </PageContainer>
   );
 }

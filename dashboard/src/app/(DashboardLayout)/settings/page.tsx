@@ -1,24 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import {
-  Box,
-  Typography,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemButton,
-  Paper,
-  CircularProgress,
-  Alert,
-  Chip,
-  Card,
-  CardContent,
-  Stack,
-  Divider,
-} from "@mui/material";
+import { Loader2 } from "lucide-react";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import { Chip } from "@/components/ui/chip";
 
 interface ChatInstance {
   chat_id: string;
@@ -55,7 +42,6 @@ export default function SettingsPage() {
   const [userInfo, setUserInfo] = useState<{ name: string; email: string; id: string } | null>(null);
 
   useEffect(() => {
-    // Check authentication
     if (!isPending && !session) {
       router.push("/authentication/login");
       return;
@@ -74,11 +60,9 @@ export default function SettingsPage() {
         setLoading(true);
         setError(null);
 
-        // Get user ID from session
         const userId = session.user.id;
         console.log("Fetching chats for user ID:", userId);
         
-        // Fetch user's chats
         const response = await fetch(`${API_BASE_URL}/api/users/${userId}/chats`, {
           method: "GET",
           headers: {
@@ -125,7 +109,6 @@ export default function SettingsPage() {
     if (session?.user?.id) {
       fetchMyChats();
     } else if (!isPending) {
-      // Session loaded but no user - set loading to false
       setLoading(false);
     }
   }, [session, isPending]);
@@ -157,250 +140,200 @@ export default function SettingsPage() {
     return lastMsg.text || lastMsg.content || "No message content";
   };
 
-  // Show loading state while checking session
   if (isPending || (loading && !session)) {
     return (
       <PageContainer title="Settings" description="Settings and configuration">
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: "400px",
-          }}
-        >
-          <CircularProgress />
-          <Typography variant="body2" sx={{ mt: 2, color: "text.secondary" }}>
-            Loading...
-          </Typography>
-        </Box>
+        <div className="flex flex-col justify-center items-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-[#EE66AA]" />
+          <p className="mt-4 text-sm text-gray-300">Loading...</p>
+        </div>
       </PageContainer>
     );
   }
 
-  // If no session after loading, show message
   if (!session) {
     return (
       <PageContainer title="Settings" description="Settings and configuration">
-        <Box sx={{ p: 3 }}>
-          <Alert severity="warning" sx={{ mb: 2 }}>
+        <div className="p-6">
+          <div className="p-4 bg-yellow-600/20 border border-yellow-500 rounded-lg text-yellow-400">
             Please log in to view settings.
-          </Alert>
-        </Box>
+          </div>
+        </div>
       </PageContainer>
     );
   }
 
   return (
     <PageContainer title="Settings" description="Settings and configuration">
-      <Box sx={{ p: 3 }}>
-        <Typography variant="h4" sx={{ mb: 4, fontWeight: 600 }}>
+      <div className="p-6">
+        <h4 className="text-2xl font-semibold text-white mb-8">
           Settings
-        </Typography>
+        </h4>
 
         {/* My Chats Section */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <h6 className="text-lg font-semibold text-white mb-6">
               My Chats
-            </Typography>
+            </h6>
 
-            {/* Debug Info - Remove in production */}
+            {/* Debug Info */}
             {process.env.NODE_ENV === "development" && (
-              <Alert severity="info" sx={{ mb: 2 }}>
-                <Typography variant="caption">
-                  Debug: Session: {session ? "✓" : "✗"} | User ID: {session?.user?.id || "N/A"} | Loading: {loading ? "Yes" : "No"}
-                </Typography>
-              </Alert>
+              <div className="mb-4 p-3 bg-blue-600/20 border border-blue-500 rounded-lg text-blue-400 text-xs">
+                Debug: Session: {session ? "✓" : "✗"} | User ID: {session?.user?.id || "N/A"} | Loading: {loading ? "Yes" : "No"}
+              </div>
             )}
 
             {/* User Info */}
             {userInfo ? (
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="body1" sx={{ mb: 1, color: "text.primary" }}>
+              <div className="mb-6">
+                <p className="text-base text-white mb-1">
                   Welcome, {userInfo.name}!
-                </Typography>
-                <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
+                </p>
+                <p className="text-sm text-gray-300 mb-3">
                   {userInfo.email}
-                </Typography>
+                </p>
                 <Chip
                   label={`${chats.length} ${chats.length === 1 ? "chat" : "chats"}`}
                   color="primary"
                   size="small"
                 />
-              </Box>
+              </div>
             ) : session?.user ? (
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="body1" sx={{ mb: 1, color: "text.primary" }}>
+              <div className="mb-6">
+                <p className="text-base text-white mb-1">
                   Welcome, {session.user.name || session.user.email || "User"}!
-                </Typography>
-                <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
+                </p>
+                <p className="text-sm text-gray-300 mb-3">
                   {session.user.email}
-                </Typography>
+                </p>
                 <Chip
                   label="Loading your chats..."
                   color="primary"
                   size="small"
                 />
-              </Box>
+              </div>
             ) : null}
 
             {/* Error Message */}
             {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
+              <div className="mb-6 p-4 bg-red-600/20 border border-red-500 rounded-lg text-red-400">
                 {error}
-              </Alert>
+              </div>
             )}
 
             {/* Widget Link */}
             {userInfo ? (
-              <Alert severity="info" sx={{ mb: 3 }}>
-                <Typography variant="body2">
+              <div className="mb-6 p-4 bg-blue-600/20 border border-blue-500 rounded-lg text-blue-400">
+                <p className="text-sm mb-1">
                   Your unique widget link:{" "}
                   <strong>
                     {typeof window !== "undefined" && `http://localhost:3000/widget/${userInfo.id}`}
                   </strong>
-                </Typography>
-                <Typography variant="caption" sx={{ display: "block", mt: 1, color: "text.secondary" }}>
+                </p>
+                <p className="text-xs text-gray-300 mt-2">
                   Copy this link to share with customers or embed on your website
-                </Typography>
-              </Alert>
+                </p>
+              </div>
             ) : session?.user?.id ? (
-              <Alert severity="info" sx={{ mb: 3 }}>
-                <Typography variant="body2">
+              <div className="mb-6 p-4 bg-blue-600/20 border border-blue-500 rounded-lg text-blue-400">
+                <p className="text-sm mb-1">
                   Your unique widget link:{" "}
                   <strong>
                     {typeof window !== "undefined" && `http://localhost:3000/widget/${session.user.id}`}
                   </strong>
-                </Typography>
-                <Typography variant="caption" sx={{ display: "block", mt: 1, color: "text.secondary" }}>
+                </p>
+                <p className="text-xs text-gray-300 mt-2">
                   Copy this link to share with customers or embed on your website
-                </Typography>
-              </Alert>
+                </p>
+              </div>
             ) : null}
 
-            <Divider sx={{ my: 3 }} />
+            <div className="border-t border-gray-700 my-6" />
 
             {/* Chats List */}
-            <Box>
+            <div>
               {chats.length === 0 ? (
-                <Box
-                  sx={{
-                    textAlign: "center",
-                    py: 4,
-                  }}
-                >
-                  <Typography variant="body1" sx={{ color: "text.secondary", mb: 2 }}>
+                <div className="text-center py-8">
+                  <p className="text-base text-gray-300 mb-2">
                     No chats yet. Start a conversation using your widget!
-                  </Typography>
-                </Box>
+                  </p>
+                </div>
               ) : (
                 <>
-                  <Typography variant="subtitle1" sx={{ mb: 2, color: "text.primary", fontWeight: 600 }}>
+                  <p className="text-base text-white font-semibold mb-4">
                     Your Chat History
-                  </Typography>
-                  <List>
+                  </p>
+                  <div className="space-y-2">
                     {chats.map((chat) => (
-                      <ListItem
+                      <div
                         key={chat.chat_id}
-                        disablePadding
-                        sx={{ mb: 1 }}
+                        className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                          selectedChat?.chat_id === chat.chat_id
+                            ? "border-[#EE66AA] bg-[#EE66AA]/10"
+                            : "border-gray-700 hover:border-gray-600"
+                        }`}
+                        onClick={() => setSelectedChat(selectedChat?.chat_id === chat.chat_id ? null : chat)}
                       >
-                        <ListItemButton
-                          onClick={() => setSelectedChat(selectedChat?.chat_id === chat.chat_id ? null : chat)}
-                          sx={{
-                            borderRadius: 1,
-                            border: selectedChat?.chat_id === chat.chat_id ? 2 : 1,
-                            borderColor: selectedChat?.chat_id === chat.chat_id ? "primary.main" : "divider",
-                          }}
-                        >
-                          <ListItemText
-                            primary={
-                              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <Typography variant="subtitle1" component="span" sx={{ fontWeight: "bold" }}>
-                                  Chat {chat.chat_id.substring(0, 8)}
-                                </Typography>
-                                <Chip
-                                  label={chat.status}
-                                  size="small"
-                                  color={chat.status === "open" ? "success" : "default"}
-                                  sx={{ ml: 1 }}
-                                />
-                              </Box>
-                            }
-                            primaryTypographyProps={{ component: "div" }}
-                            secondaryTypographyProps={{ component: "div" }}
-                            secondary={
-                              <Box>
-                                <Typography variant="body2" component="div" sx={{ color: "text.secondary", mt: 0.5 }}>
-                                  {getLastMessage(chat)}
-                                </Typography>
-                                <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
-                                  <Typography variant="caption" component="span" sx={{ color: "text.secondary" }}>
-                                    {formatDate(chat.last_activity)}
-                                  </Typography>
-                                  <Typography variant="caption" component="span" sx={{ color: "text.secondary" }}>
-                                    {chat.total_messages} {chat.total_messages === 1 ? "message" : "messages"}
-                                  </Typography>
-                                </Box>
-                              </Box>
-                            }
+                        <div className="flex justify-between items-center mb-2">
+                          <h6 className="text-base font-semibold text-white">
+                            Chat {chat.chat_id.substring(0, 8)}
+                          </h6>
+                          <Chip
+                            label={chat.status}
+                            size="small"
+                            color={chat.status === "open" ? "success" : "secondary"}
+                            className="text-xs"
                           />
-                        </ListItemButton>
-                      </ListItem>
+                        </div>
+                        <p className="text-sm text-gray-300 mb-2">
+                          {getLastMessage(chat)}
+                        </p>
+                        <div className="flex justify-between text-xs text-gray-400">
+                          <span>{formatDate(chat.last_activity)}</span>
+                          <span>{chat.total_messages} {chat.total_messages === 1 ? "message" : "messages"}</span>
+                        </div>
+                      </div>
                     ))}
-                  </List>
+                  </div>
 
                   {/* Selected Chat Messages */}
                   {selectedChat && (
-                    <Paper
-                      sx={{
-                        mt: 3,
-                        p: 2,
-                        backgroundColor: "background.default",
-                        maxHeight: "400px",
-                        overflow: "auto",
-                      }}
-                    >
-                      <Typography variant="h6" sx={{ mb: 2 }}>
+                    <div className="mt-6 p-4 bg-[#1a1a1a] rounded-lg max-h-[400px] overflow-auto">
+                      <h6 className="text-lg font-semibold text-white mb-4">
                         Messages
-                      </Typography>
-                      <List>
+                      </h6>
+                      <div className="space-y-4">
                         {selectedChat.messages.map((msg, index) => (
-                          <Box
+                          <div
                             key={index}
-                            sx={{
-                              mb: 2,
-                              display: "flex",
-                              justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
-                            }}
+                            className={`flex ${
+                              msg.role === "user" ? "justify-end" : "justify-start"
+                            }`}
                           >
-                            <Paper
-                              sx={{
-                                p: 1.5,
-                                maxWidth: "70%",
-                                backgroundColor: msg.role === "user" ? "primary.main" : "background.paper",
-                                color: msg.role === "user" ? "primary.contrastText" : "text.primary",
-                              }}
+                            <div
+                              className={`max-w-[70%] p-3 rounded-lg ${
+                                msg.role === "user"
+                                  ? "bg-[#EE66AA] text-white"
+                                  : "bg-[#2a2a2a] text-white"
+                              }`}
                             >
-                              <Typography variant="body2">{msg.text || msg.content}</Typography>
-                              <Typography variant="caption" sx={{ opacity: 0.7, mt: 0.5, display: "block" }}>
+                              <p className="text-sm">{msg.text || msg.content}</p>
+                              <p className="text-xs opacity-70 mt-1">
                                 {formatDate(msg.timestamp)}
-                              </Typography>
-                            </Paper>
-                          </Box>
+                              </p>
+                            </div>
+                          </div>
                         ))}
-                      </List>
-                    </Paper>
+                      </div>
+                    </div>
                   )}
                 </>
               )}
-            </Box>
+            </div>
           </CardContent>
         </Card>
-      </Box>
+      </div>
     </PageContainer>
   );
 }
-

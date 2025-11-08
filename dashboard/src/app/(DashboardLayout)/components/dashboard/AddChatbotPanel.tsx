@@ -1,53 +1,22 @@
 import React from "react";
-import { Box, Button, Typography } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import DashboardCard from "@/app/(DashboardLayout)/components/shared/DashboardCard";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
 
 const AddChatbotPanel = () => {
-  const theme = useTheme();
-
   return (
     <DashboardCard title="Chatbot">
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        sx={{
-          minHeight: "300px",
-          textAlign: "center",
-          p: 3,
-          backgroundColor: theme.palette.background.paper,
-        }}
-      >
-        <AddCircleOutlineIcon
-          sx={{
-            fontSize: 64,
-            color: theme.palette.primary.main,
-            mb: 2,
-          }}
-        />
-        <Typography variant="h6" gutterBottom>
-          No Chatbot Found
-        </Typography>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ maxWidth: "400px", mb: 3 }}
-        >
-          You don’t have any chatbot set up yet. Create your first chatbot to
-          start engaging with users and managing conversations.
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          size="large"
-          startIcon={<AddCircleOutlineIcon />}
-        >
+      <div className="flex flex-col items-center justify-center min-h-[300px] text-center p-6 bg-[#1f1f1f] rounded-md">
+        <PlusCircle className="w-16 h-16 text-[#EE66AA] mb-3" />
+        <div className="text-white text-lg font-semibold mb-1">No Chatbot Found</div>
+        <div className="text-sm text-gray-300 max-w-[400px] mb-4">
+          You don’t have any chatbot set up yet. Create your first chatbot to start engaging with users and managing conversations.
+        </div>
+        <Button className="inline-flex items-center gap-2">
+          <PlusCircle className="w-4 h-4" />
           Add Chatbot
         </Button>
-      </Box>
+      </div>
     </DashboardCard>
   );
 };

@@ -1,13 +1,5 @@
 
-import {
-    Typography, Box,
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableRow,
-    Chip
-} from '@mui/material';
+import React from 'react';
 import DashboardCard from '@/app/(DashboardLayout)//components/shared/DashboardCard';
 
 const products = [
@@ -17,7 +9,7 @@ const products = [
         post: "Web Designer",
         pname: "Elite Admin",
         priority: "Low",
-        pbg: "primary.main",
+        pbg: "#FDA4B8",
         budget: "3.9",
     },
     {
@@ -26,7 +18,7 @@ const products = [
         post: "Project Manager",
         pname: "Real Homes WP Theme",
         priority: "Medium",
-        pbg: "secondary.main",
+        pbg: "#EE66AA",
         budget: "24.5",
     },
     {
@@ -35,7 +27,7 @@ const products = [
         post: "Project Manager",
         pname: "MedicalPro WP Theme",
         priority: "High",
-        pbg: "error.main",
+        pbg: "#FA896B",
         budget: "12.8",
     },
     {
@@ -44,7 +36,7 @@ const products = [
         post: "Frontend Engineer",
         pname: "Hosting Press HTML",
         priority: "Critical",
-        pbg: "success.main",
+        pbg: "#13DEB9",
         budget: "2.4",
     },
 ];
@@ -54,102 +46,41 @@ const ProductPerformance = () => {
     return (
 
         <DashboardCard title="Product Performance">
-            <Box sx={{ overflow: 'auto', width: { xs: '280px', sm: 'auto' } }}>
-                <Table
-                    aria-label="simple table"
-                    sx={{
-                        whiteSpace: "nowrap",
-                        mt: 2
-                    }}
-                >
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>
-                                <Typography variant="subtitle2" fontWeight={600}>
-                                    Id
-                                </Typography>
-                            </TableCell>
-                            <TableCell>
-                                <Typography variant="subtitle2" fontWeight={600}>
-                                    Assigned
-                                </Typography>
-                            </TableCell>
-                            <TableCell>
-                                <Typography variant="subtitle2" fontWeight={600}>
-                                    Name
-                                </Typography>
-                            </TableCell>
-                            <TableCell>
-                                <Typography variant="subtitle2" fontWeight={600}>
-                                    Priority
-                                </Typography>
-                            </TableCell>
-                            <TableCell align="right">
-                                <Typography variant="subtitle2" fontWeight={600}>
-                                    Budget
-                                </Typography>
-                            </TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
+            <div className="overflow-auto w-full mt-2">
+                <table className="min-w-[600px] w-full text-left">
+                    <thead>
+                        <tr className="text-gray-300 text-sm">
+                            <th className="py-2 px-3">Id</th>
+                            <th className="py-2 px-3">Assigned</th>
+                            <th className="py-2 px-3">Name</th>
+                            <th className="py-2 px-3">Priority</th>
+                            <th className="py-2 px-3 text-right">Budget</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                         {products.map((product) => (
-                            <TableRow key={product.name}>
-                                <TableCell>
-                                    <Typography
-                                        sx={{
-                                            fontSize: "15px",
-                                            fontWeight: "500",
-                                        }}
-                                    >
-                                        {product.id}
-                                    </Typography>
-                                </TableCell>
-                                <TableCell>
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                        }}
-                                    >
-                                        <Box>
-                                            <Typography variant="subtitle2" fontWeight={600}>
-                                                {product.name}
-                                            </Typography>
-                                            <Typography
-                                                color="textSecondary"
-                                                sx={{
-                                                    fontSize: "13px",
-                                                }}
-                                            >
-                                                {product.post}
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                </TableCell>
-                                <TableCell>
-                                    <Typography color="textSecondary" variant="subtitle2" fontWeight={400}>
-                                        {product.pname}
-                                    </Typography>
-                                </TableCell>
-                                <TableCell>
-                                    <Chip
-                                        sx={{
-                                            px: "4px",
-                                            backgroundColor: product.pbg,
-                                            color: "#fff",
-                                        }}
-                                        size="small"
-                                        label={product.priority}
-                                    ></Chip>
-                                </TableCell>
-                                <TableCell align="right">
-                                    <Typography variant="h6">${product.budget}k</Typography>
-                                </TableCell>
-                            </TableRow>
+                            <tr key={product.id} className="border-t border-[#333]">
+                                <td className="py-3 px-3 text-white font-medium text-[15px]">{product.id}</td>
+                                <td className="py-3 px-3">
+                                    <div className="flex items-center gap-2">
+                                        <div>
+                                            <div className="text-white font-semibold text-sm">{product.name}</div>
+                                            <div className="text-gray-400 text-xs">{product.post}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td className="py-3 px-3 text-gray-300 text-sm">{product.pname}</td>
+                                <td className="py-3 px-3">
+                                    <span className="inline-flex items-center text-white text-xs px-2 py-0.5 rounded" style={{ backgroundColor: product.pbg }}>
+                                        {product.priority}
+                                    </span>
+                                </td>
+                                <td className="py-3 px-3 text-right text-white font-semibold">${product.budget}k</td>
+                            </tr>
                         ))}
-                    </TableBody>
-                </Table>
-            </Box>
+                    </tbody>
+                </table>
+            </div>
         </DashboardCard>
     );
 };

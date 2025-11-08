@@ -1,57 +1,27 @@
 "use client";
 import React, { useState } from "react";
 import {
-  Box,
-  Typography,
-  Container,
-  Grid,
-  Card,
-  CardContent,
-  CardHeader,
-  Paper,
-  Chip,
-  LinearProgress,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Avatar,
-  Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Tabs,
-  Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  Tooltip,
-} from "@mui/material";
-import {
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
-  Psychology as PsychologyIcon,
-  Chat as ChatIcon,
-  ThumbUp as ThumbUpIcon,
-  ThumbDown as ThumbDownIcon,
-  Speed as SpeedIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  Schedule as ScheduleIcon,
-  Assessment as AssessmentIcon,
-  Refresh as RefreshIcon,
-  Download as DownloadIcon,
-  Visibility as VisibilityIcon,
-  Message as MessageIcon,
-  Timer as TimerIcon,
-  Star as StarIcon,
-} from "@mui/icons-material";
+  TrendingUp,
+  TrendingDown,
+  Brain,
+  MessageSquare,
+  ThumbsUp,
+  ThumbsDown,
+  Gauge,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  BarChart3,
+  RefreshCw,
+  Download,
+  Eye,
+  Timer,
+  Star,
+} from "lucide-react";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
 
 interface AgentMetric {
   title: string;
@@ -96,7 +66,7 @@ const AIAgentReportsPage = () => {
       value: "3,247",
       change: 15.2,
       changeType: 'increase',
-      icon: <ChatIcon />,
+      icon: <MessageSquare size={20} />,
       color: "#1976d2"
     },
     {
@@ -104,7 +74,7 @@ const AIAgentReportsPage = () => {
       value: "0.8s",
       change: -12.5,
       changeType: 'decrease',
-      icon: <SpeedIcon />,
+      icon: <Gauge size={20} />,
       color: "#388e3c"
     },
     {
@@ -112,7 +82,7 @@ const AIAgentReportsPage = () => {
       value: "96.2%",
       change: 3.1,
       changeType: 'increase',
-      icon: <ThumbUpIcon />,
+      icon: <ThumbsUp size={20} />,
       color: "#7b1fa2"
     },
     {
@@ -120,7 +90,7 @@ const AIAgentReportsPage = () => {
       value: "98.7%",
       change: 1.2,
       changeType: 'increase',
-      icon: <CheckCircleIcon />,
+      icon: <CheckCircle2 size={20} />,
       color: "#f57c00"
     },
     {
@@ -128,7 +98,7 @@ const AIAgentReportsPage = () => {
       value: "4.2m",
       change: 8.3,
       changeType: 'increase',
-      icon: <TimerIcon />,
+      icon: <Timer size={20} />,
       color: "#d32f2f"
     },
     {
@@ -136,7 +106,7 @@ const AIAgentReportsPage = () => {
       value: "12.4",
       change: -2.1,
       changeType: 'decrease',
-      icon: <MessageIcon />,
+      icon: <MessageSquare size={20} />,
       color: "#5e35b1"
     }
   ];
@@ -206,22 +176,20 @@ const AIAgentReportsPage = () => {
 
   const getSatisfactionStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <StarIcon 
+      <Star
         key={i} 
-        sx={{ 
-          fontSize: 16, 
-          color: i < rating ? '#ffc107' : '#e0e0e0' 
-        }} 
+        size={16}
+        className={i < rating ? "text-yellow-500 fill-yellow-500" : "text-gray-500"}
       />
     ));
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return <CheckCircleIcon color="success" fontSize="small" />;
-      case 'in_progress': return <ScheduleIcon color="primary" fontSize="small" />;
-      case 'failed': return <ErrorIcon color="error" fontSize="small" />;
-      default: return <ScheduleIcon color="action" fontSize="small" />;
+      case 'completed': return <CheckCircle2 className="text-green-500 w-4 h-4" />;
+      case 'in_progress': return <Clock className="text-blue-500 w-4 h-4" />;
+      case 'failed': return <XCircle className="text-red-500 w-4 h-4" />;
+      default: return <Clock className="text-gray-500 w-4 h-4" />;
     }
   };
 
@@ -230,422 +198,399 @@ const AIAgentReportsPage = () => {
       case 'completed': return 'success';
       case 'in_progress': return 'primary';
       case 'failed': return 'error';
-      default: return 'default';
+      default: return 'secondary';
     }
   };
 
   return (
     <PageContainer title="AI Agent Reports" description="Detailed analytics for AI agents">
-      <Container maxWidth="xl">
-        <Box sx={{ py: 4 }}>
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="py-8">
           {/* Header */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-            <Box>
-              <Typography variant="h4" gutterBottom>
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h4 className="text-2xl font-semibold text-white mb-2">
                 AI Agent Analytics
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
+              </h4>
+              <p className="text-gray-300">
                 Detailed performance metrics and insights for your AI agents
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <FormControl size="small" sx={{ minWidth: 140 }}>
-                <InputLabel>Agent</InputLabel>
-                <Select
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <select
                   value={selectedAgent}
-                  label="Agent"
                   onChange={(e) => setSelectedAgent(e.target.value)}
+                className="px-3 py-2 bg-[#1e1e1e] border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-[#EE66AA]"
                 >
                   {agents.map((agent) => (
-                    <MenuItem key={agent.id} value={agent.id}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar sx={{ width: 24, height: 24, mr: 1, fontSize: 12 }}>
-                          {agent.avatar}
-                        </Avatar>
+                  <option key={agent.id} value={agent.id}>
                         {agent.name}
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel>Time Range</InputLabel>
-                <Select
+                  </option>
+                ))}
+              </select>
+              <select
                   value={timeRange}
-                  label="Time Range"
                   onChange={(e) => setTimeRange(e.target.value)}
-                >
-                  <MenuItem value="24h">Last 24 Hours</MenuItem>
-                  <MenuItem value="7d">Last 7 Days</MenuItem>
-                  <MenuItem value="30d">Last 30 Days</MenuItem>
-                  <MenuItem value="90d">Last 90 Days</MenuItem>
-                </Select>
-              </FormControl>
-              <Button variant="outlined" startIcon={<RefreshIcon />}>
+                className="px-3 py-2 bg-[#1e1e1e] border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-[#EE66AA]"
+              >
+                <option value="24h">Last 24 Hours</option>
+                <option value="7d">Last 7 Days</option>
+                <option value="30d">Last 30 Days</option>
+                <option value="90d">Last 90 Days</option>
+              </select>
+              <Button variant="outlined" color="primary" size="small">
+                <RefreshCw size={16} className="mr-2" />
                 Refresh
               </Button>
-              <Button variant="outlined" startIcon={<DownloadIcon />}>
+              <Button variant="outlined" color="primary" size="small">
+                <Download size={16} className="mr-2" />
                 Export
               </Button>
-            </Box>
-          </Box>
+            </div>
+          </div>
 
           {/* Agent Selection */}
-          <Card sx={{ mb: 4 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+          <Card className="mb-8">
+            <CardContent className="p-6">
+              <h6 className="text-lg font-semibold text-white mb-4">
                 Selected Agent: Customer Support Bot
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ bgcolor: 'primary.main' }}>CS</Avatar>
-                <Box>
-                  <Typography variant="subtitle1">Customer Support Bot</Typography>
-                  <Typography variant="body2" color="text.secondary">
+              </h6>
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-[#EE66AA] flex items-center justify-center text-white font-semibold">
+                  CS
+                </div>
+                <div>
+                  <p className="text-base font-semibold text-white">Customer Support Bot</p>
+                  <p className="text-sm text-gray-300">
                     Active since Jan 15, 2024 • Last updated 2 hours ago
-                  </Typography>
-                </Box>
-                <Chip label="Active" color="success" size="small" />
-                <Chip label="High Performance" color="primary" size="small" />
-              </Box>
+                  </p>
+                </div>
+                <Chip color="success" size="small">Active</Chip>
+                <Chip color="primary" size="small">High Performance</Chip>
+              </div>
             </CardContent>
           </Card>
 
           {/* Key Metrics Grid */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
             {agentMetrics.map((metric, index) => (
-              <Grid sx={{ xs: 12, sm: 6, md: 4, lg: 2 }} key={index}>
-                <Card sx={{ height: '100%' }}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Avatar sx={{ bgcolor: metric.color, mr: 2 }}>
+              <Card key={index} className="h-full">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: metric.color }}>
                         {metric.icon}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="h6" component="div">
+                    </div>
+                    <div>
+                      <h6 className="text-lg font-semibold text-white">
                           {metric.value}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                      </h6>
+                      <p className="text-xs text-gray-300">
                           {metric.title}
-                        </Typography>
-                      </Box>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
                       {metric.changeType === 'increase' ? (
-                        <TrendingUpIcon color="success" fontSize="small" />
-                      ) : (
-                        <TrendingDownIcon color="error" fontSize="small" />
-                      )}
-                      <Typography 
-                        variant="body2" 
-                        color={metric.changeType === 'increase' ? 'success.main' : 'error.main'}
-                        sx={{ ml: 0.5 }}
-                      >
+                      <TrendingUp className="text-green-500 w-4 h-4" />
+                    ) : (
+                      <TrendingDown className="text-red-500 w-4 h-4" />
+                    )}
+                    <p className={`text-xs ${metric.changeType === 'increase' ? 'text-green-400' : 'text-red-400'}`}>
                         {Math.abs(metric.change)}%
-                      </Typography>
-                    </Box>
+                    </p>
+                  </div>
                   </CardContent>
                 </Card>
-              </Grid>
             ))}
-          </Grid>
+          </div>
 
           {/* Tabs */}
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-            <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
-              <Tab label="Performance Overview" />
-              <Tab label="Conversation History" />
-              <Tab label="Hourly Analytics" />
-              <Tab label="Quality Metrics" />
-            </Tabs>
-          </Box>
+          <div className="border-b border-gray-700 mb-6">
+            <div className="flex">
+              {["Performance Overview", "Conversation History", "Hourly Analytics", "Quality Metrics"].map((label, index) => (
+                <button
+                  key={index}
+                  onClick={() => setActiveTab(index)}
+                  className={`px-6 py-3 text-sm font-medium transition-colors ${
+                    activeTab === index
+                      ? "text-[#EE66AA] border-b-2 border-[#EE66AA]"
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Tab Content */}
           {activeTab === 0 && (
-            <Grid container spacing={3}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Performance Chart Placeholder */}
-              <Grid sx={{ xs: 12, md: 8 }}>
+              <div className="md:col-span-2">
                 <Card>
-                  <CardHeader title="Conversation Trends" />
+                  <CardHeader className="pb-2 pt-4">
+                    <h6 className="text-lg font-semibold text-white">Conversation Trends</h6>
+                  </CardHeader>
                   <CardContent>
-                    <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'grey.50' }}>
-                      <Typography variant="body1" color="text.secondary">
-                        Chart visualization would go here
-                      </Typography>
-                    </Box>
+                    <div className="h-[300px] flex items-center justify-center bg-gray-800 rounded-lg">
+                      <p className="text-gray-400">Chart visualization would go here</p>
+                    </div>
                   </CardContent>
                 </Card>
-              </Grid>
+              </div>
 
               {/* Quick Stats */}
-              <Grid sx={{ xs: 12, md: 4 }}>
+              <div>
                 <Card>
-                  <CardHeader title="Quick Stats" />
-                  <CardContent>
-                    <Box sx={{ mb: 3 }}>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Peak Hour Performance
-                      </Typography>
-                      <Typography variant="h6">2:00 PM</Typography>
-                      <Typography variant="body2" color="text.secondary">
+                  <CardHeader className="pb-2 pt-4">
+                    <h6 className="text-lg font-semibold text-white">Quick Stats</h6>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div>
+                      <p className="text-sm text-gray-300 mb-1">Peak Hour Performance</p>
+                      <h6 className="text-xl font-semibold text-white mb-1">2:00 PM</h6>
+                      <p className="text-sm text-gray-400">
                         92 conversations, 4.7 avg satisfaction
-                      </Typography>
-                    </Box>
+                      </p>
+                    </div>
                     
-                    <Box sx={{ mb: 3 }}>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Most Common Query Type
-                      </Typography>
-                      <Typography variant="h6">Account Issues</Typography>
-                      <Typography variant="body2" color="text.secondary">
+                    <div>
+                      <p className="text-sm text-gray-300 mb-1">Most Common Query Type</p>
+                      <h6 className="text-xl font-semibold text-white mb-1">Account Issues</h6>
+                      <p className="text-sm text-gray-400">
                         34% of all conversations
-                      </Typography>
-                    </Box>
+                      </p>
+                    </div>
                     
-                    <Box sx={{ mb: 3 }}>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Resolution Rate
-                      </Typography>
-                      <LinearProgress variant="determinate" value={87} sx={{ mb: 1 }} />
-                      <Typography variant="body2">87% first-contact resolution</Typography>
-                    </Box>
+                    <div>
+                      <p className="text-sm text-gray-300 mb-2">Resolution Rate</p>
+                      <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '87%' }} />
+                      </div>
+                      <p className="text-sm text-white">87% first-contact resolution</p>
+                    </div>
                   </CardContent>
                 </Card>
-              </Grid>
-            </Grid>
+              </div>
+            </div>
           )}
 
           {activeTab === 1 && (
             <Card>
-              <CardHeader 
-                title="Recent Conversations"
-                action={
-                  <Button variant="outlined" size="small">
+              <CardHeader className="pb-2 pt-4">
+                <div className="flex justify-between items-center">
+                  <h6 className="text-lg font-semibold text-white">Recent Conversations</h6>
+                  <Button variant="outlined" color="primary" size="small">
                     View All
                   </Button>
-                }
-              />
+                </div>
+              </CardHeader>
               <CardContent>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>User</TableCell>
-                        <TableCell>Duration</TableCell>
-                        <TableCell>Satisfaction</TableCell>
-                        <TableCell>Messages</TableCell>
-                        <TableCell>Status</TableCell>
-                        <TableCell>Time</TableCell>
-                        <TableCell>Actions</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-700">
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">User</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Duration</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Satisfaction</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Messages</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Status</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Time</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
                       {recentConversations.map((conversation) => (
-                        <TableRow key={conversation.id}>
-                          <TableCell>{conversation.user}</TableCell>
-                          <TableCell>{conversation.duration}</TableCell>
-                          <TableCell>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <tr key={conversation.id} className="border-b border-gray-800 hover:bg-gray-800/50">
+                          <td className="py-3 px-4 text-sm text-white">{conversation.user}</td>
+                          <td className="py-3 px-4 text-sm text-white">{conversation.duration}</td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
                               {getSatisfactionStars(conversation.satisfaction)}
                               {conversation.satisfaction > 0 && (
-                                <Typography variant="caption" sx={{ ml: 1 }}>
+                                <span className="text-xs text-gray-400 ml-1">
                                   {conversation.satisfaction}/5
-                                </Typography>
+                                </span>
                               )}
-                            </Box>
-                          </TableCell>
-                          <TableCell>{conversation.messages}</TableCell>
-                          <TableCell>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-white">{conversation.messages}</td>
+                          <td className="py-3 px-4">
                             <Chip 
                               label={conversation.status} 
-                              color={getStatusColor(conversation.status) as any}
+                              color={getStatusColor(conversation.status)}
                               size="small"
+                              className="text-xs"
                             />
-                          </TableCell>
-                          <TableCell>{conversation.timestamp}</TableCell>
-                          <TableCell>
-                            <Tooltip title="View Details">
-                              <IconButton size="small">
-                                <VisibilityIcon />
-                              </IconButton>
-                            </Tooltip>
-                          </TableCell>
-                        </TableRow>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-white">{conversation.timestamp}</td>
+                          <td className="py-3 px-4">
+                            <button className="p-1 text-gray-400 hover:text-white transition-colors" title="View Details">
+                              <Eye size={16} />
+                            </button>
+                          </td>
+                        </tr>
                       ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                    </tbody>
+                  </table>
+                </div>
               </CardContent>
             </Card>
           )}
 
           {activeTab === 2 && (
-            <Grid container spacing={3}>
-              <Grid sx={{ xs: 12, md: 6 }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>
-                  <CardHeader title="Hourly Conversation Volume" />
+                <CardHeader className="pb-2 pt-4">
+                  <h6 className="text-lg font-semibold text-white">Hourly Conversation Volume</h6>
+                </CardHeader>
                   <CardContent>
-                    <List>
+                  <div className="space-y-0">
                       {hourlyPerformance.map((data, index) => (
-                        <ListItem key={index} divider={index < hourlyPerformance.length - 1}>
-                          <ListItemText
-                            primary={data.hour}
-                            secondary={
-                              <Box>
-                                <Typography variant="body2" color="text.secondary">
+                      <div key={index}>
+                        <div className="flex items-center justify-between py-4">
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-white mb-1">{data.hour}</p>
+                            <p className="text-xs text-gray-400 mb-2">
                                   {data.conversations} conversations
-                                </Typography>
-                                <LinearProgress 
-                                  variant="determinate" 
-                                  value={(data.conversations / 100) * 100} 
-                                  sx={{ mt: 1 }}
-                                />
-                              </Box>
-                            }
-                          />
-                          <Typography variant="body2">
+                            </p>
+                            <div className="w-full bg-gray-700 rounded-full h-2">
+                              <div
+                                className="bg-[#EE66AA] h-2 rounded-full"
+                                style={{ width: `${(data.conversations / 100) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                          <p className="text-sm text-white ml-4">
                             {data.satisfaction.toFixed(1)}★
-                          </Typography>
-                        </ListItem>
-                      ))}
-                    </List>
+                          </p>
+                        </div>
+                        {index < hourlyPerformance.length - 1 && (
+                          <div className="border-t border-gray-700" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
                   </CardContent>
                 </Card>
-              </Grid>
               
-              <Grid sx={{ xs: 12, md: 6 }}>
                 <Card>
-                  <CardHeader title="Performance Insights" />
+                <CardHeader className="pb-2 pt-4">
+                  <h6 className="text-lg font-semibold text-white">Performance Insights</h6>
+                </CardHeader>
                   <CardContent>
-                    <Box sx={{ mb: 3 }}>
-                      <Typography variant="h6" gutterBottom>
-                        Top Performing Hours
-                      </Typography>
-                      <List>
-                        <ListItem>
-                          <ListItemIcon>
-                            <StarIcon color="warning" />
-                          </ListItemIcon>
-                          <ListItemText
-                            primary="2:00 PM - 3:00 PM"
-                            secondary="Peak performance: 92 conversations, 4.7★ satisfaction"
-                          />
-                        </ListItem>
-                        <ListItem>
-                          <ListItemIcon>
-                            <StarIcon color="warning" />
-                          </ListItemIcon>
-                          <ListItemText
-                            primary="10:00 AM - 11:00 AM"
-                            secondary="High volume: 67 conversations, 4.6★ satisfaction"
-                          />
-                        </ListItem>
-                      </List>
-                    </Box>
-                    
-                    <Box>
-                      <Typography variant="h6" gutterBottom>
-                        Recommendations
-                      </Typography>
-                      <List>
-                        <ListItem>
-                          <ListItemIcon>
-                            <CheckCircleIcon color="success" />
-                          </ListItemIcon>
-                          <ListItemText
-                            primary="Consider scaling resources during peak hours"
-                            secondary="2:00 PM shows highest demand"
-                          />
-                        </ListItem>
-                        <ListItem>
-                          <ListItemIcon>
-                            <CheckCircleIcon color="success" />
-                          </ListItemIcon>
-                          <ListItemText
-                            primary="Low activity periods could be used for training"
-                            secondary="4:00 AM - 6:00 AM shows minimal usage"
-                          />
-                        </ListItem>
-                      </List>
-                    </Box>
+                  <div className="mb-6">
+                    <h6 className="text-base font-semibold text-white mb-4">Top Performing Hours</h6>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <Star className="text-yellow-500 w-5 h-5 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-semibold text-white">2:00 PM - 3:00 PM</p>
+                          <p className="text-xs text-gray-400">Peak performance: 92 conversations, 4.7★ satisfaction</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Star className="text-yellow-500 w-5 h-5 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-semibold text-white">10:00 AM - 11:00 AM</p>
+                          <p className="text-xs text-gray-400">High volume: 67 conversations, 4.6★ satisfaction</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h6 className="text-base font-semibold text-white mb-4">Recommendations</h6>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="text-green-500 w-5 h-5 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-semibold text-white">Consider scaling resources during peak hours</p>
+                          <p className="text-xs text-gray-400">2:00 PM shows highest demand</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="text-green-500 w-5 h-5 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-semibold text-white">Low activity periods could be used for training</p>
+                          <p className="text-xs text-gray-400">4:00 AM - 6:00 AM shows minimal usage</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   </CardContent>
                 </Card>
-              </Grid>
-            </Grid>
+            </div>
           )}
 
           {activeTab === 3 && (
-            <Grid container spacing={3}>
-              <Grid sx={{ xs: 12, md: 6 }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>
-                  <CardHeader title="Quality Metrics" />
-                  <CardContent>
-                    <Box sx={{ mb: 3 }}>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Response Accuracy
-                      </Typography>
-                      <LinearProgress variant="determinate" value={94} color="success" sx={{ mb: 1 }} />
-                      <Typography variant="body2">94% accurate responses</Typography>
-                    </Box>
-                    
-                    <Box sx={{ mb: 3 }}>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Intent Recognition
-                      </Typography>
-                      <LinearProgress variant="determinate" value={89} color="primary" sx={{ mb: 1 }} />
-                      <Typography variant="body2">89% correct intent detection</Typography>
-                    </Box>
-                    
-                    <Box sx={{ mb: 3 }}>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Escalation Rate
-                      </Typography>
-                      <LinearProgress variant="determinate" value={12} color="warning" sx={{ mb: 1 }} />
-                      <Typography variant="body2">12% require human intervention</Typography>
-                    </Box>
+                <CardHeader className="pb-2 pt-4">
+                  <h6 className="text-lg font-semibold text-white">Quality Metrics</h6>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <p className="text-sm text-gray-300 mb-2">Response Accuracy</p>
+                    <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+                      <div className="bg-green-500 h-2 rounded-full" style={{ width: '94%' }} />
+                    </div>
+                    <p className="text-sm text-white">94% accurate responses</p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm text-gray-300 mb-2">Intent Recognition</p>
+                    <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+                      <div className="bg-[#EE66AA] h-2 rounded-full" style={{ width: '89%' }} />
+                    </div>
+                    <p className="text-sm text-white">89% correct intent detection</p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm text-gray-300 mb-2">Escalation Rate</p>
+                    <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+                      <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '12%' }} />
+                    </div>
+                    <p className="text-sm text-white">12% require human intervention</p>
+                  </div>
                   </CardContent>
                 </Card>
-              </Grid>
               
-              <Grid sx={{ xs: 12, md: 6 }}>
                 <Card>
-                  <CardHeader title="Training Recommendations" />
+                <CardHeader className="pb-2 pt-4">
+                  <h6 className="text-lg font-semibold text-white">Training Recommendations</h6>
+                </CardHeader>
                   <CardContent>
-                    <List>
-                      <ListItem>
-                        <ListItemIcon>
-                          <AssessmentIcon color="primary" />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary="Improve billing-related responses"
-                          secondary="Low satisfaction scores detected in billing queries"
-                        />
-                      </ListItem>
-                      <ListItem>
-                        <ListItemIcon>
-                          <AssessmentIcon color="primary" />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary="Enhance technical troubleshooting"
-                          secondary="Higher escalation rate for technical issues"
-                        />
-                      </ListItem>
-                      <ListItem>
-                        <ListItemIcon>
-                          <AssessmentIcon color="primary" />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary="Update product knowledge base"
-                          secondary="Recent product updates not reflected in responses"
-                        />
-                      </ListItem>
-                    </List>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <BarChart3 className="text-[#EE66AA] w-5 h-5 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-white">Improve billing-related responses</p>
+                        <p className="text-xs text-gray-400">Low satisfaction scores detected in billing queries</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <BarChart3 className="text-[#EE66AA] w-5 h-5 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-white">Enhance technical troubleshooting</p>
+                        <p className="text-xs text-gray-400">Higher escalation rate for technical issues</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <BarChart3 className="text-[#EE66AA] w-5 h-5 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-white">Update product knowledge base</p>
+                        <p className="text-xs text-gray-400">Recent product updates not reflected in responses</p>
+                      </div>
+                    </div>
+                  </div>
                   </CardContent>
                 </Card>
-              </Grid>
-            </Grid>
+            </div>
           )}
-        </Box>
-      </Container>
+        </div>
+      </div>
     </PageContainer>
   );
 };

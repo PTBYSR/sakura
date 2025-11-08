@@ -1,25 +1,16 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import {
-  Box,
-  Typography,
-  Container,
-  Card,
-  CardContent,
-  CardHeader,
-  Avatar,
-  Chip,
-  CircularProgress,
-  Alert,
-} from "@mui/material";
-import {
-  Message as MessageIcon,
-  CheckCircle as CheckCircleIcon,
-  Psychology as PsychologyIcon,
-  Error as ErrorIcon,
-} from "@mui/icons-material";
+  MessageSquare,
+  CheckCircle2,
+  Brain,
+  XCircle,
+  Loader2,
+} from "lucide-react";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { useAgents } from "@/contexts/AgentsContext";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Chip } from "@/components/ui/chip";
 
 interface AgentStats {
   chats_responded_to: number;
@@ -83,11 +74,11 @@ const AIAgentOverviewPage = () => {
   if (loading) {
     return (
       <PageContainer title="AI Agent Overview" description="Overview of AI agent performance and activity">
-        <Container maxWidth="xl">
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
-            <CircularProgress />
-          </Box>
-        </Container>
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex justify-center items-center min-h-[400px]">
+            <Loader2 className="w-8 h-8 animate-spin text-[#EE66AA]" />
+          </div>
+        </div>
       </PageContainer>
     );
   }
@@ -95,151 +86,155 @@ const AIAgentOverviewPage = () => {
   if (error) {
     return (
       <PageContainer title="AI Agent Overview" description="Overview of AI agent performance and activity">
-        <Container maxWidth="xl">
-          <Box sx={{ py: 2 }}>
-            <Alert severity="error">{error}</Alert>
-          </Box>
-        </Container>
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="py-4">
+            <div className="p-4 bg-red-600/20 border border-red-500 rounded-lg text-red-400">
+              {error}
+            </div>
+          </div>
+        </div>
       </PageContainer>
     );
   }
 
   return (
     <PageContainer title="AI Agent Overview" description="Overview of AI agent performance and activity">
-      <Container maxWidth="xl">
-        <Box sx={{ py: 2 }}>
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="py-4">
           {/* Header */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Box>
-              <Typography variant="h5" sx={{ fontWeight: 600, fontSize: "1.25rem", mb: 0.5 }}>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h5 className="text-xl font-semibold text-white mb-1">
                 AI Agent Overview
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
+              </h5>
+              <p className="text-sm text-gray-300">
                 Current Agent: {agent.name} ({agent.type})
-              </Typography>
-            </Box>
-            <Chip 
-              label={stats?.status === "online" ? "Online" : "Offline"} 
-              color={stats?.status === "online" ? "success" : "error"} 
-              variant="outlined"
-              size="small"
-              icon={stats?.status === "online" ? (
-                <CheckCircleIcon sx={{ fontSize: "1rem" }} />
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {stats?.status === "online" ? (
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
               ) : (
-                <ErrorIcon sx={{ fontSize: "1rem" }} />
+                <XCircle className="w-4 h-4 text-red-500" />
               )}
-            />
-          </Box>
+              <Chip 
+                label={stats?.status === "online" ? "Online" : "Offline"} 
+                color={stats?.status === "online" ? "success" : "error"} 
+                variant="outlined"
+                size="small"
+              />
+            </div>
+          </div>
 
           {/* Stats Cards */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(33.333% - 16px)' }, minWidth: 0 }}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center', p: 2 }}>
-                  <MessageIcon color="primary" sx={{ fontSize: 32, mb: 0.75 }} />
-                  <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600, mb: 0.5 }}>
-                    {stats?.chats_responded_to.toLocaleString() || 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
-                    Chats AI Agent Has Responded To
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Box>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+            <Card>
+              <CardContent className="text-center p-4">
+                <MessageSquare className="text-[#EE66AA] w-8 h-8 mx-auto mb-2" />
+                <h6 className="text-lg font-semibold text-white mb-1">
+                  {stats?.chats_responded_to.toLocaleString() || 0}
+                </h6>
+                <p className="text-xs text-gray-300">
+                  Chats AI Agent Has Responded To
+                </p>
+              </CardContent>
+            </Card>
             
-            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(33.333% - 16px)' }, minWidth: 0 }}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center', p: 2 }}>
-                  <PsychologyIcon color="secondary" sx={{ fontSize: 32, mb: 0.75 }} />
-                  <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600, mb: 0.5 }}>
-                    {stats?.model || "Unknown"}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
-                    AI Model
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Box>
+            <Card>
+              <CardContent className="text-center p-4">
+                <Brain className="text-blue-500 w-8 h-8 mx-auto mb-2" />
+                <h6 className="text-lg font-semibold text-white mb-1">
+                  {stats?.model || "Unknown"}
+                </h6>
+                <p className="text-xs text-gray-300">
+                  AI Model
+                </p>
+              </CardContent>
+            </Card>
 
-            <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(33.333% - 16px)' }, minWidth: 0 }}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center', p: 2 }}>
-                  <CheckCircleIcon 
-                    color={stats?.status === "online" ? "success" : "error"} 
-                    sx={{ fontSize: 32, mb: 0.75 }} 
-                  />
-                  <Typography variant="h6" sx={{ fontSize: "1.125rem", fontWeight: 600, mb: 0.5 }}>
-                    {stats?.status === "online" ? "Online" : "Offline"}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
-                    Live Status
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Box>
-          </Box>
+            <Card>
+              <CardContent className="text-center p-4">
+                <CheckCircle2 
+                  className={`w-8 h-8 mx-auto mb-2 ${
+                    stats?.status === "online" ? "text-green-500" : "text-red-500"
+                  }`}
+                />
+                <h6 className="text-lg font-semibold text-white mb-1">
+                  {stats?.status === "online" ? "Online" : "Offline"}
+                </h6>
+                <p className="text-xs text-gray-300">
+                  Live Status
+                </p>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Agent Information */}
           <Card>
-            <CardHeader 
-              title="Agent Information"
-              titleTypographyProps={{ variant: "h6", sx: { fontSize: "0.95rem", fontWeight: 600 } }}
-              avatar={<Avatar sx={{ bgcolor: 'info.main', width: 32, height: 32 }}><PsychologyIcon sx={{ fontSize: "1rem" }} /></Avatar>}
-              sx={{ pb: 1, pt: 2 }}
-            />
+            <CardHeader className="pb-2 pt-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white">
+                  <Brain size={16} />
+                </div>
+                <h6 className="text-base font-semibold text-white">Agent Information</h6>
+              </div>
+            </CardHeader>
             <CardContent>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' }, minWidth: 0 }}>
-                  <Typography variant="h6" sx={{ fontSize: "1rem", fontWeight: 600, mb: 0.75 }}>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex-1 min-w-0">
+                  <h6 className="text-base font-semibold text-white mb-2">
                     {agent.name}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.85rem", mb: 1.5 }}>
+                  </h6>
+                  <p className="text-sm text-gray-300 mb-3">
                     {agent.description || "AI customer support agent"}
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-                    <Chip label={agent.type} color="primary" size="small" sx={{ fontSize: "0.75rem", height: 24 }} />
+                  </p>
+                  <div className="flex gap-2 flex-wrap">
+                    <Chip color="primary" size="small" className="text-xs">
+                      {agent.type}
+                    </Chip>
                     <Chip 
-                      label={stats?.status === "online" ? "Active" : "Inactive"} 
-                      color={stats?.status === "online" ? "success" : "default"} 
+                      color={stats?.status === "online" ? "success" : "secondary"} 
                       size="small" 
-                      sx={{ fontSize: "0.75rem", height: 24 }} 
-                    />
-                  </Box>
-                </Box>
-                <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' }, minWidth: 0 }}>
-                  <Typography variant="subtitle2" sx={{ fontSize: "0.875rem", fontWeight: 600, mb: 1 }}>
+                      className="text-xs"
+                    >
+                      {stats?.status === "online" ? "Active" : "Inactive"}
+                    </Chip>
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white mb-2">
                     System Status
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
                       {stats?.status === "online" ? (
-                        <CheckCircleIcon color="success" sx={{ fontSize: "1rem" }} />
+                        <CheckCircle2 className="text-green-500 w-4 h-4" />
                       ) : (
-                        <ErrorIcon color="error" sx={{ fontSize: "1rem" }} />
+                        <XCircle className="text-red-500 w-4 h-4" />
                       )}
-                      <Typography variant="body2" sx={{ fontSize: "0.85rem" }}>
+                      <p className="text-sm text-gray-300">
                         AI Engine: {stats?.status === "online" ? "Running" : "Stopped"}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CheckCircleIcon color={stats?.initialized ? "success" : "disabled"} sx={{ fontSize: "1rem" }} />
-                      <Typography variant="body2" sx={{ fontSize: "0.85rem" }}>
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className={`w-4 h-4 ${stats?.initialized ? "text-green-500" : "text-gray-500"}`} />
+                      <p className="text-sm text-gray-300">
                         Service Initialized: {stats?.initialized ? "Yes" : "No"}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <PsychologyIcon color="primary" sx={{ fontSize: "1rem" }} />
-                      <Typography variant="body2" sx={{ fontSize: "0.85rem" }}>
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Brain className="text-[#EE66AA] w-4 h-4" />
+                      <p className="text-sm text-gray-300">
                         Model: {stats?.model || "Unknown"}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-              </Box>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
-        </Box>
-      </Container>
+        </div>
+      </div>
     </PageContainer>
   );
 };

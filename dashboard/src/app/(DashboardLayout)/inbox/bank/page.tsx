@@ -14,56 +14,31 @@
 
 import { useEffect, useState } from "react";
 import {
-  Box,
-  Typography,
-  TextField,
-  Card,
-  CardContent,
-  CardHeader,
-  Chip,
-  Avatar,
-  CircularProgress,
-  Alert,
-  Paper,
-  Divider,
-  InputAdornment,
-  IconButton,
-  Collapse,
-  Tabs,
-  Tab,
-  Grid,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Button,
-} from "@mui/material";
-import {
-  Search as SearchIcon,
-  ExpandMore as ExpandMoreIcon,
-  Person as PersonIcon,
-  Chat as ChatIcon,
-  Message as MessageIcon,
-  AccessTime as TimeIcon,
-  LocationOn as LocationIcon,
-  Computer as ComputerIcon,
-  Psychology as PsychologyIcon,
-  Category as CategoryIcon,
-  CheckCircle as CheckCircleIcon,
-  SmartToy as AgentIcon,
-  PersonPin as HumanIcon,
-  Storage as DatabaseIcon,
-  People as PeopleIcon,
-  Forum as ForumIcon,
-  AccountCircle as AccountIcon,
-  Link as LinkIcon,
-  Analytics as AnalyticsIcon,
-} from "@mui/icons-material";
+  Search,
+  ChevronDown,
+  User,
+  MessageSquare,
+  MessageCircle,
+  Clock,
+  MapPin,
+  Monitor,
+  Brain,
+  Tag,
+  CheckCircle2,
+  Bot,
+  UserCircle,
+  Database,
+  Users,
+  MessageSquareMore,
+  UserCircle2,
+  Link2,
+  BarChart3,
+  Loader2,
+} from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Chip } from "@/components/ui/chip";
 
 interface DashboardUser {
   _id: string;
@@ -151,9 +126,9 @@ export default function DatabaseInspectorPage() {
     }
   }, []);
 
-  // Fetch data when authenticated - must be declared before conditional return
+  // Fetch data when authenticated
   useEffect(() => {
-    if (!isAuthenticated) return; // Early return inside useEffect, not conditional hook declaration
+    if (!isAuthenticated) return;
     
     const fetchData = async () => {
       try {
@@ -206,39 +181,20 @@ export default function DatabaseInspectorPage() {
   // Show login screen if not authenticated
   if (!isAuthenticated) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "100vh",
-          backgroundColor: "#1a1a1a",
-          p: 3,
-        }}
-      >
-        <Card
-          sx={{
-            maxWidth: 450,
-            width: "100%",
-            backgroundColor: "#2a2a2a",
-            border: "1px solid #333",
-            p: 4,
-          }}
-        >
-          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 3 }}>
-            <DatabaseIcon sx={{ fontSize: 60, color: "#ff6b35", mb: 2 }} />
-            <Typography variant="h4" sx={{ color: "white", fontWeight: "bold", mb: 1 }}>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#1a1a1a] p-6">
+        <Card className="max-w-md w-full bg-[#2a2a2a] border border-gray-700 p-8">
+          <div className="flex flex-col items-center mb-6">
+            <Database className="text-[#ff6b35] w-16 h-16 mb-4" />
+            <h4 className="text-2xl font-bold text-white mb-2">
               Database Inspector
-            </Typography>
-            <Typography variant="body2" sx={{ color: "#ccc", textAlign: "center" }}>
+            </h4>
+            <p className="text-sm text-gray-300 text-center">
               This page is password protected. Please enter the passcode to continue.
-            </Typography>
-          </Box>
+            </p>
+          </div>
 
           <form onSubmit={handlePasscodeSubmit}>
-            <TextField
-              fullWidth
+            <Input
               type="password"
               label="Passcode"
               value={passcode}
@@ -246,42 +202,24 @@ export default function DatabaseInspectorPage() {
                 setPasscode(e.target.value);
                 setPasscodeError("");
               }}
-              error={!!passcodeError}
+              error={passcodeError}
               helperText={passcodeError}
               autoFocus
-              sx={{
-                mb: 3,
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "#333",
-                  "& fieldset": { borderColor: "#444" },
-                  "&:hover fieldset": { borderColor: "#666" },
-                  "&.Mui-focused fieldset": { borderColor: "#ff6b35" },
-                },
-                "& .MuiInputBase-input": { color: "white" },
-                "& .MuiInputLabel-root": { color: "#ccc" },
-                "& .MuiFormHelperText-root": { color: "#f44336" },
-              }}
+              className="mb-6"
             />
 
-            <Box sx={{ display: "flex", gap: 2 }}>
               <Button
                 type="submit"
-                fullWidth
                 variant="contained"
-                sx={{
-                  backgroundColor: "#ff6b35",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "#d1488a",
-                  },
-                }}
+              color="primary"
+              className="w-full"
+              style={{ backgroundColor: "#ff6b35" }}
               >
                 Access Database
               </Button>
-            </Box>
           </form>
         </Card>
-      </Box>
+      </div>
     );
   }
 
@@ -295,7 +233,7 @@ export default function DatabaseInspectorPage() {
   const getStatusColor = (status?: string) => {
     switch (status?.toLowerCase()) {
       case 'active': return 'success';
-      case 'closed': return 'default';
+      case 'closed': return 'secondary';
       default: return 'warning';
     }
   };
@@ -312,26 +250,30 @@ export default function DatabaseInspectorPage() {
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", gap: 2 }}>
-        <CircularProgress size={60} />
-        <Typography variant="h6" color="text.secondary">Loading database overview...</Typography>
-      </Box>
+      <div className="flex flex-col items-center justify-center h-screen gap-4">
+        <Loader2 className="w-16 h-16 animate-spin text-[#ff6b35]" />
+        <h6 className="text-lg text-gray-300">Loading database overview...</h6>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">Failed to load data: {error}</Alert>
-      </Box>
+      <div className="p-6">
+        <div className="p-4 bg-red-600/20 border border-red-500 rounded-lg text-red-400">
+          Failed to load data: {error}
+        </div>
+      </div>
     );
   }
 
   if (!overview) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="info">No data available</Alert>
-      </Box>
+      <div className="p-6">
+        <div className="p-4 bg-blue-600/20 border border-blue-500 rounded-lg text-blue-400">
+          No data available
+        </div>
+      </div>
     );
   }
 
@@ -360,238 +302,223 @@ export default function DatabaseInspectorPage() {
   );
 
   return (
-    <Box sx={{ p: 3, backgroundColor: "#1a1a1a", minHeight: "100vh" }}>
+    <div className="p-6 bg-[#1a1a1a] min-h-screen">
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-          <DatabaseIcon sx={{ fontSize: 40, color: "#ff6b35" }} />
-          <Box>
-            <Typography variant="h3" sx={{ color: "white", fontWeight: "bold" }}>
+      <div className="mb-8">
+        <div className="flex items-center gap-4 mb-4">
+          <Database className="text-[#ff6b35] w-10 h-10" />
+          <div>
+            <h3 className="text-3xl font-bold text-white">
               Database Inspector
-            </Typography>
-            <Typography variant="subtitle1" sx={{ color: "#ccc" }}>
+            </h3>
+            <p className="text-base text-gray-300">
               Comprehensive MongoDB Data Viewer - Database: {overview.database_name}
-            </Typography>
-          </Box>
-        </Box>
+            </p>
+          </div>
+        </div>
 
         {/* Statistics Cards */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
-            <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <PeopleIcon sx={{ fontSize: 40, color: "#4caf50" }} />
-                  <Box>
-                    <Typography variant="h4" sx={{ color: "white" }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Card className="bg-[#2a2a2a] border border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <Users className="text-green-500 w-10 h-10" />
+                <div>
+                  <h4 className="text-2xl font-semibold text-white">
                       {stats.total_widget_customers}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "#ccc" }}>
+                  </h4>
+                  <p className="text-sm text-gray-300">
                       Widget Customers
-                    </Typography>
-                  </Box>
-                </Box>
+                  </p>
+                </div>
+              </div>
               </CardContent>
             </Card>
-          </Grid>
 
-          <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
-            <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <ForumIcon sx={{ fontSize: 40, color: "#2196f3" }} />
-                  <Box>
-                    <Typography variant="h4" sx={{ color: "white" }}>
+          <Card className="bg-[#2a2a2a] border border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <MessageSquareMore className="text-blue-500 w-10 h-10" />
+                <div>
+                  <h4 className="text-2xl font-semibold text-white">
                       {stats.total_customer_chats}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "#ccc" }}>
+                  </h4>
+                  <p className="text-sm text-gray-300">
                       Customer Chats
-                    </Typography>
-                  </Box>
-                </Box>
+                  </p>
+                </div>
+              </div>
               </CardContent>
             </Card>
-          </Grid>
 
-          <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
-            <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <MessageIcon sx={{ fontSize: 40, color: "#ff6b35" }} />
-                  <Box>
-                    <Typography variant="h4" sx={{ color: "white" }}>
+          <Card className="bg-[#2a2a2a] border border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <MessageCircle className="text-[#ff6b35] w-10 h-10" />
+                <div>
+                  <h4 className="text-2xl font-semibold text-white">
                       {stats.total_messages}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "#ccc" }}>
+                  </h4>
+                  <p className="text-sm text-gray-300">
                       Total Messages
-                    </Typography>
-                  </Box>
-                </Box>
+                  </p>
+                </div>
+              </div>
               </CardContent>
             </Card>
-          </Grid>
 
-          <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
-            <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <AccountIcon sx={{ fontSize: 40, color: "#9c27b0" }} />
-                  <Box>
-                    <Typography variant="h4" sx={{ color: "white" }}>
+          <Card className="bg-[#2a2a2a] border border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <UserCircle2 className="text-purple-500 w-10 h-10" />
+                <div>
+                  <h4 className="text-2xl font-semibold text-white">
                       {stats.total_dashboard_users}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "#ccc" }}>
+                  </h4>
+                  <p className="text-sm text-gray-300">
                       Dashboard Users
-                    </Typography>
-                  </Box>
-                </Box>
+                  </p>
+                </div>
+              </div>
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+        </div>
 
         {/* Additional Stats */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid sx={{ xs: 12, sm: 4 }}>
-            <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <LinkIcon sx={{ fontSize: 30, color: "#4caf50" }} />
-                  <Box>
-                    <Typography variant="h5" sx={{ color: "white" }}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <Card className="bg-[#2a2a2a] border border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <Link2 className="text-green-500 w-8 h-8" />
+                <div>
+                  <h5 className="text-xl font-semibold text-white">
                       {stats.customers_linked_to_dashboard}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "#ccc" }}>
+                  </h5>
+                  <p className="text-sm text-gray-300">
                       Customers Linked
-                    </Typography>
-                  </Box>
-                </Box>
+                  </p>
+                </div>
+              </div>
               </CardContent>
             </Card>
-          </Grid>
 
-          <Grid sx={{ xs: 12, sm: 4 }}>
-            <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <LinkIcon sx={{ fontSize: 30, color: "#f44336" }} />
-                  <Box>
-                    <Typography variant="h5" sx={{ color: "white" }}>
+          <Card className="bg-[#2a2a2a] border border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <Link2 className="text-red-500 w-8 h-8" />
+                <div>
+                  <h5 className="text-xl font-semibold text-white">
                       {stats.customers_not_linked}
-        </Typography>
-                    <Typography variant="body2" sx={{ color: "#ccc" }}>
+                  </h5>
+                  <p className="text-sm text-gray-300">
                       Customers Not Linked
-        </Typography>
-                  </Box>
-                </Box>
+                  </p>
+                </div>
+              </div>
               </CardContent>
             </Card>
-          </Grid>
 
-          <Grid sx={{ xs: 12, sm: 4 }}>
-            <Card sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <ChatIcon sx={{ fontSize: 30, color: "#ff9800" }} />
-                  <Box>
-                    <Typography variant="h5" sx={{ color: "white" }}>
+          <Card className="bg-[#2a2a2a] border border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <MessageSquare className="text-orange-500 w-8 h-8" />
+                <div>
+                  <h5 className="text-xl font-semibold text-white">
                       {stats.customers_with_chats}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "#ccc" }}>
+                  </h5>
+                  <p className="text-sm text-gray-300">
                       Customers w/ Chats
-          </Typography>
-                  </Box>
-                </Box>
+                  </p>
+                </div>
+              </div>
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+        </div>
 
         {/* Search */}
-        <TextField
-          fullWidth
+        <div className="max-w-2xl mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Input
           placeholder="Search across all collections..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ color: "#666" }} />
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            maxWidth: 600,
-            mb: 3,
-            "& .MuiOutlinedInput-root": {
-              backgroundColor: "#2a2a2a",
-              "& fieldset": { borderColor: "#444" },
-              "&:hover fieldset": { borderColor: "#666" },
-              "&.Mui-focused fieldset": { borderColor: "#ff6b35" },
-            },
-            "& .MuiInputBase-input": { color: "white" },
-          }}
-        />
-      </Box>
+              className="pl-10"
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Tabs */}
-      <Paper sx={{ backgroundColor: "#2a2a2a", mb: 3 }}>
-        <Tabs
-          value={activeTab}
-          onChange={(e, newValue) => setActiveTab(newValue)}
-            sx={{
-            "& .MuiTab-root": { color: "#ccc" },
-            "& .Mui-selected": { color: "#ff6b35" },
-            "& .MuiTabs-indicator": { backgroundColor: "#ff6b35" },
-          }}
-        >
-          <Tab icon={<PeopleIcon />} label={`Widget Customers (${filteredCustomers.length})`} />
-          <Tab icon={<ForumIcon />} label={`Customer Chats (${filteredChats.length})`} />
-          <Tab icon={<AccountIcon />} label={`Dashboard Users (${filteredDashboardUsers.length})`} />
-          <Tab icon={<AnalyticsIcon />} label="Relationships" />
-        </Tabs>
-      </Paper>
+      <div className="bg-[#2a2a2a] border border-gray-700 rounded-lg mb-6">
+        <div className="flex border-b border-gray-700">
+          {[
+            { icon: Users, label: `Widget Customers (${filteredCustomers.length})` },
+            { icon: MessageSquareMore, label: `Customer Chats (${filteredChats.length})` },
+            { icon: UserCircle2, label: `Dashboard Users (${filteredDashboardUsers.length})` },
+            { icon: BarChart3, label: "Relationships" },
+          ].map((tab, index) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={index}
+                onClick={() => setActiveTab(index)}
+                className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${
+                  activeTab === index
+                    ? "text-[#ff6b35] border-b-2 border-[#ff6b35]"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Icon size={18} />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Tab Content */}
-      <Box>
+      <div>
         {/* Tab 0: Widget Customers */}
         {activeTab === 0 && (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <div className="flex flex-col gap-4">
             {filteredCustomers.length === 0 ? (
-              <Alert severity="info">No widget customers found</Alert>
+              <div className="p-4 bg-blue-600/20 border border-blue-500 rounded-lg text-blue-400">
+                No widget customers found
+              </div>
             ) : (
               filteredCustomers.map((customer) => (
-                <Card key={customer._id} sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-            <CardHeader
-                    sx={{ backgroundColor: "#333" }}
-              title={
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                        <Avatar sx={{ bgcolor: "#ff6b35" }}>{customer.name?.charAt(0) || "?"}</Avatar>
-                  <Box>
-                    <Typography variant="h6" sx={{ color: "white" }}>
+                <Card key={customer._id} className="bg-[#2a2a2a] border border-gray-700">
+                  <CardHeader className="bg-[#333] p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-[#ff6b35] flex items-center justify-center text-white font-semibold">
+                          {customer.name?.charAt(0) || "?"}
+                        </div>
+                        <div>
+                          <h6 className="text-base font-semibold text-white">
                             {customer.name || "Unknown User"}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "#ccc" }}>
+                          </h6>
+                          <p className="text-sm text-gray-300">
                             {customer.email}
-                    </Typography>
-                  </Box>
-                </Box>
-              }
-              action={
-                      <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
                         {customer.dashboard_user_id && (
                   <Chip
-                            icon={<LinkIcon />}
                             label="Linked"
+                            color="success"
                     size="small"
-                            sx={{ bgcolor: "#4caf50", color: "white" }}
+                            className="text-xs"
                   />
                         )}
                         {customer.category && (
                   <Chip
                             label={customer.category}
                     size="small"
-                            sx={{ bgcolor: getCategoryColor(customer.category), color: "white" }}
+                            className="text-xs"
+                            style={{ backgroundColor: getCategoryColor(customer.category), color: "white" }}
                           />
                         )}
                         {customer.status && (
@@ -599,339 +526,356 @@ export default function DatabaseInspectorPage() {
                             label={customer.status}
                       size="small"
                             color={getStatusColor(customer.status)}
+                            className="text-xs"
                           />
                         )}
-                        <IconButton onClick={() => handleToggle(`customer-${customer._id}`)} sx={{ color: "white" }}>
-                    <ExpandMoreIcon
-                      sx={{
-                              transform: expandedItems[`customer-${customer._id}`] ? "rotate(180deg)" : "rotate(0deg)",
-                        transition: "transform 0.3s",
-                      }}
-                    />
-                  </IconButton>
-                </Box>
-              }
-            />
-                  <Collapse in={expandedItems[`customer-${customer._id}`]}>
-              <CardContent>
-                      <Grid container spacing={2}>
-                        <Grid sx={{ xs: 12, md: 6 }}>
-                          <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Customer ID</Typography>
-                          <Typography variant="body2" sx={{ color: "#ccc", mb: 2, fontFamily: "monospace" }}>
+                        <button
+                          onClick={() => handleToggle(`customer-${customer._id}`)}
+                          className="p-2 text-white hover:bg-gray-700 rounded-lg transition-colors"
+                        >
+                          <ChevronDown
+                            className={`w-5 h-5 transition-transform ${
+                              expandedItems[`customer-${customer._id}`] ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  {expandedItems[`customer-${customer._id}`] && (
+                    <CardContent className="p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-[#ff6b35] mb-1 font-semibold">Customer ID</p>
+                          <p className="text-sm text-gray-300 mb-4 font-mono">
                             {customer._id}
-                          </Typography>
-                        </Grid>
+                          </p>
+                        </div>
                         {customer.dashboard_user_id && (
-                          <Grid sx={{ xs: 12, md: 6 }}>
-                            <Typography variant="subtitle2" sx={{ color: "#4caf50", mb: 1 }}>
+                          <div>
+                            <p className="text-xs text-green-500 mb-1 font-semibold">
                               Linked to Dashboard User
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: "#ccc", mb: 2, fontFamily: "monospace" }}>
+                            </p>
+                            <p className="text-sm text-gray-300 mb-4 font-mono">
                               {customer.dashboard_user_id}
-                            </Typography>
-                          </Grid>
+                            </p>
+                          </div>
                         )}
-                        <Grid sx={{ xs: 12, md: 6 }}>
-                          <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Location</Typography>
-                          <Typography variant="body2" sx={{ color: "#ccc" }}>
+                        <div>
+                          <p className="text-xs text-[#ff6b35] mb-1 font-semibold">Location</p>
+                          <p className="text-sm text-gray-300">
                             {customer.location?.city || "?"}, {customer.location?.country || "?"}
-                          </Typography>
-                        </Grid>
-                        <Grid sx={{ xs: 12, md: 6 }}>
-                          <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Device</Typography>
-                          <Typography variant="body2" sx={{ color: "#ccc" }}>
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-[#ff6b35] mb-1 font-semibold">Device</p>
+                          <p className="text-sm text-gray-300">
                             {customer.device?.platform || "Unknown"}
-                          </Typography>
-                        </Grid>
-                        <Grid sx={{ xs: 12, md: 6 }}>
-                          <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>IP Address</Typography>
-                    <Typography variant="body2" sx={{ color: "#ccc" }}>
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-[#ff6b35] mb-1 font-semibold">IP Address</p>
+                          <p className="text-sm text-gray-300">
                             {customer.ip || "N/A"}
-                    </Typography>
-                        </Grid>
-                        <Grid sx={{ xs: 12, md: 6 }}>
-                          <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Vibe</Typography>
-                    <Typography variant="body2" sx={{ color: "#ccc" }}>
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-[#ff6b35] mb-1 font-semibold">Vibe</p>
+                          <p className="text-sm text-gray-300">
                             {customer.vibe || "neutral"}
-                    </Typography>
-                        </Grid>
-                        <Grid sx={{ xs: 12, md: 6 }}>
-                          <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Created</Typography>
-                    <Typography variant="body2" sx={{ color: "#ccc" }}>
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-[#ff6b35] mb-1 font-semibold">Created</p>
+                          <p className="text-sm text-gray-300">
                             {customer.created_at ? new Date(customer.created_at).toLocaleString() : "N/A"}
-                    </Typography>
-                        </Grid>
-                        <Grid sx={{ xs: 12, md: 6 }}>
-                          <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Last Seen</Typography>
-                          <Typography variant="body2" sx={{ color: "#ccc" }}>
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-[#ff6b35] mb-1 font-semibold">Last Seen</p>
+                          <p className="text-sm text-gray-300">
                             {customer.last_seen ? new Date(customer.last_seen).toLocaleString() : "N/A"}
-                      </Typography>
-                        </Grid>
-                      </Grid>
+                          </p>
+                        </div>
+                      </div>
                     </CardContent>
-                  </Collapse>
+                  )}
                 </Card>
               ))
             )}
-                    </Box>
+          </div>
                   )}
 
         {/* Tab 1: Customer Chats */}
         {activeTab === 1 && (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <div className="flex flex-col gap-4">
             {filteredChats.length === 0 ? (
-              <Alert severity="info">No customer chats found</Alert>
+              <div className="p-4 bg-blue-600/20 border border-blue-500 rounded-lg text-blue-400">
+                No customer chats found
+              </div>
             ) : (
               filteredChats.map((chat) => (
-                <Card key={chat._id} sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-                        <CardHeader
-                    sx={{ backgroundColor: "#333" }}
-                          title={
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                              <ChatIcon sx={{ color: "#ff6b35" }} />
-                        <Typography variant="h6" sx={{ color: "white" }}>
+                <Card key={chat._id} className="bg-[#2a2a2a] border border-gray-700">
+                  <CardHeader className="bg-[#333] p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <MessageSquare className="text-[#ff6b35] w-5 h-5" />
+                        <h6 className="text-base font-semibold text-white">
                           Chat: {chat.chat_id}
-                              </Typography>
+                        </h6>
                               <Chip
                           label={chat.status || "active"}
                                 size="small"
                                 color={getStatusColor(chat.status)}
+                          className="text-xs"
                         />
                         <Chip
                           label={`${chat.messages_count || 0} messages`}
                           size="small"
-                          sx={{ bgcolor: "#ff6b35", color: "white" }}
+                          className="text-xs"
+                          style={{ backgroundColor: "#ff6b35", color: "white" }}
                         />
-                            </Box>
-                          }
-                          action={
-                      <IconButton onClick={() => handleToggle(`chat-${chat._id}`)} sx={{ color: "white" }}>
-                              <ExpandMoreIcon
-                                sx={{
-                            transform: expandedItems[`chat-${chat._id}`] ? "rotate(180deg)" : "rotate(0deg)",
-                                  transition: "transform 0.3s",
-                                }}
-                              />
-                            </IconButton>
-                          }
+                      </div>
+                      <button
+                        onClick={() => handleToggle(`chat-${chat._id}`)}
+                        className="p-2 text-white hover:bg-gray-700 rounded-lg transition-colors"
+                      >
+                        <ChevronDown
+                          className={`w-5 h-5 transition-transform ${
+                            expandedItems[`chat-${chat._id}`] ? "rotate-180" : ""
+                          }`}
                         />
-                  <Collapse in={expandedItems[`chat-${chat._id}`]}>
-                          <CardContent>
-                      <Grid container spacing={2}>
-                        <Grid sx={{ xs: 12, md: 6 }}>
-                          <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Chat ID</Typography>
-                          <Typography variant="body2" sx={{ color: "#ccc", mb: 2, fontFamily: "monospace" }}>
+                      </button>
+                    </div>
+                  </CardHeader>
+                  {expandedItems[`chat-${chat._id}`] && (
+                    <CardContent className="p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-[#ff6b35] mb-1 font-semibold">Chat ID</p>
+                          <p className="text-sm text-gray-300 mb-4 font-mono">
                             {chat.chat_id}
-                          </Typography>
-                        </Grid>
-                        <Grid sx={{ xs: 12, md: 6 }}>
-                          <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Document ID</Typography>
-                          <Typography variant="body2" sx={{ color: "#ccc", mb: 2, fontFamily: "monospace" }}>
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-[#ff6b35] mb-1 font-semibold">Document ID</p>
+                          <p className="text-sm text-gray-300 mb-4 font-mono">
                             {chat._id}
-                          </Typography>
-                        </Grid>
+                          </p>
+                        </div>
                         {chat.user_id && (
-                          <Grid sx={{ xs: 12, md: 6 }}>
-                            <Typography variant="subtitle2" sx={{ color: "#4caf50", mb: 1 }}>
+                          <div>
+                            <p className="text-xs text-green-500 mb-1 font-semibold">
                               Linked to Customer
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: "#ccc", mb: 2, fontFamily: "monospace" }}>
+                            </p>
+                            <p className="text-sm text-gray-300 mb-4 font-mono">
                               {chat.user_id}
-                            </Typography>
-                          </Grid>
+                            </p>
+                          </div>
                         )}
-                        <Grid sx={{ xs: 12, md: 6 }}>
-                          <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Created</Typography>
-                          <Typography variant="body2" sx={{ color: "#ccc" }}>
+                        <div>
+                          <p className="text-xs text-[#ff6b35] mb-1 font-semibold">Created</p>
+                          <p className="text-sm text-gray-300">
                             {chat.created_at ? new Date(chat.created_at).toLocaleString() : "N/A"}
-                                        </Typography>
-                        </Grid>
-                        <Grid sx={{ xs: 12, md: 6 }}>
-                          <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Last Activity</Typography>
-                          <Typography variant="body2" sx={{ color: "#ccc" }}>
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-[#ff6b35] mb-1 font-semibold">Last Activity</p>
+                          <p className="text-sm text-gray-300">
                             {chat.last_activity ? new Date(chat.last_activity).toLocaleString() : "N/A"}
-                                        </Typography>
-                        </Grid>
+                          </p>
+                        </div>
                         {chat.first_message && (
-                          <Grid sx={{ xs: 12 }}>
-                            <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>First Message</Typography>
-                            <Paper sx={{ p: 2, backgroundColor: "#333", color: "#ccc" }}>
+                          <div className="md:col-span-2">
+                            <p className="text-xs text-[#ff6b35] mb-1 font-semibold">First Message</p>
+                            <div className="p-3 bg-[#333] text-gray-300 rounded-lg">
                               {chat.first_message}
-                            </Paper>
-                          </Grid>
+                            </div>
+                          </div>
                         )}
                         {chat.last_message && (
-                          <Grid sx={{ xs: 12 }}>
-                            <Typography variant="subtitle2" sx={{ color: "#ff6b35", mb: 1 }}>Last Message</Typography>
-                            <Paper sx={{ p: 2, backgroundColor: "#333", color: "#ccc" }}>
+                          <div className="md:col-span-2">
+                            <p className="text-xs text-[#ff6b35] mb-1 font-semibold">Last Message</p>
+                            <div className="p-3 bg-[#333] text-gray-300 rounded-lg">
                               {chat.last_message}
-                            </Paper>
-                          </Grid>
+                            </div>
+                          </div>
                         )}
-                      </Grid>
+                      </div>
                     </CardContent>
-                  </Collapse>
+                  )}
                 </Card>
               ))
             )}
-                                      </Box>
+          </div>
         )}
 
         {/* Tab 2: Dashboard Users */}
         {activeTab === 2 && (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <div className="flex flex-col gap-4">
             {filteredDashboardUsers.length === 0 ? (
-              <Alert severity="info">No dashboard users found</Alert>
+              <div className="p-4 bg-blue-600/20 border border-blue-500 rounded-lg text-blue-400">
+                No dashboard users found
+              </div>
             ) : (
               filteredDashboardUsers.map((user) => (
-                <Card key={user._id} sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-                  <CardHeader
-                    sx={{ backgroundColor: "#333" }}
-                    title={
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                        <Avatar sx={{ bgcolor: "#9c27b0" }}>{user.name?.charAt(0) || user.email?.charAt(0) || "?"}</Avatar>
-                        <Box>
-                          <Typography variant="h6" sx={{ color: "white" }}>
+                <Card key={user._id} className="bg-[#2a2a2a] border border-gray-700">
+                  <CardHeader className="bg-[#333] p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-semibold">
+                          {user.name?.charAt(0) || user.email?.charAt(0) || "?"}
+                        </div>
+                        <div>
+                          <h6 className="text-base font-semibold text-white">
                             {user.name || "Unknown User"}
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: "#ccc" }}>
+                          </h6>
+                          <p className="text-sm text-gray-300">
                             {user.email}
-                                      </Typography>
-                                  </Box>
+                          </p>
+                        </div>
                         {user.emailVerified && (
                           <Chip
-                            icon={<CheckCircleIcon />}
                             label="Verified"
+                            color="success"
                             size="small"
-                            sx={{ bgcolor: "#4caf50", color: "white" }}
+                            className="text-xs"
                           />
                         )}
-                            </Box>
-                    }
-                    action={
-                      <IconButton onClick={() => handleToggle(`dashuser-${user._id}`)} sx={{ color: "white" }}>
-                        <ExpandMoreIcon
-                          sx={{
-                            transform: expandedItems[`dashuser-${user._id}`] ? "rotate(180deg)" : "rotate(0deg)",
-                            transition: "transform 0.3s",
-                          }}
+                      </div>
+                      <button
+                        onClick={() => handleToggle(`dashuser-${user._id}`)}
+                        className="p-2 text-white hover:bg-gray-700 rounded-lg transition-colors"
+                      >
+                        <ChevronDown
+                          className={`w-5 h-5 transition-transform ${
+                            expandedItems[`dashuser-${user._id}`] ? "rotate-180" : ""
+                          }`}
                         />
-                      </IconButton>
-                    }
-                  />
-                  <Collapse in={expandedItems[`dashuser-${user._id}`]}>
-                    <CardContent>
-                      <Grid container spacing={2}>
-                        <Grid sx={{ xs: 12, md: 6 }}>
-                          <Typography variant="subtitle2" sx={{ color: "#9c27b0", mb: 1 }}>User ID</Typography>
-                          <Typography variant="body2" sx={{ color: "#ccc", mb: 2, fontFamily: "monospace" }}>
+                      </button>
+                    </div>
+                  </CardHeader>
+                  {expandedItems[`dashuser-${user._id}`] && (
+                    <CardContent className="p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-purple-500 mb-1 font-semibold">User ID</p>
+                          <p className="text-sm text-gray-300 mb-4 font-mono">
                             {user._id}
-                          </Typography>
-                        </Grid>
-                        <Grid sx={{ xs: 12, md: 6 }}>
-                          <Typography variant="subtitle2" sx={{ color: "#9c27b0", mb: 1 }}>Email Verified</Typography>
-                          <Typography variant="body2" sx={{ color: "#ccc", mb: 2 }}>
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-purple-500 mb-1 font-semibold">Email Verified</p>
+                          <p className="text-sm text-gray-300 mb-4">
                             {user.emailVerified ? "Yes" : "No"}
-                          </Typography>
-                        </Grid>
-                        <Grid sx={{ xs: 12, md: 6 }}>
-                          <Typography variant="subtitle2" sx={{ color: "#9c27b0", mb: 1 }}>Created</Typography>
-                          <Typography variant="body2" sx={{ color: "#ccc" }}>
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-purple-500 mb-1 font-semibold">Created</p>
+                          <p className="text-sm text-gray-300">
                             {user.createdAt ? new Date(user.createdAt).toLocaleString() : "N/A"}
-                          </Typography>
-                        </Grid>
-                        <Grid sx={{ xs: 12, md: 6 }}>
-                          <Typography variant="subtitle2" sx={{ color: "#9c27b0", mb: 1 }}>Updated</Typography>
-                          <Typography variant="body2" sx={{ color: "#ccc" }}>
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-purple-500 mb-1 font-semibold">Updated</p>
+                          <p className="text-sm text-gray-300">
                             {user.updatedAt ? new Date(user.updatedAt).toLocaleString() : "N/A"}
-                          </Typography>
-                        </Grid>
-                        <Grid sx={{ xs: 12 }}>
-                          <Typography variant="subtitle2" sx={{ color: "#9c27b0", mb: 1 }}>Widget Link</Typography>
-                          <Typography variant="body2" sx={{ color: "#4caf50", fontFamily: "monospace" }}>
+                          </p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <p className="text-xs text-purple-500 mb-1 font-semibold">Widget Link</p>
+                          <p className="text-sm text-green-500 font-mono">
                             {typeof window !== "undefined" && `/widget/${user._id}`}
-                          </Typography>
-                        </Grid>
-                      </Grid>
+                          </p>
+                        </div>
+                      </div>
                           </CardContent>
-                        </Collapse>
+                  )}
                       </Card>
               ))
             )}
-          </Box>
+          </div>
         )}
 
         {/* Tab 3: Relationships */}
         {activeTab === 3 && (
-          <Box>
-            <Typography variant="h5" sx={{ color: "white", mb: 3 }}>
+          <div>
+            <h5 className="text-xl font-semibold text-white mb-6">
               Dashboard User → Widget Customer Relationships
-            </Typography>
+            </h5>
             
             {dashboardUsers.length === 0 ? (
-              <Alert severity="info">No dashboard users found. Create relationships by using widget links.</Alert>
+              <div className="p-4 bg-blue-600/20 border border-blue-500 rounded-lg text-blue-400">
+                No dashboard users found. Create relationships by using widget links.
+              </div>
             ) : (
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <div className="flex flex-col gap-6">
                 {dashboardUsers.map((dashUser) => {
                   const linkedCustomers = customers.filter(c => c.dashboard_user_id === dashUser._id);
                   
                   return (
-                    <Card key={dashUser._id} sx={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
-                      <CardHeader
-                        sx={{ backgroundColor: "#333" }}
-                        title={
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                            <AccountIcon sx={{ color: "#9c27b0" }} />
-                            <Box>
-                              <Typography variant="h6" sx={{ color: "white" }}>
+                    <Card key={dashUser._id} className="bg-[#2a2a2a] border border-gray-700">
+                      <CardHeader className="bg-[#333] p-4">
+                        <div className="flex items-center gap-4">
+                          <UserCircle2 className="text-purple-500 w-5 h-5" />
+                          <div>
+                            <h6 className="text-base font-semibold text-white">
                                 {dashUser.name || dashUser.email}
-                              </Typography>
-                              <Typography variant="body2" sx={{ color: "#ccc", fontFamily: "monospace" }}>
+                            </h6>
+                            <p className="text-sm text-gray-300 font-mono">
                                 ID: {dashUser._id}
-                              </Typography>
-                            </Box>
+                            </p>
+                          </div>
                             <Chip
                               label={`${linkedCustomers.length} widget customers`}
                               size="small"
-                              sx={{ bgcolor: linkedCustomers.length > 0 ? "#4caf50" : "#666", color: "white" }}
-                            />
-                          </Box>
-                        }
-                      />
-                      <CardContent>
+                            className="text-xs"
+                            style={{ backgroundColor: linkedCustomers.length > 0 ? "#4caf50" : "#666", color: "white" }}
+                          />
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4">
                         {linkedCustomers.length === 0 ? (
-                          <Alert severity="warning">
+                          <div className="p-4 bg-yellow-600/20 border border-yellow-500 rounded-lg text-yellow-400">
                             No widget customers linked to this dashboard user.
-                            Widget link: <code>/widget/{dashUser._id}</code>
-                          </Alert>
+                            Widget link: <code className="ml-1">/widget/{dashUser._id}</code>
+                          </div>
                         ) : (
-                          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                          <div className="flex flex-col gap-2">
                             {linkedCustomers.map((customer) => (
-                              <Paper key={customer._id} sx={{ p: 2, backgroundColor: "#333", display: "flex", alignItems: "center", gap: 2 }}>
-                                <LinkIcon sx={{ color: "#4caf50" }} />
-                                <Box sx={{ flex: 1 }}>
-                                  <Typography variant="body1" sx={{ color: "white" }}>
+                              <div key={customer._id} className="p-4 bg-[#333] rounded-lg flex items-center gap-4">
+                                <Link2 className="text-green-500 w-5 h-5" />
+                                <div className="flex-1">
+                                  <p className="text-sm font-semibold text-white">
                                     {customer.name}
-                                  </Typography>
-                                  <Typography variant="caption" sx={{ color: "#ccc" }}>
+                                  </p>
+                                  <p className="text-xs text-gray-400">
                                     {customer.email}
-                                  </Typography>
-                                </Box>
-                                <Chip label={customer.category || "agent-inbox"} size="small" />
-                                <Chip label={customer.status || "active"} size="small" color={getStatusColor(customer.status)} />
-                              </Paper>
-                    ))}
-                  </Box>
+                                  </p>
+                                </div>
+                                <Chip size="small" className="text-xs">
+                                  {customer.category || "agent-inbox"}
+                                </Chip>
+                                <Chip
+                                  size="small"
+                                  color={getStatusColor(customer.status)}
+                                  className="text-xs"
+                                >
+                                  {customer.status || "active"}
+                                </Chip>
+                              </div>
+                            ))}
+                          </div>
                 )}
               </CardContent>
           </Card>
                   );
                 })}
-              </Box>
+              </div>
             )}
-          </Box>
+          </div>
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }

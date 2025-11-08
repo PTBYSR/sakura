@@ -1,17 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import {
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Button,
-  Stack,
-  IconButton,
-} from "@mui/material";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { Info, ChevronRight } from "lucide-react";
 import Image from "next/image";
 
 interface IntegrationCardProps {
@@ -57,70 +48,29 @@ const integrations = [
 
 
 
-const IntegrationCard: React.FC<IntegrationCardProps> = ({
-  name,
-  desc,
-  icon,
-  disabled,
-}) => {
+const IntegrationCard: React.FC<IntegrationCardProps> = ({ name, desc, icon, disabled }) => {
   return (
-    <Card
-      sx={{
-    p: 2,
-    display: "flex",
-    alignItems: "left",
-    flexDirection: "column",
-    gap: 2,
-    boxShadow: "none",
-    border: "1px solid",
-    borderColor: "grey.200",
-    minWidth: 400,   // ensures card never shrinks too small
-    maxWidth: 500,   // prevents card from stretching too wide
-    width: "100%",   // makes it responsive within grid
-  }}
-    >
-      {/* App Icon */}
-                 <Image src={icon} alt={name} width={30} height={30} />
-
-
-      {/* Text Section */}
-      <CardContent sx={{ flexGrow: 1, p: 0 }}>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="subtitle1" fontWeight={600}>
-            {name}
-          </Typography>
-          <IconButton size="small" color="primary">
-            <InfoOutlinedIcon fontSize="small" />
+    <div className="flex flex-col gap-3 border border-[#333] rounded-lg p-4 bg-[#1d1d1d]">
+      <Image src={icon} alt={name} width={30} height={30} />
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <div className="text-white font-semibold">{name}</div>
+          <IconButton className="text-gray-300">
+            <Info className="h-4 w-4" />
           </IconButton>
-        </Stack>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ whiteSpace: "normal" }}
+        </div>
+        <div className="text-sm text-gray-300 leading-snug">{desc}</div>
+      </div>
+      <div>
+        <Button
+          disabled={disabled}
+          className={`${disabled ? 'border border-gray-600 text-gray-300 bg-transparent' : 'bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white'} px-4 py-2 inline-flex items-center gap-2`}
         >
-          {desc}
-        </Typography>
-      </CardContent>
-
-      {/* Action Button */}
-      <Button
-        variant={disabled ? "outlined" : "contained"}
-        color={disabled ? "inherit" : "primary"}
-        disabled={disabled}
-        endIcon={
-          !disabled && (
-            <ArrowForwardIosIcon sx={{ fontSize: 14, ml: -0.5 }} />
-          )
-        }
-        sx={{
-          textTransform: "none",
-          fontWeight: 500,
-          minWidth: "110px",
-        }}
-      >
-        {disabled ? "Coming Soon" : "Connect Now"}
-      </Button>
-    </Card>
+          {disabled ? 'Coming Soon' : 'Connect Now'}
+          {!disabled && <ChevronRight className="h-4 w-4" />}
+        </Button>
+      </div>
+    </div>
   );
 };
 
@@ -130,58 +80,26 @@ export default function IntegrationSettingsPage() {
   const [androidUrl, setAndroidUrl] = useState("");
 
   return (
-    <Stack spacing={4} sx={{ p: 3 }}>
-      <Typography variant="h5" fontWeight={600}>
-        Integration Settings
-      </Typography>
+    <div className="p-4 space-y-4">
+      <div className="text-white font-semibold text-xl">Integration Settings</div>
 
-      <Grid container spacing={4}>
-        {/* Mobile App Card */}
-        
-
-        {/* Integrations */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {integrations.map((app) => (
-          <Grid
-          size={{
-                xs: 12,
-                md: 6,
-                sm: 6,
-          }}
-           key={app.name}>
-            
-<IntegrationCard
-  name={app.name}
-  desc={app.desc}
-  icon={app.icon}
-  disabled={true}
-/>
-</Grid>
-
-
-            
+          <IntegrationCard
+            key={app.name}
+            name={app.name}
+            desc={app.desc}
+            icon={app.icon}
+            disabled={true}
+          />
         ))}
 
-        {/* Contact Us Card */}
-        <Grid size={{
-
-                xs: 12,
-                md: 6,
-        }} >
-          <Card>
-            <CardContent>
-              <Typography variant="h6">
-                Couldn’t find what you’re looking for?
-              </Typography>
-              <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                Contact us for more integrations and support.
-              </Typography>
-              <Button variant="contained" color="primary">
-                Contact Us
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Stack>
+        <div className="border border-[#333] rounded-lg p-4 bg-[#1d1d1d]">
+          <div className="text-white font-semibold text-lg mb-1">Couldn’t find what you’re looking for?</div>
+          <div className="text-sm text-gray-300 mb-3">Contact us for more integrations and support.</div>
+          <Button className="bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white">Contact Us</Button>
+        </div>
+      </div>
+    </div>
   );
 }

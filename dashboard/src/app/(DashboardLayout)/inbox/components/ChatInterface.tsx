@@ -1,29 +1,24 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { Chip } from "@/components/ui/chip";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Collapse } from "@/components/ui/collapse";
+import { IconButton } from "@/components/ui/icon-button";
 import {
-  Box,
-  Typography,
-  TextField,
-  IconButton,
-  Avatar,
-  Chip,
-  Collapse,
-  Badge,
-  InputAdornment,
-  Button,
-} from "@mui/material";
-import {
-  MoreVert,
-  Link,
+  MoreVertical,
+  Link as LinkIcon,
   Send,
-  AttachFile,
+  Paperclip,
   Tag,
-  ChatBubbleOutline,
+  MessageSquare,
   Archive,
-  Public,
-  ExpandMore,
-  Add,
-} from "@mui/icons-material";
+  Globe2,
+  ChevronDown,
+  Plus,
+} from "lucide-react";
 
 // Types
 interface Message {
@@ -118,481 +113,231 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <Box
-      sx={{
-        height: "calc(100vh - 200px)",
-        display: "flex",
-        backgroundColor: "#1a1a1a",
-        borderRadius: 2,
-        overflow: "hidden",
-      }}
-    >
+    <div className="h-[calc(100vh-200px)] flex bg-[#1a1a1a] rounded-lg overflow-hidden">
       {/* Left Sidebar - Chat List */}
-      <Box
-        sx={{
-          width: 300,
-          backgroundColor: "#2a2a2a",
-          borderRight: "1px solid #333",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+      <div className="w-[300px] bg-[#2a2a2a] border-r border-[#333] flex flex-col">
         {/* Chat List Header */}
-        <Box sx={{ p: 2, borderBottom: "1px solid #333" }}>
-          <Typography variant="h6" sx={{ color: "white", fontWeight: "bold" }}>
-            All chats
-          </Typography>
-          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
-            <Typography variant="body2" sx={{ color: "#ccc" }}>
-              My chats {chats.length}
-            </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", color: "#ccc" }}>
-              <Typography variant="body2" sx={{ mr: 1 }}>
-                Oldest
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
+        <div className="p-2 border-b border-[#333]">
+          <div className="text-white font-bold">All chats</div>
+          <div className="flex items-center justify-between mt-1 text-[#ccc] text-sm">
+            <div>My chats {chats.length}</div>
+            <div className="flex items-center">Oldest</div>
+          </div>
+        </div>
 
         {/* Chat List */}
-        <Box sx={{ flex: 1, overflow: "auto" }}>
+        <div className="flex-1 overflow-auto">
           {chats.map((chat) => (
-            <Box
+            <button
               key={chat.id}
               onClick={() => onChatSelect(chat.id)}
-              sx={{
-                p: 2,
-                cursor: "pointer",
-                backgroundColor: selectedChatId === chat.id ? "#3a3a3a" : "transparent",
-                borderBottom: "1px solid #333",
-                "&:hover": {
-                  backgroundColor: "#3a3a3a",
-                },
-              }}
+              className={`w-full text-left p-2 border-b border-[#333] hover:bg-[#3a3a3a] ${selectedChatId === chat.id ? 'bg-[#3a3a3a]' : ''}`}
             >
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Avatar
-                  sx={{
-                    bgcolor: getAvatarColor(chat.status),
-                    color: "white",
-                    width: 40,
-                    height: 40,
-                    mr: 2,
-                  }}
-                >
-                  {chat.avatar}
-                </Avatar>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography
-                    variant="body1"
-                    sx={{ color: "white", fontWeight: "medium" }}
-                  >
-                    {chat.name}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#ccc", fontSize: "0.875rem" }}
-                  >
-                    {chat.lastMessage}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                  <Typography variant="caption" sx={{ color: "#ccc" }}>
-                    {chat.timestamp}
-                  </Typography>
+              <div className="flex items-center">
+                <Avatar size={40} className="mr-2" style={{ backgroundColor: getAvatarColor(chat.status), color: 'white' }} fallback={chat.avatar} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-white font-medium truncate">{chat.name}</div>
+                  <div className="text-[#ccc] text-sm truncate">{chat.lastMessage}</div>
+                </div>
+                <div className="flex flex-col items-end">
+                  <div className="text-[#ccc] text-xs">{chat.timestamp}</div>
                   {chat.unreadCount > 0 && (
-                    <Badge
-                      badgeContent={chat.unreadCount}
-                      color="error"
-                      sx={{ mt: 0.5 }}
-                    />
+                    <div className="mt-1"><Badge content={chat.unreadCount} /></div>
                   )}
-                </Box>
-              </Box>
-            </Box>
+                </div>
+              </div>
+            </button>
           ))}
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       {/* Central Panel - Chat Conversation */}
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <div className="flex-1 flex flex-col">
         {/* Chat Header */}
-        <Box
-          sx={{
-            p: 2,
-            borderBottom: "1px solid #333",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Typography variant="h6" sx={{ color: "white", fontWeight: "bold" }}>
-            {selectedChatData?.name}
-          </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <IconButton sx={{ color: "#ccc" }}>
-              <Link />
-            </IconButton>
-            <IconButton sx={{ color: "#ccc" }}>
-              <MoreVert />
-            </IconButton>
-          </Box>
-        </Box>
+        <div className="p-2 border-b border-[#333] flex items-center justify-between">
+          <div className="text-white font-bold">{selectedChatData?.name}</div>
+          <div className="flex items-center gap-2">
+            <IconButton className="text-[#ccc]"><LinkIcon className="h-5 w-5" /></IconButton>
+            <IconButton className="text-[#ccc]"><MoreVertical className="h-5 w-5" /></IconButton>
+          </div>
+        </div>
 
         {/* Messages Area */}
-        <Box sx={{ flex: 1, overflow: "auto", p: 2 }}>
+        <div className="flex-1 overflow-auto p-2">
           {messages.map((msg) => (
-            <Box
-              key={msg.id}
-              sx={{
-                display: "flex",
-                justifyContent: msg.sender === "You" ? "flex-end" : "flex-start",
-                mb: 2,
-              }}
-            >
-              <Box sx={{ maxWidth: "70%" }}>
-                <Typography variant="caption" sx={{ color: "#ccc", ml: 1 }}>
-                  {msg.sender} {msg.timestamp}
-                </Typography>
-                <Box
-                  sx={{
-                    backgroundColor: msg.sender === "You" ? "#1976d2" : "#3a3a3a",
-                    color: "white",
-                    p: 1.5,
-                    borderRadius: 2,
-                    mt: 0.5,
-                  }}
-                >
-                  <Typography variant="body1">{msg.content}</Typography>
-                </Box>
-                <Typography variant="caption" sx={{ color: "#ccc", ml: 1 }}>
-                  {msg.sender === "You" ? "Read • Now" : msg.isRead ? "Read" : "Unread"}
-                </Typography>
-              </Box>
-              {msg.sender === "You" && (
-                <Avatar
-                  sx={{
-                    bgcolor: "#9c27b0",
-                    color: "white",
-                    width: 24,
-                    height: 24,
-                    ml: 1,
-                    mt: 2,
-                  }}
-                >
-                  A
-                </Avatar>
+            <div key={msg.id} className={`flex ${msg.sender === 'You' ? 'justify-end' : 'justify-start'} mb-2`}>
+              <div className="max-w-[70%]">
+                <div className="text-[#ccc] text-xs ml-1">{msg.sender} {msg.timestamp}</div>
+                <div className={`mt-1 rounded-lg text-white p-3 ${msg.sender === 'You' ? 'bg-[#1976d2]' : 'bg-[#3a3a3a]'}`}>
+                  <div className="text-sm">{msg.content}</div>
+                </div>
+                <div className="text-[#ccc] text-xs ml-1">{msg.sender === 'You' ? 'Read • Now' : msg.isRead ? 'Read' : 'Unread'}</div>
+              </div>
+              {msg.sender === 'You' && (
+                <Avatar size={24} className="ml-1 mt-2" style={{ backgroundColor: '#9c27b0', color: 'white' }} fallback="A" />
               )}
-            </Box>
+            </div>
           ))}
-        </Box>
+        </div>
 
         {/* Suggested Replies */}
         {suggestedReplies.length > 0 && (
-          <Box sx={{ p: 2, borderTop: "1px solid #333" }}>
-            <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+          <div className="p-2 border-t border-[#333]">
+            <div className="flex gap-2 mb-2">
               {suggestedReplies.map((reply, index) => (
                 <Chip
                   key={index}
-                  label={reply}
                   size="small"
-                  sx={{
-                    backgroundColor: "#3a3a3a",
-                    color: "#ccc",
-                    "&:hover": {
-                      backgroundColor: "#4a4a4a",
-                    },
-                  }}
-                />
+                  style={{ backgroundColor: '#3a3a3a', color: '#ccc' }}
+                  className="text-gray-300 hover:bg-gray-600 transition-colors cursor-pointer"
+                >
+                  {reply}
+                </Chip>
               ))}
-            </Box>
-          </Box>
+            </div>
+          </div>
         )}
 
         {/* Message Input */}
-        <Box sx={{ p: 2, borderTop: "1px solid #333" }}>
-          <TextField
-            fullWidth
-            placeholder="Enter message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                backgroundColor: "#3a3a3a",
-                color: "white",
-                "& fieldset": {
-                  borderColor: "#555",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#777",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#1976d2",
-                },
-              },
-              "& .MuiInputBase-input": {
-                color: "white",
-              },
-              "& .MuiInputBase-input::placeholder": {
-                color: "#ccc",
-              },
-            }}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <IconButton size="small" sx={{ color: "#ccc" }}>
-                      <Tag />
-                    </IconButton>
-                    <IconButton size="small" sx={{ color: "#ccc" }}>
-                      <AttachFile />
-                    </IconButton>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={handleSendMessage}
-                      sx={{
-                        backgroundColor: "#3a3a3a",
-                        color: "white",
-                        "&:hover": {
-                          backgroundColor: "#4a4a4a",
-                        },
-                      }}
-                    >
-                      Send
-                    </Button>
-                  </Box>
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Box>
-      </Box>
+        <div className="p-2 border-t border-[#333]">
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Enter message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              className="flex-1 bg-[#3a3a3a] border-[#555] placeholder:text-[#ccc]"
+            />
+            <IconButton className="text-[#ccc]"><Tag className="h-5 w-5" /></IconButton>
+            <IconButton className="text-[#ccc]"><Paperclip className="h-5 w-5" /></IconButton>
+            <Button onClick={handleSendMessage} size="small" className="bg-[#3a3a3a] text-white hover:bg-[#4a4a4a]">Send</Button>
+          </div>
+        </div>
+      </div>
 
       {/* Right Sidebar - Contact Details */}
-      <Box
-        sx={{
-          width: 300,
-          backgroundColor: "#2a2a2a",
-          borderLeft: "1px solid #333",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+      <div className="w-[300px] bg-[#2a2a2a] border-l border-[#333] flex flex-col">
         {/* Contact Header */}
-        <Box sx={{ p: 2, borderBottom: "1px solid #333" }}>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Avatar
-                sx={{
-                  bgcolor: getAvatarColor(contactInfo.status),
-                  color: "white",
-                  width: 40,
-                  height: 40,
-                  mr: 2,
-                }}
-              >
-                {contactInfo.avatar}
-              </Avatar>
-              <Box>
-                <Typography variant="h6" sx={{ color: "white", fontWeight: "bold" }}>
-                  {contactInfo.name}
-                </Typography>
-                <Typography variant="body2" sx={{ color: "#ccc" }}>
-                  {contactInfo.status}
-                </Typography>
-              </Box>
-            </Box>
-            <IconButton sx={{ color: "#ccc" }}>
-              <ExpandMore />
-            </IconButton>
-          </Box>
-        </Box>
+        <div className="p-2 border-b border-[#333]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Avatar size={40} className="mr-2" style={{ backgroundColor: getAvatarColor(contactInfo.status), color: 'white' }} fallback={contactInfo.avatar} />
+              <div>
+                <div className="text-white font-bold">{contactInfo.name}</div>
+                <div className="text-[#ccc] text-sm">{contactInfo.status}</div>
+              </div>
+            </div>
+            <IconButton className="text-[#ccc]"><ChevronDown className="h-5 w-5" /></IconButton>
+          </div>
+        </div>
 
         {/* Contact Information */}
-        <Box sx={{ p: 2, borderBottom: "1px solid #333" }}>
-          <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-            <Typography variant="body2" sx={{ color: "#ccc", mr: 1 }}>
-              📧
-            </Typography>
-            <Typography variant="body2" sx={{ color: "white" }}>
-              {contactInfo.email}
-            </Typography>
-          </Box>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Typography variant="body2" sx={{ color: "#ccc", mr: 1 }}>
-              📍
-            </Typography>
-            <Typography variant="body2" sx={{ color: "white" }}>
-              {contactInfo.location}
-            </Typography>
-          </Box>
-        </Box>
+        <div className="p-2 border-b border-[#333]">
+          <div className="flex items-center mb-1">
+            <span className="text-[#ccc] mr-2">📧</span>
+            <span className="text-white">{contactInfo.email}</span>
+          </div>
+          <div className="flex items-center">
+            <span className="text-[#ccc] mr-2">📍</span>
+            <span className="text-white">{contactInfo.location}</span>
+          </div>
+        </div>
 
         {/* Metrics */}
-        <Box sx={{ p: 2, borderBottom: "1px solid #333" }}>
-          <Box sx={{ display: "flex", justifyContent: "space-around" }}>
-            <Box sx={{ textAlign: "center" }}>
-              <ChatBubbleOutline sx={{ color: "#ccc", mb: 0.5 }} />
-              <Typography variant="body2" sx={{ color: "white" }}>
-                {contactInfo.totalMessages}
-              </Typography>
-            </Box>
-            <Box sx={{ textAlign: "center" }}>
-              <Archive sx={{ color: "#ccc", mb: 0.5 }} />
-              <Typography variant="body2" sx={{ color: "white" }}>
-                {contactInfo.archivedCount}
-              </Typography>
-            </Box>
-            <Box sx={{ textAlign: "center" }}>
-              <Public sx={{ color: "#ccc", mb: 0.5 }} />
-              <Typography variant="body2" sx={{ color: "white" }}>
-                {contactInfo.visitedPagesCount}
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
+        <div className="p-2 border-b border-[#333]">
+          <div className="flex justify-around text-center text-white">
+            <div>
+              <MessageSquare className="h-5 w-5 text-[#ccc] mx-auto mb-1" />
+              <div>{contactInfo.totalMessages}</div>
+            </div>
+            <div>
+              <Archive className="h-5 w-5 text-[#ccc] mx-auto mb-1" />
+              <div>{contactInfo.archivedCount}</div>
+            </div>
+            <div>
+              <Globe2 className="h-5 w-5 text-[#ccc] mx-auto mb-1" />
+              <div>{contactInfo.visitedPagesCount}</div>
+            </div>
+          </div>
+        </div>
 
         {/* Chat Info Section */}
-        <Box sx={{ p: 2, borderBottom: "1px solid #333" }}>
-          <Box
-            onClick={() => toggleSection("chatInfo")}
-            sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
-          >
-            <Typography variant="body1" sx={{ color: "white", fontWeight: "medium" }}>
-              Chat info
-            </Typography>
-            <ExpandMore
-              sx={{
-                color: "#ccc",
-                transform: expandedSections.chatInfo ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.2s",
-              }}
-            />
-          </Box>
+        <div className="p-2 border-b border-[#333]">
+          <button onClick={() => toggleSection('chatInfo')} className="w-full flex items-center justify-between text-white font-medium hover:bg-white/5 rounded px-2 py-1">
+            <span>Chat info</span>
+            <ChevronDown className={`h-5 w-5 text-[#ccc] transition-transform ${expandedSections.chatInfo ? 'rotate-180' : ''}`} />
+          </button>
           <Collapse in={expandedSections.chatInfo}>
-            <Box sx={{ mt: 2 }}>
-              <Box sx={{ mb: 1 }}>
-                <Typography variant="body2" sx={{ color: "#ccc" }}>
-                  Chat ID
-                </Typography>
-                <Typography variant="body2" sx={{ color: "white" }}>
-                  {contactInfo.chatId}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="body2" sx={{ color: "#ccc" }}>
-                  Chat duration
-                </Typography>
-                <Typography variant="body2" sx={{ color: "white" }}>
-                  {contactInfo.chatDuration}
-                </Typography>
-              </Box>
-            </Box>
+            <div className="mt-2">
+              <div className="mb-1">
+                <div className="text-[#ccc] text-sm">Chat ID</div>
+                <div className="text-white">{contactInfo.chatId}</div>
+              </div>
+              <div>
+                <div className="text-[#ccc] text-sm">Chat duration</div>
+                <div className="text-white">{contactInfo.chatDuration}</div>
+              </div>
+            </div>
           </Collapse>
-        </Box>
+        </div>
 
         {/* Chat Tags Section */}
-        <Box sx={{ p: 2, borderBottom: "1px solid #333" }}>
-          <Box
-            onClick={() => toggleSection("chatTags")}
-            sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
-          >
-            <Typography variant="body1" sx={{ color: "white", fontWeight: "medium" }}>
-              Chat tags
-            </Typography>
-            <ExpandMore
-              sx={{
-                color: "#ccc",
-                transform: expandedSections.chatTags ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.2s",
-              }}
-            />
-          </Box>
+        <div className="p-2 border-b border-[#333]">
+          <button onClick={() => toggleSection('chatTags')} className="w-full flex items-center justify-between text-white font-medium hover:bg-white/5 rounded px-2 py-1">
+            <span>Chat tags</span>
+            <ChevronDown className={`h-5 w-5 text-[#ccc] transition-transform ${expandedSections.chatTags ? 'rotate-180' : ''}`} />
+          </button>
           <Collapse in={expandedSections.chatTags}>
-            <Box sx={{ mt: 2 }}>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1 }}>
+            <div className="mt-2">
+              <div className="flex flex-wrap gap-2 mb-2">
                 {contactInfo.tags.map((tag, index) => (
                   <Chip
                     key={index}
-                    label={tag}
                     size="small"
-                    sx={{
-                      backgroundColor: "#3a3a3a",
-                      color: "#ccc",
-                      fontSize: "0.75rem",
-                    }}
-                  />
+                    style={{ backgroundColor: '#3a3a3a', color: '#ccc', fontSize: '0.75rem' }}
+                    className="text-gray-300"
+                  >
+                    {tag}
+                  </Chip>
                 ))}
-              </Box>
-              <IconButton
-                sx={{
-                  backgroundColor: "#3a3a3a",
-                  color: "#ccc",
-                  width: 32,
-                  height: 32,
-                  "&:hover": {
-                    backgroundColor: "#4a4a4a",
-                  },
-                }}
-              >
-                <Add />
+              </div>
+              <IconButton className="bg-[#3a3a3a] text-[#ccc] w-8 h-8 hover:bg-[#4a4a4a]">
+                <Plus className="h-4 w-4" />
               </IconButton>
-            </Box>
+            </div>
           </Collapse>
-        </Box>
+        </div>
 
         {/* Visited Pages Section */}
-        <Box sx={{ p: 2 }}>
-          <Box
-            onClick={() => toggleSection("visitedPages")}
-            sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Typography variant="body1" sx={{ color: "white", fontWeight: "medium" }}>
-                Visited pages
-              </Typography>
-              <Badge badgeContent="1" color="error" sx={{ ml: 1 }} />
-            </Box>
-            <ExpandMore
-              sx={{
-                color: "#ccc",
-                transform: expandedSections.visitedPages ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.2s",
-              }}
-            />
-          </Box>
+        <div className="p-2">
+          <button onClick={() => toggleSection('visitedPages')} className="w-full flex items-center justify-between text-white font-medium hover:bg-white/5 rounded px-2 py-1">
+            <span className="flex items-center">Visited pages <Badge content={"1"} className="ml-2" /></span>
+            <ChevronDown className={`h-5 w-5 text-[#ccc] transition-transform ${expandedSections.visitedPages ? 'rotate-180' : ''}`} />
+          </button>
           <Collapse in={expandedSections.visitedPages}>
-            <Box sx={{ mt: 2 }}>
+            <div className="mt-2">
               {contactInfo.visitedPages.length > 0 ? (
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <div className="flex flex-col gap-2">
                   {contactInfo.visitedPages.map((page, index) => (
-                    <Box key={index} sx={{ display: "flex", flexDirection: "column" }}>
-                      <Typography variant="body2" sx={{ color: "white", fontWeight: "medium" }}>
-                        {page.title}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: "#ccc" }}>
-                        {page.url} • {page.timestamp}
-                      </Typography>
-                    </Box>
+                    <div key={index} className="flex flex-col">
+                      <div className="text-white font-medium">{page.title}</div>
+                      <div className="text-[#ccc] text-xs">{page.url} • {page.timestamp}</div>
+                    </div>
                   ))}
-                </Box>
+                </div>
               ) : (
-                <Typography variant="body2" sx={{ color: "#ccc" }}>
-                  No pages visited yet
-                </Typography>
+                <div className="text-[#ccc] text-sm">No pages visited yet</div>
               )}
-            </Box>
+            </div>
           </Collapse>
-        </Box>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -1,71 +1,40 @@
+"use client";
 import React from 'react';
-import { Box, AppBar, Toolbar, styled, IconButton, Badge } from '@mui/material';
-import PropTypes from 'prop-types';
-// components
-import { IconBellRinging, IconMenu } from '@tabler/icons-react';
+import { Bell, Menu } from 'lucide-react';
+import Profile from './Profile';
 
 interface ItemType {
-  toggleMobileSidebar:  (event: React.MouseEvent<HTMLElement>) => void;
+  toggleMobileSidebar: (event: React.MouseEvent<HTMLElement>) => void;
 }
 
-const Header = ({toggleMobileSidebar}: ItemType) => {
-
-  // const lgUp = useMediaQuery((theme) => theme.breakpoints.up('lg'));
-  // const lgDown = useMediaQuery((theme) => theme.breakpoints.down('lg'));
-
-
-  const AppBarStyled = styled(AppBar)(({ theme }) => ({
-    boxShadow: 'none',
-    background: theme.palette.background.paper,
-    justifyContent: 'center',
-    backdropFilter: 'blur(4px)',
-    [theme.breakpoints.up('lg')]: {
-      minHeight: '70px',
-    },
-  }));
-  const ToolbarStyled = styled(Toolbar)(({ theme }) => ({
-    width: '100%',
-    color: theme.palette.text.secondary,
-  }));
-
+const Header = ({ toggleMobileSidebar }: ItemType) => {
   return (
-    <AppBarStyled position="sticky" color="default">
-      <ToolbarStyled>
-        <IconButton
-          color="inherit"
-          aria-label="menu"
+    <header className="sticky top-0 z-[1200] bg-[#1e1e1e] border-b border-gray-700 backdrop-blur-sm shadow-none min-h-[70px] flex items-center">
+      <div className="w-full flex items-center px-4 py-3 text-gray-300">
+        <button
           onClick={toggleMobileSidebar}
-          sx={{
-            display: {
-              lg: "none",
-              xs: "inline",
-            },
-          }}
+          className="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors"
+          aria-label="menu"
         >
-          <IconMenu width="20" height="20" />
-        </IconButton>
+          <Menu width={20} height={20} />
+        </button>
 
+        <div className="flex-1" />
 
-        <IconButton
-          size="large"
-          aria-label="show 11 new notifications"
-          color="inherit"
+        <button
+          className="relative inline-flex items-center justify-center w-10 h-10 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors"
+          aria-label="show notifications"
           aria-controls="msgs-menu"
           aria-haspopup="true"
         >
-          <Badge variant="dot" color="primary">
-            <IconBellRinging size="21" stroke="1.5" />
-          </Badge>
+          <Bell size={21} strokeWidth={1.5} />
+          <span className="absolute top-2 right-2 w-2 h-2 bg-[#EE66AA] rounded-full border-2 border-[#1e1e1e]" />
+        </button>
 
-        </IconButton>
-        <Box flexGrow={1} />
-      </ToolbarStyled>
-    </AppBarStyled>
+        <Profile />
+      </div>
+    </header>
   );
-};
-
-Header.propTypes = {
-  sx: PropTypes.object,
 };
 
 export default Header;

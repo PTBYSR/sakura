@@ -1,30 +1,19 @@
 "use client";
 import React, { useState } from "react";
 import {
-  Box,
-  Typography,
-  Container,
-  Card,
-  CardContent,
-  CardHeader,
-  Button,
-  Chip,
-  Avatar,
-  TextField,
-  IconButton,
-  InputAdornment,
-} from "@mui/material";
-import {
-  Store as ShopifyIcon,
-  Payment as PaystackIcon,
-  TableChart as ExcelIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  Schedule as ScheduleIcon,
-  UploadFile as UploadIcon,
-  Edit as EditIcon,
-} from "@mui/icons-material";
+  Store,
+  CreditCard,
+  FileSpreadsheet,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Upload,
+  Edit,
+} from "lucide-react";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
 
 interface BusinessIntegration {
   id: string;
@@ -41,7 +30,7 @@ const BusinessIntegrationsPage = () => {
       id: "shopify",
       name: "Shopify",
       description: "Connect with Shopify store for e-commerce data synchronization",
-      icon: <ShopifyIcon />,
+      icon: <Store size={20} />,
       status: "disconnected",
       color: "#96BF48",
     },
@@ -49,7 +38,7 @@ const BusinessIntegrationsPage = () => {
       id: "paystack",
       name: "Paystack",
       description: "Integrate with Paystack for payment processing and transaction management",
-      icon: <PaystackIcon />,
+      icon: <CreditCard size={20} />,
       status: "disconnected",
       color: "#00C851",
     },
@@ -57,7 +46,7 @@ const BusinessIntegrationsPage = () => {
       id: "excel-editor",
       name: "Excel Editor",
       description: "Upload and edit Excel files for data management",
-      icon: <ExcelIcon />,
+      icon: <FileSpreadsheet size={20} />,
       status: "disconnected",
       color: "#1976d2",
     },
@@ -68,9 +57,9 @@ const BusinessIntegrationsPage = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'connected': return <CheckCircleIcon color="success" sx={{ fontSize: "1rem" }} />;
-      case 'disconnected': return <ErrorIcon color="error" sx={{ fontSize: "1rem" }} />;
-      default: return <ScheduleIcon color="action" sx={{ fontSize: "1rem" }} />;
+      case 'connected': return <CheckCircle2 className="text-green-500 w-4 h-4" />;
+      case 'disconnected': return <XCircle className="text-red-500 w-4 h-4" />;
+      default: return <Clock className="text-gray-500 w-4 h-4" />;
     }
   };
 
@@ -79,7 +68,6 @@ const BusinessIntegrationsPage = () => {
   };
 
   const handleConnect = (integrationId: string) => {
-    // Placeholder for connect functionality
     console.log(`Connect ${integrationId}`);
   };
 
@@ -93,115 +81,117 @@ const BusinessIntegrationsPage = () => {
 
   return (
     <PageContainer title="Business Integrations" description="Connect with business tools and services">
-      <Container maxWidth="lg">
-        <Box sx={{ py: 2 }}>
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="py-4">
           {/* Header */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h5" sx={{ fontWeight: 600, fontSize: "1.25rem", mb: 0.5 }}>
+          <div className="mb-6">
+            <h5 className="text-xl font-semibold text-white mb-1">
               Business Integrations
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
+            </h5>
+            <p className="text-sm text-gray-300">
               Connect Sakura with your business tools
-            </Typography>
-          </Box>
+            </p>
+          </div>
 
           {/* Integration Cards */}
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <div className="flex flex-col gap-3">
             {/* Shopify Integration */}
             <Card>
-              <CardContent sx={{ p: 2.5 }}>
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Avatar sx={{ bgcolor: integrations[0].color, width: 48, height: 48 }}>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: integrations[0].color }}>
                       {integrations[0].icon}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontSize: "1rem", fontWeight: 600 }}>
+                    </div>
+                    <div>
+                      <h6 className="text-base font-semibold text-white">
                         {integrations[0].name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
+                      </h6>
+                      <p className="text-sm text-gray-300">
                         {integrations[0].description}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
                     {getStatusIcon(integrations[0].status)}
                     <Chip
                       label={integrations[0].status}
-                      color={getStatusColor(integrations[0].status) as any}
+                      color={getStatusColor(integrations[0].status)}
                       size="small"
-                      sx={{ fontSize: "0.75rem", height: 24 }}
+                      className="text-xs"
                     />
                     <Button
                       variant={integrations[0].status === 'connected' ? 'outlined' : 'contained'}
+                      color="primary"
                       size="small"
                       onClick={() => handleConnect(integrations[0].id)}
-                      sx={{ fontSize: "0.875rem" }}
+                      className="text-sm"
                     >
                       {integrations[0].status === 'connected' ? 'Disconnect' : 'Connect'}
                     </Button>
-                  </Box>
-                </Box>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
             {/* Paystack Integration */}
             <Card>
-              <CardContent sx={{ p: 2.5 }}>
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Avatar sx={{ bgcolor: integrations[1].color, width: 48, height: 48 }}>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: integrations[1].color }}>
                       {integrations[1].icon}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontSize: "1rem", fontWeight: 600 }}>
+                    </div>
+                    <div>
+                      <h6 className="text-base font-semibold text-white">
                         {integrations[1].name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
+                      </h6>
+                      <p className="text-sm text-gray-300">
                         {integrations[1].description}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
                     {getStatusIcon(integrations[1].status)}
                     <Chip
                       label={integrations[1].status}
-                      color={getStatusColor(integrations[1].status) as any}
+                      color={getStatusColor(integrations[1].status)}
                       size="small"
-                      sx={{ fontSize: "0.75rem", height: 24 }}
+                      className="text-xs"
                     />
                     <Button
                       variant={integrations[1].status === 'connected' ? 'outlined' : 'contained'}
+                      color="primary"
                       size="small"
                       onClick={() => handleConnect(integrations[1].id)}
-                      sx={{ fontSize: "0.875rem" }}
+                      className="text-sm"
                     >
                       {integrations[1].status === 'connected' ? 'Disconnect' : 'Connect'}
                     </Button>
-                  </Box>
-                </Box>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
             {/* Excel Editor */}
             <Card>
-              <CardContent sx={{ p: 2.5 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-                  <Avatar sx={{ bgcolor: integrations[2].color, width: 48, height: 48 }}>
+              <CardContent className="p-5">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: integrations[2].color }}>
                     {integrations[2].icon}
-                  </Avatar>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="h6" sx={{ fontSize: "1rem", fontWeight: 600 }}>
+                  </div>
+                  <div className="flex-1">
+                    <h6 className="text-base font-semibold text-white">
                       {integrations[2].name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
+                    </h6>
+                    <p className="text-sm text-gray-300">
                       {integrations[2].description}
-                    </Typography>
-                  </Box>
-                </Box>
+                    </p>
+                  </div>
+                </div>
 
                 {/* File Upload Section */}
-                <Box sx={{ mt: 2 }}>
+                <div className="mt-4">
                   <input
                     accept=".xlsx,.xls,.csv"
                     style={{ display: 'none' }}
@@ -210,46 +200,48 @@ const BusinessIntegrationsPage = () => {
                     onChange={handleFileUpload}
                   />
                   <label htmlFor="excel-file-upload">
-                    <Button
-                      variant="outlined"
-                      component="span"
-                      startIcon={<UploadIcon sx={{ fontSize: "1rem" }} />}
-                      size="small"
-                      sx={{ fontSize: "0.875rem", mb: 1.5 }}
-                    >
-                      Upload Excel File
-                    </Button>
+                    <span className="inline-block">
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        className="text-sm mb-3"
+                      >
+                        <Upload size={16} className="mr-2" />
+                        Upload Excel File
+                      </Button>
+                    </span>
                   </label>
                   {excelFileName && (
-                    <Box sx={{ mt: 1 }}>
-                      <Typography variant="body2" sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-300">
                         Selected: {excelFileName}
-                      </Typography>
-                    </Box>
+                      </p>
+                    </div>
                   )}
-                </Box>
+                </div>
 
                 {/* Edit Section */}
                 {excelFile && (
-                  <Box sx={{ mt: 2 }}>
+                  <div className="mt-4">
                     <Button
                       variant="contained"
-                      startIcon={<EditIcon sx={{ fontSize: "1rem" }} />}
+                      color="primary"
                       size="small"
-                      sx={{ fontSize: "0.875rem" }}
+                      className="text-sm"
                     >
+                      <Edit size={16} className="mr-2" />
                       Edit Excel File
                     </Button>
-                  </Box>
+                  </div>
                 )}
               </CardContent>
             </Card>
-          </Box>
-        </Box>
-      </Container>
+          </div>
+        </div>
+      </div>
     </PageContainer>
   );
 };
 
 export default BusinessIntegrationsPage;
-

@@ -1,7 +1,6 @@
 'use client';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
-import { Typography, Link, Box, Divider } from '@mui/material';
 import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import SyntaxHighlighter from "react-syntax-highlighter";
 
@@ -10,47 +9,30 @@ const Icons = () => {
     <PageContainer title="Icons" description="this is Icons">
 
       <DashboardCard title="Icons">
-
-        <Typography variant="h6" gutterBottom>
-          🔍 Explore Icons
-        </Typography>
-        <Typography variant="body1" gutterBottom>
+        <div className="text-white text-lg font-semibold mb-2">🔍 Explore Icons</div>
+        <div className="text-sm text-gray-300 mb-2">
           Browse and search for icons directly on the{' '}
-          <Link
-            href="https://tabler-icons.io/"
-            target="_blank"
-            rel="noopener noreferrer"
-            underline="hover"
-            color="primary"
-          >
+          <a href="https://tabler-icons.io/" target="_blank" rel="noopener noreferrer" className="text-[#EE66AA] underline">
             Tabler Icons website
-          </Link>.
-        </Typography>
+          </a>.
+        </div>
 
-        <Divider sx={{ my: 3 }} />
+        <hr className="my-3 border-[#333]" />
 
-        <Typography variant="h6" gutterBottom>
-          ⚙️ Installation
-        </Typography>
+        <div className="text-white text-lg font-semibold mb-2">⚙️ Installation</div>
 
-
-        <Typography variant="body1" gutterBottom>
+        <div className="text-sm text-gray-300 mb-2">
           To use Tabler icons in your project, install the official React package:
-        </Typography>
+        </div>
         <SyntaxHighlighter language="typescript" style={docco}>
           {` npm install @tabler/icons-react `}
         </SyntaxHighlighter>
 
+        <hr className="my-3 border-[#333]" />
 
-        <Divider sx={{ my: 3 }} />
+        <div className="text-white text-lg font-semibold mb-2">🧩 Usage Example</div>
 
-        <Typography variant="h6" gutterBottom>
-          🧩 Usage Example
-        </Typography>
-
-        <Typography variant="body1" gutterBottom>
-          Import and use any icon in your components:
-        </Typography>
+        <div className="text-sm text-gray-300 mb-2">Import and use any icon in your components:</div>
         <SyntaxHighlighter language="typescript" style={docco}>
           {`import { IconHome } from '@tabler/icons-react';
 function MyComponent() {

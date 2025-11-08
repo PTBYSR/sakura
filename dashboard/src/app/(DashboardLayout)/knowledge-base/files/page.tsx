@@ -2,42 +2,20 @@
 import React, { useState, useRef, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import {
-  Box,
-  Typography,
-  Container,
-  Card,
-  CardContent,
-  Button,
-  Grid,
-  Chip,
-  LinearProgress,
-  Alert,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Paper,
-  ListItemIcon,
-} from "@mui/material";
-import {
-  Upload as UploadIcon,
-  Delete as DeleteIcon,
-  Refresh as RefreshIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  Schedule as ScheduleIcon,
-  Description as DescriptionIcon,
-  PictureAsPdf as PdfIcon,
-  TextSnippet as TextIcon,
-  TableChart as SpreadsheetIcon,
-  InsertDriveFile as FileIcon,
-} from "@mui/icons-material";
+  Upload,
+  Trash2,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  FileText,
+  File,
+  FileSpreadsheet,
+  Loader2,
+} from "lucide-react";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
 
 interface FileSource {
   id: string;
@@ -54,10 +32,9 @@ interface FileSource {
 }
 
 const KnowledgeBaseFilesPage = () => {
-  // Get logged-in user's ID from session
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id || null;
-  const [mounted, setMounted] = useState(false); // For hydration mismatch prevention
+  const [mounted, setMounted] = useState(false);
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -66,7 +43,6 @@ const KnowledgeBaseFilesPage = () => {
   const [deleteDialog, setDeleteDialog] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Prevent hydration mismatch by only rendering after mount
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -77,7 +53,6 @@ const KnowledgeBaseFilesPage = () => {
       ? "http://localhost:8000"
       : "https://sakura-backend.onrender.com");
 
-  // Load files on mount and when userId changes
   useEffect(() => {
     if (userId) {
       loadFiles();
@@ -95,7 +70,6 @@ const KnowledgeBaseFilesPage = () => {
         const data = await response.json();
         setFiles(data);
         
-        // Start polling for any files that are still processing
         data.forEach((file: FileSource) => {
           if (file.status === 'pending' || file.status === 'processing') {
             pollFileStatus(file.id);
@@ -109,7 +83,6 @@ const KnowledgeBaseFilesPage = () => {
     }
   };
 
-  // Poll file status until it's completed or errored
   const pollFileStatus = (fileId: string) => {
     const pollInterval = setInterval(async () => {
       try {
@@ -121,13 +94,11 @@ const KnowledgeBaseFilesPage = () => {
         
         const updatedFile: FileSource = await response.json();
         
-        // Update the file in the list
         setFiles(prev => {
           const updated = prev.map(f => f.id === fileId ? updatedFile : f);
           return updated;
         });
         
-        // Stop polling if file is completed or errored
         if (updatedFile.status === 'completed' || updatedFile.status === 'error') {
           clearInterval(pollInterval);
         }
@@ -135,9 +106,8 @@ const KnowledgeBaseFilesPage = () => {
         console.error('Error polling file status:', error);
         clearInterval(pollInterval);
       }
-    }, 2000); // Poll every 2 seconds
+    }, 2000);
     
-    // Store interval reference to clean up on unmount if needed
     return pollInterval;
   };
 
@@ -154,12 +124,10 @@ const KnowledgeBaseFilesPage = () => {
         const formData = new FormData();
         formData.append('file', file);
 
-        // Simulate upload progress
         const progressInterval = setInterval(() => {
           setUploadProgress(prev => Math.min(prev + 10, 90));
         }, 200);
 
-        // Add dashboard_user_id to form data if available
         if (userId) {
           formData.append('dashboard_user_id', userId);
         }
@@ -175,7 +143,6 @@ const KnowledgeBaseFilesPage = () => {
         if (response.ok) {
           const newFile = await response.json();
           setFiles(prev => [newFile, ...prev]);
-          // Start polling for status updates if file is still processing
           if (newFile.status === 'pending' || newFile.status === 'processing') {
             pollFileStatus(newFile.id);
           }
@@ -202,11 +169,9 @@ const KnowledgeBaseFilesPage = () => {
       });
       
       if (response.ok) {
-        // Remove file from UI immediately
         setFiles(prev => prev.filter(f => f.id !== id));
         console.log(`✅ File ${id} deleted successfully`);
       } else {
-        // Try to get error message from response
         let errorMessage = 'Failed to delete file';
         try {
           const errorData = await response.json();
@@ -226,21 +191,21 @@ const KnowledgeBaseFilesPage = () => {
 
   const getFileIcon = (type: string) => {
     switch (type) {
-      case 'pdf': return <PdfIcon color="error" />;
-      case 'txt': return <TextIcon color="primary" />;
-      case 'docx': return <DescriptionIcon color="info" />;
+      case 'pdf': return <FileText className="text-red-500 w-5 h-5" />;
+      case 'txt': return <FileText className="text-[#EE66AA] w-5 h-5" />;
+      case 'docx': return <FileText className="text-blue-500 w-5 h-5" />;
       case 'csv':
-      case 'xlsx': return <SpreadsheetIcon color="success" />;
-      default: return <FileIcon color="action" />;
+      case 'xlsx': return <FileSpreadsheet className="text-green-500 w-5 h-5" />;
+      default: return <File className="text-gray-500 w-5 h-5" />;
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return <CheckCircleIcon color="success" />;
-      case 'error': return <ErrorIcon color="error" />;
-      case 'processing': return <ScheduleIcon color="primary" />;
-      default: return <ScheduleIcon color="action" />;
+      case 'completed': return <CheckCircle2 className="text-green-500 w-5 h-5" />;
+      case 'error': return <XCircle className="text-red-500 w-5 h-5" />;
+      case 'processing': return <Clock className="text-blue-500 w-5 h-5" />;
+      default: return <Clock className="text-gray-500 w-5 h-5" />;
     }
   };
 
@@ -249,7 +214,7 @@ const KnowledgeBaseFilesPage = () => {
       case 'completed': return 'success';
       case 'error': return 'error';
       case 'processing': return 'primary';
-      default: return 'default';
+      default: return 'secondary';
     }
   };
 
@@ -268,218 +233,222 @@ const KnowledgeBaseFilesPage = () => {
       case 'docx': return 'info';
       case 'csv':
       case 'xlsx': return 'success';
-      default: return 'default';
+      default: return 'secondary';
     }
   };
 
-  // Conditional render for hydration
   if (!mounted) {
     return (
       <PageContainer title="Knowledge Base Files" description="Manage file-based knowledge sources">
-        <Container maxWidth="lg">
-          <Box sx={{ py: 4 }}>
-            <Typography variant="h4" gutterBottom>
-              Loading...
-            </Typography>
-          </Box>
-        </Container>
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="py-8">
+            <p className="text-gray-300">Loading...</p>
+          </div>
+        </div>
       </PageContainer>
     );
   }
 
   return (
     <PageContainer title="Knowledge Base Files" description="Manage file-based knowledge sources">
-      <Container maxWidth="lg">
-        <Box sx={{ py: 4 }}>
-          <Typography variant="h4" gutterBottom>
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="py-8">
+          <h1 className="text-3xl font-bold text-white mb-2">
             File Knowledge Sources
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+          </h1>
+          <p className="text-gray-300 mb-8">
             Upload documents to automatically extract and index their content into your knowledge base.
-          </Typography>
+          </p>
 
           {/* File Upload Section */}
-          <Card sx={{ mb: 4 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+          <Card className="mb-8">
+            <CardContent className="p-6">
+              <h6 className="text-lg font-semibold text-white mb-4">
                 Upload Files
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+              </h6>
+              <div className="flex gap-4 items-center mb-4">
                 <input
                   ref={fileInputRef}
                   type="file"
                   multiple
                   accept=".pdf,.txt,.docx,.csv,.xlsx"
                   onChange={handleFileUpload}
-                  style={{ display: 'none' }}
+                  className="hidden"
                 />
                 <Button
                   variant="contained"
-                  startIcon={<UploadIcon />}
+                  color="primary"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}
-                  sx={{ minWidth: 140 }}
+                  className="min-w-[140px]"
                 >
+                  <Upload size={16} className="mr-2" />
                   {isUploading ? 'Uploading...' : 'Choose Files'}
                 </Button>
-                <Typography variant="body2" color="text.secondary">
+                <p className="text-sm text-gray-300">
                   Supported formats: PDF, TXT, DOCX, CSV, XLSX
-                </Typography>
-              </Box>
+                </p>
+              </div>
               
               {isUploading && (
-                <Box sx={{ mt: 2 }}>
-                  <LinearProgress variant="determinate" value={uploadProgress} />
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                <div className="mt-4">
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div 
+                      className="bg-[#EE66AA] h-2 rounded-full transition-all"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-sm text-gray-300 mt-2">
                     Uploading and processing files... {uploadProgress}%
-                  </Typography>
-                </Box>
+                  </p>
+                </div>
               )}
             </CardContent>
           </Card>
 
           {/* File Sources List */}
           <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+            <CardContent className="p-6">
+              <h6 className="text-lg font-semibold text-white mb-4">
                 File Sources ({files.length})
-              </Typography>
+              </h6>
               
               {loading ? (
-                <Box sx={{ p: 4, textAlign: "center" }}>
-                  <Typography variant="body1">Loading files...</Typography>
-                </Box>
+                <div className="p-8 text-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#EE66AA] mx-auto mb-4" />
+                  <p className="text-gray-300">Loading files...</p>
+                </div>
               ) : files.length === 0 ? (
-                <Alert severity="info">
+                <div className="p-4 bg-blue-600/20 border border-blue-500 rounded-lg text-blue-400">
                   No files uploaded yet. Upload your first document above to get started.
-                </Alert>
+                </div>
               ) : (
-                <List>
-                  {files.map((file) => (
-                    <ListItem key={file.id} divider>
-                      <ListItemIcon>
-                        {getFileIcon(file.type)}
-                      </ListItemIcon>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-                        {getStatusIcon(file.status)}
-                      </Box>
-                      <ListItemText
-                        primary={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                            <Typography variant="subtitle1" component="span">
-                              {file.originalName}
-                            </Typography>
-                            <Chip 
-                              label={file.type.toUpperCase()} 
-                              color={getFileTypeColor(file.type) as any}
-                              size="small"
-                            />
-                            <Chip 
-                              label={file.status} 
-                              color={getStatusColor(file.status) as any}
-                              size="small"
-                            />
-                          </Box>
-                        }
-                        secondary={
-                          <Box component="div" sx={{ mt: 1 }}>
-                            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 1 }}>
-                              <Typography variant="caption" component="span">
-                                Size: {formatFileSize(file.size)}
-                              </Typography>
-                              <Typography variant="caption" component="span">
-                                Pages: {file.pagesExtracted > 0 ? file.pagesExtracted : '...'}
-                              </Typography>
-                              <Typography variant="caption" component="span">
-                                Chunks: {file.totalChunks > 0 ? file.totalChunks : '...'}
-                              </Typography>
-                              <Typography variant="caption" component="span">
-                                Updated: {new Date(file.lastUpdated).toLocaleString()}
-                              </Typography>
-                            </Box>
+                <div className="space-y-0">
+                  {files.map((file, index) => (
+                    <div key={file.id}>
+                      <div className="flex items-start gap-4 p-4 hover:bg-gray-800 rounded-lg transition-colors">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          {getFileIcon(file.type)}
+                          {getStatusIcon(file.status)}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <h6 className="text-base font-semibold text-white truncate">
+                                {file.originalName}
+                              </h6>
+                              <Chip 
+                                color={getFileTypeColor(file.type)}
+                                size="small"
+                                className="text-xs"
+                              >
+                                {file.type.toUpperCase()}
+                              </Chip>
+                              <Chip 
+                                color={getStatusColor(file.status)}
+                                size="small"
+                                className="text-xs"
+                              >
+                                {file.status}
+                              </Chip>
+                            </div>
+                            <div className="flex gap-4 flex-wrap text-xs text-gray-400 mb-2">
+                              <span>Size: {formatFileSize(file.size)}</span>
+                              <span>Pages: {file.pagesExtracted > 0 ? file.pagesExtracted : '...'}</span>
+                              <span>Chunks: {file.totalChunks > 0 ? file.totalChunks : '...'}</span>
+                              <span>Updated: {new Date(file.lastUpdated).toLocaleString()}</span>
+                            </div>
                             
-                            {/* Live progress indicators for processing stages */}
+                            {/* Live progress indicators */}
                             {file.status === 'processing' && (
-                              <Box component="div" sx={{ mt: 1.5, width: '100%' }}>
-                                <LinearProgress sx={{ mb: 1 }} />
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                                  <Typography variant="caption" color="text.secondary" component="div">
-                                    🔄 Processing stages:
-                                  </Typography>
-                                  <Box sx={{ pl: 2 }}>
-                                    <Typography variant="caption" color="text.secondary" component="div" sx={{ display: 'block' }}>
+                              <div className="mt-3 w-full">
+                                <div className="w-full bg-gray-700 rounded-full h-1 mb-2">
+                                  <div className="bg-blue-500 h-1 rounded-full animate-pulse" style={{ width: '50%' }} />
+                                </div>
+                                <div className="space-y-1 text-xs text-gray-400 pl-2">
+                                  <p>🔄 Processing stages:</p>
+                                  <div className="pl-4 space-y-1">
+                                    <p>
                                       {file.pagesExtracted > 0 ? '✅' : '⏳'} Extracting text from file
                                       {file.pagesExtracted > 0 && ` (${file.pagesExtracted} pages extracted)`}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary" component="div" sx={{ display: 'block' }}>
+                                    </p>
+                                    <p>
                                       {file.totalChunks > 0 ? '✅' : '⏳'} Creating chunks
                                       {file.totalChunks > 0 && ` (${file.totalChunks} chunks created)`}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary" component="div" sx={{ display: 'block' }}>
+                                    </p>
+                                    <p>
                                       {file.totalChunks > 0 ? '✅' : '⏳'} Storing in database
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary" component="div" sx={{ display: 'block' }}>
+                                    </p>
+                                    <p>
                                       {file.totalChunks > 0 ? '⏳' : '⏳'} Indexing into vector store (happens after chunks are created)
-                                    </Typography>
-                                  </Box>
-                                </Box>
-                              </Box>
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
                             )}
                             {file.status === 'pending' && (
-                              <Typography variant="caption" color="text.secondary" component="div" sx={{ display: 'block', mt: 1 }}>
+                              <p className="text-xs text-gray-400 mt-2">
                                 ⏳ Queued for processing... Waiting to start
-                              </Typography>
+                              </p>
                             )}
                             {file.status === 'completed' && (
-                              <Typography variant="caption" color="success.main" component="div" sx={{ display: 'block', mt: 1, fontWeight: 500 }}>
+                              <p className="text-xs text-green-400 mt-2 font-medium">
                                 ✅ Ready to use! File has been processed, chunked, and indexed
-                              </Typography>
+                              </p>
                             )}
                             {file.error && (
-                              <Alert severity="error" sx={{ mt: 1 }}>
+                              <div className="mt-2 p-3 bg-red-600/20 border border-red-500 rounded-lg text-red-400 text-sm">
                                 {file.error}
-                              </Alert>
+                              </div>
                             )}
-                          </Box>
-                        }
-                      />
-                      <ListItemSecondaryAction>
-                        <IconButton 
-                          edge="end" 
+                          </div>
+                        </div>
+                        <button
                           onClick={() => setDeleteDialog(file.id)}
-                          color="error"
+                          className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
                         >
-                          <DeleteIcon />
-                        </IconButton>
-                      </ListItemSecondaryAction>
-                    </ListItem>
+                          <Trash2 size={20} />
+                        </button>
+                      </div>
+                      {index < files.length - 1 && (
+                        <div className="border-t border-gray-700 my-2" />
+                      )}
+                    </div>
                   ))}
-                </List>
+                </div>
               )}
             </CardContent>
           </Card>
-        </Box>
+        </div>
 
         {/* Delete Confirmation Dialog */}
-        <Dialog open={!!deleteDialog} onClose={() => setDeleteDialog(null)}>
-          <DialogTitle>Delete File Source</DialogTitle>
-          <DialogContent>
-            <Typography>
-              Are you sure you want to delete this file source? This will remove all associated content from your knowledge base.
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDeleteDialog(null)}>Cancel</Button>
-            <Button 
-              onClick={() => deleteDialog && handleDelete(deleteDialog)} 
-              color="error"
-              variant="contained"
-            >
-              Delete
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Container>
+        {deleteDialog && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-[#1e1e1e] border border-gray-700 rounded-lg p-6 max-w-md w-full mx-4">
+              <h6 className="text-lg font-semibold text-white mb-4">
+                Delete File Source
+              </h6>
+              <p className="text-gray-300 mb-6">
+                Are you sure you want to delete this file source? This will remove all associated content from your knowledge base.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => setDeleteDialog(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={() => deleteDialog && handleDelete(deleteDialog)}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </PageContainer>
   );
 };

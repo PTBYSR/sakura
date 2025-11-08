@@ -1,20 +1,6 @@
 
 import Link from "next/link";
-import {
-  CardContent,
-  Typography,
-  Grid,
-  Rating,
-  Tooltip,
-  Fab,
-  Avatar
-} from "@mui/material";
-// import img1 from "public/images/products/s4.jpg";
-// import img2 from "public/images/products/s5.jpg";
-// import img3 from "public/images/products/s7.jpg";
-// import img4 from "public/images/products/s11.jpg";
-import { Stack } from "@mui/system";
-import { IconBasket } from "@tabler/icons-react";
+import { ShoppingCart, Star } from "lucide-react";
 import BlankCard from "@/app/(DashboardLayout)/components/shared/BlankCard";
 import Image from "next/image";
 
@@ -55,65 +41,36 @@ const ecoCard = [
 
 const Blog = () => {
   return (
-    <Grid container spacing={3}>
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
       {ecoCard.map((product, index) => (
-        <Grid
-          key={index}
-          size={{
-            xs: 12,
-            md: 4,
-            lg: 3
-          }}>
+        <div key={index}>
           <BlankCard>
-            <Typography component={Link} href="/">
-              <Avatar
-                src={product.photo} variant="square"
-                sx={{
-                  height: 250,
-                  width: '100%',
-                }}
-                
-              />
-            </Typography>
-            <Tooltip title="Add To Cart">
-              <Fab
-                size="small"
-                color="primary"
-                sx={{ bottom: "75px", right: "15px", position: "absolute" }}
-              >
-                <IconBasket size="16" />
-              </Fab>
-            </Tooltip>
-            <CardContent sx={{ p: 3, pt: 2 }}>
-              <Typography variant="h6">{product.title}</Typography>
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                mt={1}
-              >
-                <Stack direction="row" alignItems="center">
-                  <Typography variant="h6">${product.price}</Typography>
-                  <Typography
-                    color="textSecondary"
-                    ml={1}
-                    sx={{ textDecoration: "line-through" }}
-                  >
-                    ${product.salesPrice}
-                  </Typography>
-                </Stack>
-                <Rating
-                  name="read-only"
-                  size="small"
-                  value={product.rating}
-                  readOnly
-                />
-              </Stack>
-            </CardContent>
+            <Link href="/" className="block">
+              <div className="relative w-full h-[250px]">
+                <Image src={product.photo} alt={product.title} fill className="object-cover rounded-t" />
+              </div>
+            </Link>
+            <button className="absolute bottom-[75px] right-[15px] w-9 h-9 rounded-full bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white flex items-center justify-center" title="Add To Cart">
+              <ShoppingCart className="w-4 h-4" />
+            </button>
+            <div className="p-4 pt-3">
+              <div className="text-white font-semibold text-base">{product.title}</div>
+              <div className="mt-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="text-white font-semibold">${product.price}</div>
+                  <div className="text-gray-400 line-through">${product.salesPrice}</div>
+                </div>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className={`w-4 h-4 ${i < product.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-600'}`} />
+                  ))}
+                </div>
+              </div>
+            </div>
           </BlankCard>
-        </Grid>
+        </div>
       ))}
-    </Grid>
+    </div>
   );
 };
 

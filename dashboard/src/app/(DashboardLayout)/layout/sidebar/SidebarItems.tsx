@@ -1,6 +1,5 @@
 import React from "react";
 import Menuitems from "./MenuItems";
-import { Box, Typography } from "@mui/material";
 import {
   Logo,
   Sidebar as MUI_Sidebar,
@@ -26,14 +25,14 @@ const renderMenuItems = (items: any, pathDirect: any) => {
     if (item.subheader) {
       // Display Subheader
       return (
-        <Box display={item.navlabel ? 'block' : 'none'} key={item.subheader}>
+        <div className={item.navlabel ? 'block' : 'hidden'} key={item.subheader}>
           <Menu
             subHeading={item.subheader}
             key={item.subheader}
           >
             {null}
           </Menu>
-        </Box>
+        </div>
       );
     }
 
@@ -54,7 +53,7 @@ const renderMenuItems = (items: any, pathDirect: any) => {
     // If the item has no children, render a MenuItem
 
     return (
-      <Box px={3} key={item.id}>
+      <div className="px-3" key={item.id}>
         <MenuItem
           key={item.id}
           isSelected={pathDirect === item?.href}
@@ -65,7 +64,7 @@ const renderMenuItems = (items: any, pathDirect: any) => {
         >
           {item.title}
         </MenuItem >
-      </Box>
+      </div>
 
     );
   });
@@ -81,11 +80,11 @@ const SidebarItems = () => {
       <MUI_Sidebar width={"100%"} showProfile={false} themeColor={"#5D87FF"} themeSecondaryColor={'#EE66AA'} >
 
         <Logo img='/images/logos/dark-logo.svg' component={Link} href="/" >Modernize</Logo>
-<Box mt={5}>
+<div className="mt-5">
 
 
         {renderMenuItems(Menuitems, pathDirect)}
-</Box>
+        </div>
         {/* <Box px={2}>
           <Upgrade />
         </Box> */}

@@ -1,21 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Box,
-  Typography,
-  FormGroup,
-  FormControlLabel,
-  Button,
-  Stack,
-  Checkbox,
-  Alert,
-  Divider,
-} from "@mui/material";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import CustomTextField from "@/app/(DashboardLayout)/components/forms/theme-elements/CustomTextField";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface loginType {
   title?: string;
@@ -79,132 +69,103 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
 
   return (
     <>
-      {title ? (
-        <Typography fontWeight="700" variant="h2" mb={1}>
+      {title && (
+        <h2 className="text-3xl font-bold mb-2 text-white">
           {title}
-        </Typography>
-      ) : null}
+        </h2>
+      )}
 
       {subtext}
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
-          {error}
-        </Alert>
+        <div className="mb-4 p-3 bg-red-600/20 border border-red-500 rounded-lg text-red-400 text-sm flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={() => setError("")}
+            className="text-red-400 hover:text-red-300 ml-2"
+          >
+            ×
+          </button>
+        </div>
       )}
 
-      <form onSubmit={handleEmailSignIn}>
-        <Stack>
-          <Box>
-            <Typography
-              variant="subtitle1"
-              fontWeight={600}
-              component="label"
-              htmlFor="email"
-              mb="5px"
-            >
-              Email
-            </Typography>
-            <CustomTextField
-              id="email"
-              variant="outlined"
-              fullWidth
-              type="email"
-              value={email}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-              required
-              disabled={loading}
-              autoComplete="email"
-            />
-          </Box>
-          <Box mt="25px">
-            <Typography
-              variant="subtitle1"
-              fontWeight={600}
-              component="label"
-              htmlFor="password"
-              mb="5px"
-            >
-              Password
-            </Typography>
-            <CustomTextField
-              id="password"
-              type="password"
-              variant="outlined"
-              fullWidth
-              value={password}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-              autoComplete="current-password"
-            />
-          </Box>
-          <Stack
-            justifyContent="space-between"
-            direction="row"
-            alignItems="center"
-            my={2}
-          >
-            <FormGroup>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={rememberMe}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRememberMe(e.target.checked)}
-                    disabled={loading}
-                  />
-                }
-                label="Remember this Device"
-              />
-            </FormGroup>
-            <Typography
-              component={Link}
-              href="/authentication/forgot-password"
-              fontWeight="500"
-              sx={{
-                textDecoration: "none",
-                color: "primary.main",
-              }}
-            >
-              Forgot Password ?
-            </Typography>
-          </Stack>
-        </Stack>
-        <Box>
-          <Button
-            color="primary"
-            variant="contained"
-            size="large"
-            fullWidth
-            type="submit"
+      <form onSubmit={handleEmailSignIn} className="space-y-6">
+        <div>
+          <label htmlFor="email" className="block text-sm font-semibold text-gray-300 mb-1">
+            Email
+          </label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+            required
             disabled={loading}
+            autoComplete="email"
+            className="w-full"
+          />
+        </div>
+        <div>
+          <label htmlFor="password" className="block text-sm font-semibold text-gray-300 mb-1">
+            Password
+          </label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+            required
+            disabled={loading}
+            autoComplete="current-password"
+            className="w-full"
+          />
+        </div>
+        <div className="flex items-center justify-between my-4">
+          <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRememberMe(e.target.checked)}
+              disabled={loading}
+              className="w-4 h-4 rounded border-gray-600 bg-[#1e1e1e] text-[#EE66AA] focus:ring-[#EE66AA]"
+            />
+            <span>Remember this Device</span>
+          </label>
+          <Link
+            href="/authentication/forgot-password"
+            className="text-sm font-medium text-[#EE66AA] hover:underline"
           >
-            {loading ? "Signing in..." : "Sign In"}
-          </Button>
-        </Box>
+            Forgot Password ?
+          </Link>
+        </div>
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          type="submit"
+          disabled={loading}
+          className="w-full"
+        >
+          {loading ? "Signing in..." : "Sign In"}
+        </Button>
       </form>
 
-      <Box sx={{ my: 3 }}>
-        <Divider>
-          <Typography variant="body2" color="textSecondary">
-            OR
-          </Typography>
-        </Divider>
-      </Box>
+      <div className="my-6 flex items-center">
+        <div className="flex-1 border-t border-gray-700"></div>
+        <span className="px-4 text-sm text-gray-400">OR</span>
+        <div className="flex-1 border-t border-gray-700"></div>
+      </div>
 
-      <Box>
-        <Button
-          color="primary"
-          variant="outlined"
-          size="large"
-          fullWidth
-          onClick={handleGoogleSignIn}
-          disabled={loading}
-          sx={{ mb: 2 }}
-        >
-          Sign In with Google
-        </Button>
-      </Box>
+      <Button
+        variant="outlined"
+        color="primary"
+        size="large"
+        onClick={handleGoogleSignIn}
+        disabled={loading}
+        className="w-full mb-4"
+      >
+        Sign In with Google
+      </Button>
 
       {subtitle}
     </>

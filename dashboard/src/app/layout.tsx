@@ -1,9 +1,7 @@
-import { Providers } from "./providers";
 import './global.css'
 
-// Force dynamic rendering to ensure providers are available during build
-export const dynamic = 'force-dynamic';
-
+// Root layout - no MUI providers needed since we're using Tailwind
+// MUI components will use MUIProviders wrapper when needed
 export default function RootLayout({
   children,
 }: {
@@ -12,12 +10,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="emotion-insertion-point" content="" />
       </head>
       <body suppressHydrationWarning>
-        <Providers>
-          {children}
-        </Providers>
+        {children}
       </body>
     </html>
   );
