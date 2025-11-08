@@ -123,13 +123,15 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
             const callbacks = subscribersRef.current.get(message.type as SubscriptionType);
             if (callbacks) {
               console.log(`📬 Found ${callbacks.size} subscriber(s) for ${message.type}`);
-              callbacks.forEach((callback, index) => {
+              let callbackCounter = 0;
+              callbacks.forEach((callback) => {
+                callbackCounter += 1;
                 try {
-                  console.log(`  → Calling callback ${index + 1}...`);
+                  console.log(`  → Calling callback ${callbackCounter}...`);
                   callback(message.data);
-                  console.log(`  ✅ Callback ${index + 1} executed successfully`);
+                  console.log(`  ✅ Callback ${callbackCounter} executed successfully`);
                 } catch (error) {
-                  console.warn(`  ❌ Error in subscription callback ${index + 1}:`, error);
+                  console.warn(`  ❌ Error in subscription callback ${callbackCounter}:`, error);
                 }
               });
             } else {
