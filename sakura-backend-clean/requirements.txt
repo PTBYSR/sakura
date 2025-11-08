@@ -1,41 +1,42 @@
-# Core dependencies
-fastapi>=0.104.1
-uvicorn[standard]>=0.24.0
-websockets>=12.0  # Explicit WebSocket support for uvicorn
-pydantic>=2.5.0
-pydantic-settings>=2.0.0
+# Dependencies exported for Render from pyproject.toml
+# Update pyproject.toml first, then regenerate this file if needed.
+
+# Core stack
+fastapi>=0.120.1
+uvicorn[standard]>=0.38.0
+websockets>=12.0
+pydantic>=2.12.3
+pydantic-settings>=2.11.0
 python-multipart>=0.0.6
 python-dotenv>=1.0.0
-pymongo>=4.6.0
-redis[hiredis]>=5.0.0
-certifi>=2023.7.22
 httpx>=0.25.0
 
-# LangChain and AI dependencies (required)
+# Storage and infrastructure
+pymongo>=4.15.3
+redis>=5.0.8
+certifi>=2024.8.30
+
+# LangChain ecosystem
 langchain>=0.2.16
 langgraph>=0.2.28
-langchain-core>=0.2.39
-langchain-community>=0.2.16
-langchain-huggingface>=0.0.3
-langchain-google-genai>=1.0.10
+langchain-core>=1.0.0
+langchain-community>=0.4.1
+langchain-huggingface>=1.0.0
+langchain-google-genai>=3.0.0
+langsmith>=0.4.38
 
-# Vector store and embeddings
+# Vector search and embeddings
 faiss-cpu>=1.12.0
-sentence-transformers>=2.2.2
+sentence-transformers>=5.1.2
 
 # Utilities
 jsonlines>=4.0.0
 tqdm>=4.66.1
-google-generativeai>=0.3.2
 beautifulsoup4>=4.12.0
-requests>=2.31.0
+requests>=2.32.5
 
-# File processing
-PyPDF2>=3.0.0
-python-docx>=1.1.0
-pandas>=2.0.0
-openpyxl>=3.1.0
-
-# Optional: LangSmith for tracing (uncomment if using)
-# langsmith>=0.1.0
-
+# File/document handling
+PyPDF2>=3.0.1
+python-docx>=1.2.0
+pandas>=2.3.3
+openpyxl>=3.1.5
