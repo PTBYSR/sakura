@@ -3,6 +3,8 @@ import React from "react";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { useAgents } from "@/contexts/AgentsContext";
 
+export const dynamic = 'force-dynamic';
+
 const SalesAgentPage = () => {
   const { agent } = useAgents();
 

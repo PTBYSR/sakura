@@ -24,6 +24,8 @@ import { useAgents } from "@/contexts/AgentsContext";
 import { useSOPs } from "@/contexts/SOPsContext";
 import { useRouter, usePathname } from "next/navigation";
 
+export const dynamic = 'force-dynamic';
+
 interface KnowledgeBaseItem {
   id: string;
   name: string;

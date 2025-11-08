@@ -4,6 +4,8 @@ import PageContainer from "@/app/(DashboardLayout)/components/container/PageCont
 import { useAgents } from "@/contexts/AgentsContext";
 import { useParams } from "next/navigation";
 
+export const dynamic = 'force-dynamic';
+
 const AgentSettingsPage = () => {
   const params = useParams();
   const agentId = params.agentId as string;

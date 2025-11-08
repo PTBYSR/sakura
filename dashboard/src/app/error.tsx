@@ -3,10 +3,6 @@
 import { useEffect } from "react";
 import Link from "next/link";
 
-// Force dynamic rendering to avoid SSG issues
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
-
 export default function Error({
   error,
   reset,

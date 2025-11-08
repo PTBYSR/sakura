@@ -12,6 +12,8 @@ import { useAgents } from "@/contexts/AgentsContext";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 
+export const dynamic = 'force-dynamic';
+
 interface AgentStats {
   chats_responded_to: number;
   model: string;
