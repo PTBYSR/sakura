@@ -120,6 +120,7 @@ export const useUnifiedChatData = ({ inboxType, userEmail, userId, section }: Us
   const [chats, setChats] = useState<ChatInstance[]>([]);
   const [selectedChat, setSelectedChat] = useState<ChatInstance | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { subscribe, isConnected } = useWebSocket();
 
@@ -177,14 +178,24 @@ export const useUnifiedChatData = ({ inboxType, userEmail, userId, section }: Us
   };
 
   const loadChats = useCallback(async () => {
+      const shouldShowLoading = !initialized;
+      const finalizeInitialLoad = () => {
+        if (shouldShowLoading) {
+          setLoading(false);
+          setInitialized(true);
+        }
+      };
+
       try {
-        setLoading(true);
+        if (shouldShowLoading) {
+          setLoading(true);
+        }
         setError(null);
 
         if (!section) {
           setChats([]);
           setSelectedChat(null);
-          setLoading(false);
+          finalizeInitialLoad();
           return;
         }
 
@@ -199,7 +210,7 @@ export const useUnifiedChatData = ({ inboxType, userEmail, userId, section }: Us
           setError(backendUsers.__error);
           setChats([]);
           setSelectedChat(null);
-          setLoading(false);
+          finalizeInitialLoad();
           return;
         }
         
@@ -208,7 +219,7 @@ export const useUnifiedChatData = ({ inboxType, userEmail, userId, section }: Us
           setError('Failed to load chats from backend. Please check backend connection.');
           setChats([]);
           setSelectedChat(null);
-          setLoading(false);
+          finalizeInitialLoad();
           return;
         }
         
@@ -216,7 +227,7 @@ export const useUnifiedChatData = ({ inboxType, userEmail, userId, section }: Us
         if (backendUsers.length === 0) {
           setChats([]);
           setSelectedChat(null);
-          setLoading(false);
+          finalizeInitialLoad();
           return;
         }
 
@@ -349,20 +360,24 @@ export const useUnifiedChatData = ({ inboxType, userEmail, userId, section }: Us
         setChats(transformedChats);
         
         // Set the first chat as selected by default
-        if (transformedChats.length > 0) {
-          setSelectedChat(transformedChats[0]);
-        } else {
-          setSelectedChat(null);
-        }
+        setSelectedChat(prevSelected => {
+          if (prevSelected) {
+            const stillExists = transformedChats.find(chat => chat.chat.id === prevSelected.chat.id);
+            if (stillExists) {
+              return stillExists;
+            }
+          }
+          return transformedChats[0] ?? null;
+        });
       } catch (err) {
         console.error('❌ Error loading chats:', err);
         setError(err instanceof Error ? err.message : 'Failed to load chats');
         setChats([]);
         setSelectedChat(null);
       } finally {
-        setLoading(false);
+        finalizeInitialLoad();
       }
-    }, [section, userId, userEmail, inboxType]);
+    }, [section, userId, userEmail, inboxType, initialized]);
 
     // Always load chats on mount/change, regardless of WebSocket status
     useEffect(() => {
