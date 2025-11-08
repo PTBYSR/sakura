@@ -23,8 +23,8 @@ export function Chip({
 }: ChipProps) {
   const colorClasses = {
     primary: variant === 'filled' 
-      ? 'bg-[#EE66AA]/20 text-[#EE66AA] border-[#EE66AA]' 
-      : 'border-[#EE66AA] text-[#EE66AA]',
+      ? 'bg-sakura-500/20 text-sakura-500 border-sakura-500' 
+      : 'border-sakura-500 text-sakura-500',
     secondary: variant === 'filled'
       ? 'bg-gray-700 text-gray-300 border-gray-600'
       : 'border-gray-600 text-gray-300',

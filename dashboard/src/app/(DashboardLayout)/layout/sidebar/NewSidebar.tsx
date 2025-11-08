@@ -219,8 +219,8 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
         <Image
           src="/images/logos/nav-logo.svg"
           alt="Sakura"
-          width={120}
-          height={32}
+          width={40}
+          height={10}
           priority
         />
       </div>

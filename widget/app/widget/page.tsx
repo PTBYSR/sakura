@@ -55,7 +55,7 @@ import {
 interface Message {
   id: string;
   content: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'agent';
   timestamp: string;
   processingTime?: number;
 }
@@ -109,43 +109,6 @@ interface UserDataResponse {
 // ============================================================================
 // UTILITY COMPONENTS
 // ============================================================================
-
-/**
- * TypewriterText Component
- * 
- * Creates a typewriter animation effect for AI responses
- * @param text - The text to animate
- * @param speed - Animation speed in milliseconds per character (default: 30ms)
- */
-const TypewriterText = ({ text, speed = 30 }: { text: string; speed?: number }) => {
-  const [displayedText, setDisplayedText] = useState('');
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  // Animate text character by character
-  useEffect(() => {
-    if (currentIndex < text.length) {
-      const timeout = setTimeout(() => {
-        setDisplayedText(prev => prev + text[currentIndex]);
-        setCurrentIndex(prev => prev + 1);
-      }, speed);
-
-      return () => clearTimeout(timeout);
-    }
-  }, [currentIndex, text, speed]);
-
-  // Reset animation when text changes
-  useEffect(() => {
-    setDisplayedText('');
-    setCurrentIndex(0);
-  }, [text]);
-
-  return (
-    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-      {displayedText}
-      {currentIndex < text.length && <span style={{ opacity: 0.7 }}>|</span>}
-    </Typography>
-  );
-};
 
 // ============================================================================
 // CONFIGURATION
@@ -237,6 +200,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
   const [sessionId, setSessionId] = useState<string>('');
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(propUserId || null);
+  const [lastMessageCount, setLastMessageCount] = useState<number>(0);
 
   // Refs for DOM manipulation
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -248,16 +212,34 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
   // ============================================================================
 
   /**
-   * Initialize component state from localStorage
-   * Loads saved user data, stage, and messages on component mount
+   * Clear localStorage chat data - useful for starting fresh
    */
+  const clearChatData = () => {
+    console.log('🧹 Clearing chat data from localStorage');
+    localStorage.removeItem("currentChatId");
+    localStorage.removeItem("messages");
+    localStorage.removeItem("stage");
+  };
+
   useEffect(() => {
+    console.log('🌐 Widget API URL:', API_BASE_URL);
+    console.log('⚙️ Environment:', process.env.NODE_ENV);
     if (typeof window !== "undefined") {
       // Always load saved user data from localStorage first (UI state restoration)
       const storedName = localStorage.getItem("userName");
       const storedEmail = localStorage.getItem("userEmail");
       const savedStage = localStorage.getItem("stage") as 'form' | 'chat';
       const savedChatId = localStorage.getItem("currentChatId");
+      
+      // ⚠️ IMPORTANT: Clear old chat data if this is a new session
+      // Check if we have user data in localStorage but no valid session
+      const hasStoredData = storedName || storedEmail || savedChatId;
+      const isNewSession = !propUserId && !storedEmail; // No URL userId and no saved email
+      
+      if (hasStoredData && isNewSession) {
+        console.log('🧹 Clearing old session data for fresh start');
+        clearChatData();
+      }
       
       if (storedName) setName(storedName);
       if (storedEmail) setEmail(storedEmail);
@@ -349,25 +331,35 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
             // Load chat messages from backend or localStorage
             if (latestChat.messages && latestChat.messages.length > 0) {
               const chatMessages: Message[] = latestChat.messages.map((msg: any) => ({
-              id: `msg_${msg.timestamp}`,
+              id: msg._id || `msg_${msg.timestamp}`,
               content: msg.text || msg.content || '',
-              role: msg.role === 'assistant' || msg.role === 'agent' ? 'assistant' : 'user',
+              role: msg.role === 'user' ? 'user' : msg.role === 'agent' ? 'agent' : 'assistant',
               timestamp: msg.timestamp
               }));
             setMessages(chatMessages);
+            console.log(`✅ Loaded ${chatMessages.length} messages from backend for ${customerEmail}`);
             } else {
-              // Check localStorage for unsynced messages
-              const savedMessages = localStorage.getItem("messages");
-              if (savedMessages) {
-                try {
-                  const parsedMessages = JSON.parse(savedMessages);
-                  if (parsedMessages && parsedMessages.length > 0) {
-                    setMessages(parsedMessages);
+              // ⚠️ VALIDATE: Only load localStorage messages if email matches
+              const storedEmail = localStorage.getItem("userEmail");
+              if (storedEmail === customerEmail) {
+                // Check localStorage for unsynced messages
+                const savedMessages = localStorage.getItem("messages");
+                if (savedMessages) {
+                  try {
+                    const parsedMessages = JSON.parse(savedMessages);
+                    if (parsedMessages && parsedMessages.length > 0) {
+                      setMessages(parsedMessages);
+                      console.log(`✅ Loaded ${parsedMessages.length} messages from localStorage for ${customerEmail}`);
+                    }
+                  } catch (e) {
+                    setMessages([]);
                   }
-                } catch (e) {
+                } else {
                   setMessages([]);
                 }
               } else {
+                console.log('⚠️ Email mismatch, clearing localStorage messages');
+                clearChatData();
                 setMessages([]);
               }
             }
@@ -380,12 +372,17 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
         console.log('Could not fetch from debug endpoint:', error);
       }
 
-      // If we have a saved chat ID, use it
-      if (savedChatId) {
+      // ⚠️ VALIDATE: Only use saved chat ID if email matches
+      const storedEmail = localStorage.getItem("userEmail");
+      if (savedChatId && storedEmail === customerEmail) {
         setCurrentChatId(savedChatId);
         setStage('chat');
         localStorage.setItem("stage", "chat");
+        console.log(`✅ Using saved chat ID ${savedChatId} for ${customerEmail}`);
         return;
+      } else if (savedChatId && storedEmail !== customerEmail) {
+        console.log('⚠️ Saved chat ID belongs to different user, clearing...');
+        clearChatData();
       }
 
       // If no chat found but stage was saved as 'chat', go to chat (chat will be created on first message)
@@ -444,9 +441,9 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
           if (latestChat.messages && latestChat.messages.length > 0) {
           // Convert chat messages to widget message format
           const chatMessages: Message[] = latestChat.messages.map((msg: any) => ({
-            id: `msg_${msg.timestamp}`,
+            id: msg._id || `msg_${msg.timestamp}`,
             content: msg.text || msg.content || '',
-            role: msg.role === 'assistant' || msg.role === 'agent' ? 'assistant' : 'user',
+            role: msg.role === 'user' ? 'user' : msg.role === 'agent' ? 'agent' : 'assistant',
             timestamp: msg.timestamp
           }));
           
@@ -576,7 +573,8 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
 
   /**
    * Sync messages to database on browser close/tab close
-   * This ensures messages are persisted before localStorage is cleared
+   * ⚠️ DISABLED: Messages are now saved immediately when sent, no need for sync on close
+   * This prevents duplicate messages from being sent repeatedly
    */
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -584,8 +582,12 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
     const syncMessagesToDatabase = async () => {
       if (!currentChatId || messages.length === 0) return;
 
-      // Check which messages need to be synced (not already in DB)
-      // For simplicity, we'll sync all messages - backend should handle deduplication
+      // ⚠️ DISABLED: Do not sync messages here - they're already saved when sent!
+      // Re-syncing all messages causes infinite loops
+      console.log('💡 Sync disabled - messages are saved immediately when created');
+      return;
+
+      // OLD CODE (CAUSES LOOP): Syncs ALL messages repeatedly
       const messagesToSync = messages;
 
       try {
@@ -606,15 +608,12 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
             
             if (useBeacon) {
               // Use sendBeacon for reliability (synchronous, survives page unload)
-              // Note: sendBeacon doesn't support custom headers, so we need to send as FormData
-              // or use URL-encoded data. Since backend expects JSON, we'll use FormData with JSON string
-              const formData = new FormData();
-              formData.append('content', message.content);
-              formData.append('role', message.role);
+              // sendBeacon can send Blob with JSON, which is better than FormData
+              const blob = new Blob([payload], { type: 'application/json' });
               
               const success = navigator.sendBeacon(
-                `${API_BASE_URL}/api/dashboard/chats/${currentChatId}/send`,
-                formData
+                `${API_BASE_URL}/api/users/chats/${currentChatId}/send`,
+                blob
               );
               if (!success) {
                 syncSuccess = false;
@@ -622,7 +621,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
               }
             } else {
               // Fallback to fetch for visibility changes (async)
-              await fetch(`${API_BASE_URL}/api/dashboard/chats/${currentChatId}/send`, {
+              await fetch(`${API_BASE_URL}/api/users/chats/${currentChatId}/send`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: payload,
@@ -648,28 +647,25 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
       }
     };
 
-    // Handle visibility change (tab switching, minimizing, browser close)
-    // This is more reliable than beforeunload for async operations
+    // ⚠️ DISABLED: Event listeners removed since sync is disabled
+    // Messages are saved immediately when created, no need to sync on page unload
+    
+    // OLD CODE (REMOVED): These caused messages to be re-sent repeatedly
+    /*
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        // Page is being hidden - sync messages
-        // Use setTimeout to ensure the async operation has time to complete
         syncMessagesToDatabase();
       }
     };
 
-    // Handle beforeunload as a backup (for hard closes)
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // Sync messages synchronously using sendBeacon
       syncMessagesToDatabase();
     };
 
-    // Handle pagehide (fires more reliably than beforeunload)
     const handlePageHide = () => {
       syncMessagesToDatabase();
     };
 
-    // Register event listeners
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('pagehide', handlePageHide);
@@ -679,6 +675,9 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('pagehide', handlePageHide);
     };
+    */
+    
+    // No cleanup needed since no listeners are registered
   }, [currentChatId, messages]);
 
   /**
@@ -695,6 +694,84 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  /**
+   * Poll for new messages from the dashboard (human agent replies)
+   * This runs every 2 seconds when in chat stage and chat ID exists
+   */
+  useEffect(() => {
+    if (stage !== 'chat' || !currentChatId || !email) return;
+
+    let isActive = true;
+
+    const pollMessages = async () => {
+      try {
+        console.log(`🔄 Polling for messages - Chat ID: ${currentChatId}, Email: ${email}`);
+        
+        // Fetch latest messages from backend
+        const response = await fetch(`${API_BASE_URL}/api/users/${email}/chats`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!response.ok) {
+          console.error(`❌ Poll failed - Status: ${response.status}`);
+          return;
+        }
+        
+        if (!isActive) return;
+
+        const data = await response.json();
+        console.log(`📦 Received ${data.chats?.length || 0} chats from backend`);
+        
+        const currentChat = data.chats?.find((chat: any) => chat.chat_id === currentChatId);
+        
+        if (!currentChat) {
+          console.warn(`⚠️ Chat ${currentChatId} not found in response`);
+          return;
+        }
+        
+        console.log(`💬 Chat found with ${currentChat.messages?.length || 0} messages`);
+        
+        if (currentChat && currentChat.messages && isActive) {
+          const serverMessages: Message[] = currentChat.messages.map((msg: any) => {
+            const mappedRole = msg.role === 'user' ? 'user' : msg.role === 'agent' ? 'agent' : 'assistant';
+            return {
+              id: msg._id || `msg_${msg.timestamp}`,
+              content: msg.text || msg.content || '',
+              role: mappedRole,
+              timestamp: msg.timestamp
+            };
+          });
+
+          // Always update with server messages (server is source of truth)
+          setMessages(prevMessages => {
+            // Compare to detect if there are actual changes
+            const prevIds = prevMessages.map(m => m.id).join(',');
+            const serverIds = serverMessages.map(m => m.id).join(',');
+            
+            if (prevIds !== serverIds) {
+              console.log('📬 Messages updated - Count:', serverMessages.length);
+              setLastMessageCount(serverMessages.length);
+              return serverMessages;
+            }
+            return prevMessages;
+          });
+        }
+      } catch (error) {
+        console.warn('Failed to poll messages:', error);
+      }
+    };
+
+    // Poll immediately on mount, then every 2 seconds
+    pollMessages();
+    const intervalId = setInterval(pollMessages, 2000);
+
+    return () => {
+      isActive = false;
+      clearInterval(intervalId);
+    };
+  }, [stage, currentChatId, email]); // Stable dependencies
 
   // ============================================================================
   // UTILITY FUNCTIONS
@@ -818,7 +895,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
       
       // If userId is available (from widget link), include it so backend can link to correct customer
       if (userId) {
-        userData.user_id = userId;
+        (userData as any).user_id = userId;
       }
       
       console.log("🧠 Sending user data to backend:", userData);
@@ -831,6 +908,13 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
       });
 
       if (!response.ok) throw new Error(`Failed to save user data: ${response.status}`);
+
+      // ⚠️ IMPORTANT: Check if email changed BEFORE saving - clear old chat data
+      const storedEmail = localStorage.getItem("userEmail");
+      if (storedEmail && storedEmail !== email) {
+        console.log(`🧹 Email changed from ${storedEmail} to ${email}, clearing old chat data`);
+        clearChatData();
+      }
 
       // Save user data to localStorage (only for UI state, not messages)
       localStorage.setItem("userName", name);
@@ -951,23 +1035,35 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
       // If we have a chat instance, save the message to it
       if (currentChatId) {
         try {
-          await fetch(`${API_BASE_URL}/api/chats/${currentChatId}/send`, {
+          console.log(`📤 Saving user message to chat ${currentChatId}...`);
+          const saveResponse = await fetch(`${API_BASE_URL}/api/users/chats/${currentChatId}/send`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content: userMessage.content }),
+            body: JSON.stringify({ 
+              content: userMessage.content,
+              role: 'user'  // Important: specify role
+            }),
           });
+          
+          if (saveResponse.ok) {
+            console.log('✅ User message saved to chat:', currentChatId);
+          } else {
+            console.error(`❌ Failed to save message - Status: ${saveResponse.status}`);
+          }
         } catch (error) {
-          console.warn('Failed to save message to chat instance:', error);
+          console.error('❌ Error saving message to chat instance:', error);
         }
       }
 
       // Prepare chat payload
+      // Use currentChatId if available (for AI agent toggle check), otherwise fallback to sessionId
       const payload = {
         message: userMessage.content,
-        session_id: sessionId,
+        session_id: currentChatId || sessionId,
       };
       
       console.log("💬 Sending chat payload to backend:", payload);
+      console.log("🆔 Using chat ID for AI agent check:", currentChatId || sessionId);
 
       // Send message to backend
       const response = await fetch(`${API_BASE_URL}/api/chat`, {
@@ -985,7 +1081,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
       // Save AI response to chat instance if we have one
       if (currentChatId) {
         try {
-          await fetch(`${API_BASE_URL}/api/chats/${currentChatId}/send`, {
+          await fetch(`${API_BASE_URL}/api/users/chats/${currentChatId}/send`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -993,6 +1089,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
               role: 'assistant' 
             }),
           });
+          console.log('✅ AI response saved to chat:', currentChatId);
         } catch (error) {
           console.warn('Failed to save AI response to chat instance:', error);
         }
@@ -1405,13 +1502,13 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
                     justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
                   }}
                 >
-                  {/* Assistant Avatar */}
-                  {message.role === 'assistant' && (
+                  {/* Agent Avatar - AI or Human */}
+                  {(message.role === 'assistant' || message.role === 'agent') && (
                     <Avatar
                       sx={{
                         width: 24,
                         height: 24,
-                        bgcolor: 'grey.800',
+                        bgcolor: message.role === 'agent' ? '#1976d2' : 'grey.800',
                         borderRadius: 1,
                       }}
                     >
@@ -1425,14 +1522,24 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
                       maxWidth: '70%',
                       px: 1.5,
                       py: 1,
-                      bgcolor: message.role === 'user' ? 'primary.main' : 'grey.50',
-                      color: message.role === 'user' ? 'white' : 'grey.800',
+                      bgcolor: message.role === 'user' ? 'primary.main' : message.role === 'agent' ? '#e3f2fd' : 'grey.50',
+                      color: message.role === 'user' ? 'white' : message.role === 'agent' ? '#1565c0' : 'grey.800',
                       borderRadius: 2,
                       boxShadow: 1,
+                      border: message.role === 'agent' ? '1px solid #1976d2' : 'none',
                     }}
                   >
-                    {message.role === 'assistant' ? (
-                      <TypewriterText text={message.content} speed={30} />
+                    {message.role === 'assistant' || message.role === 'agent' ? (
+                      <Box>
+                        {message.role === 'agent' && (
+                          <Typography variant="caption" sx={{ fontWeight: 600, display: 'block', mb: 0.5, color: '#1565c0' }}>
+                            👤 Human Agent
+                          </Typography>
+                        )}
+                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                          {message.content}
+                        </Typography>
+                      </Box>
                     ) : (
                       <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                         {message.content}

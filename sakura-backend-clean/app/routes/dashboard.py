@@ -1,13 +1,25 @@
 """
 Dashboard-specific API routes for user and chat management.
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
-from datetime import datetime
-from typing import List, Optional, Union
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
+from fastapi.responses import JSONResponse
 from pymongo.database import Database
 from bson import ObjectId
-from app.core.database import get_database, get_db_manager
-from app.models.chat_model import UserDataRequest, UserDataResponse
+from typing import Optional, Dict, Any, Union
+from datetime import datetime
+import traceback
+import json
+import uuid
+import asyncio
+import httpx
+import os
+
+from app.core.database import get_database
+from app.services.file_processing_service import get_file_processing_service
+from app.services.faq_embedding_service import get_faq_embedding_service
+from app.services.langgraph_service import get_langgraph_service
+from app.services.embeddings_service import get_embeddings_service
+from app.services.redis_publisher import publish_event
 
 router = APIRouter(prefix="/api", tags=["Dashboard"])
 
@@ -636,15 +648,68 @@ async def get_chat_by_id_for_context(chat_id: str, db: Database = Depends(get_da
 
 
 @router.post("/dashboard/chats/{chat_id}/send")
-async def send_message_to_chat(chat_id: str, request: dict, db: Database = Depends(get_database)):
+async def send_message_to_chat(chat_id: str, request: Request, db: Database = Depends(get_database)):
     """Send a message to a chat (for ChatContext and Widget)."""
     try:
         if db is None:
             raise HTTPException(status_code=503, detail="Database not available")
         
+        # Debug: Check what we're receiving
+        method = request.method
+        content_type = request.headers.get("content-type", "")
+        origin = request.headers.get("origin", "")
+        print(f"📨 Dashboard send request - Method: {method}, Chat ID: {chat_id}, Content-Type: {content_type}, Origin: {origin}")
+        
+        # Parse request body - support both JSON and FormData
         chats_collection = db["customer-chats"]
-        content = request.get("content", "")
-        role = request.get("role", "user")  # Allow role to be specified (user or assistant)
+        content = ""
+        role = "user"
+        
+        try:
+            # Check content type to determine parsing method
+            if "multipart/form-data" in content_type or "application/x-www-form-urlencoded" in content_type:
+                # Parse as FormData (for sendBeacon compatibility)
+                form_data = await request.form()
+                print(f"📥 Parsed FormData: {dict(form_data)}")
+                content = form_data.get("content", "")
+                role = form_data.get("role", "user")
+                
+                # Convert to string if needed
+                if hasattr(content, 'read'):
+                    content = await content.read()
+                    content = content.decode('utf-8') if isinstance(content, bytes) else str(content)
+                else:
+                    content = str(content) if content else ""
+                role = str(role) if role else "user"
+            else:
+                # Default to JSON parsing
+                raw_body = await request.body()
+                print(f"📦 Raw body length: {len(raw_body)} bytes")
+                
+                if len(raw_body) == 0:
+                    print(f"⚠️ Empty request body received!")
+                    raise HTTPException(status_code=400, detail="Request body is empty")
+                
+                import json
+                try:
+                    body = json.loads(raw_body.decode('utf-8'))
+                    print(f"📥 Parsed JSON body: {body}")
+                    content = body.get("content", "")
+                    role = body.get("role", "user")
+                except json.JSONDecodeError:
+                    # If JSON parsing fails, try to parse as form data
+                    # Note: This won't work if body was already consumed, but worth trying
+                    print(f"⚠️ Failed to parse as JSON, attempting FormData...")
+                    raise HTTPException(status_code=400, detail="Invalid JSON in request body. Expected JSON or FormData.")
+        except HTTPException:
+            raise
+        except Exception as e:
+            print(f"❌ Failed to parse request body: {e}")
+            import traceback
+            traceback.print_exc()
+            raise HTTPException(status_code=400, detail=f"Invalid request body: {str(e)}")
+        
+        print(f"💬 Dashboard sending message - Role: '{role}', Content: '{content[:50] if content else 'EMPTY'}'")
         
         if not content:
             raise HTTPException(status_code=400, detail="Message content is required")
@@ -659,6 +724,8 @@ async def send_message_to_chat(chat_id: str, request: dict, db: Database = Depen
             "status": "sent",
             "read": False
         }
+        
+        print(f"💾 Saving message to DB - Role: '{message['role']}', Chat ID: {chat_id}")
         
         # First check if chat exists
         chat_doc = chats_collection.find_one({"chat_id": chat_id})
@@ -689,6 +756,25 @@ async def send_message_to_chat(chat_id: str, request: dict, db: Database = Depen
                 {"chat_id": chat_id},
                 {"$set": {"total_messages": len(updated_chat_doc.get("messages", []))}}
             )
+        
+        # Trigger lightweight notification via Redis for real-time update
+        try:
+            notification = {
+                "type": "chat_updates",
+                "data": {
+                    "type": "chat_message_notification",
+                    "chat_id": chat_id,
+                    "message_role": role,
+                    "timestamp": datetime.now().isoformat()
+                }
+            }
+
+            await publish_event("chat_updates", notification)
+            print("✅ Quick notification published to Redis (dashboard message)")
+        except Exception as ws_error:
+            print(f"⚠️ Redis notification failed (non-critical): {ws_error}")
+            import traceback
+            traceback.print_exc()
         
         return {"success": True, "message": "Message sent successfully"}
         

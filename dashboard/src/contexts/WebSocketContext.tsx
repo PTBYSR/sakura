@@ -2,19 +2,42 @@
 
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback, ReactNode } from 'react';
 
-// Dynamically switch between local and production backend URLs
-// Convert HTTP URL to WebSocket URL (ws:// or wss://)
-const getWebSocketUrl = () => {
-  const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 
+// Determine the WebSocket endpoint (defaults to the new WebSocket microservice)
+const getWebSocketEndpoint = () => {
+  const explicit = process.env.NEXT_PUBLIC_WS_BASE_URL;
+  if (explicit) {
+    return explicit.endsWith("/ws/dashboard")
+      ? explicit
+      : `${explicit.replace(/\/$/, "")}/ws/dashboard`;
+  }
+
+  const fallbackApi = process.env.NEXT_PUBLIC_API_BASE_URL ||
     (process.env.NODE_ENV === "development"
       ? "http://localhost:8000"
       : "https://sakura-backend.onrender.com");
-  
-  // Convert http:// to ws:// and https:// to wss://
-  return apiUrl.replace(/^http:/, 'ws:').replace(/^https:/, 'wss:');
+
+  try {
+    const url = new URL(fallbackApi);
+    const isSecure = url.protocol === "https:";
+    url.protocol = isSecure ? "wss:" : "ws:";
+
+    if (url.port) {
+      if (url.port === "8000") {
+        url.port = "8001"; // default WebSocket microservice port in dev
+      }
+    } else if (!isSecure) {
+      url.port = "8001";
+    }
+
+    url.pathname = "/ws/dashboard";
+    return url.toString();
+  } catch (error) {
+    console.warn("Failed to derive WebSocket URL from API base, falling back to localhost:8001", error);
+    return "ws://localhost:8001/ws/dashboard";
+  }
 };
 
-const WS_BASE_URL = getWebSocketUrl();
+const WS_ENDPOINT = getWebSocketEndpoint();
 
 export type SubscriptionType = 'chat_updates' | 'unread_counts' | 'website_status';
 
@@ -65,9 +88,8 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
     }
 
     try {
-      const wsUrl = `${WS_BASE_URL}/ws/dashboard`;
-      console.log(`🔌 Attempting to connect to WebSocket: ${wsUrl}`);
-      const ws = new WebSocket(wsUrl);
+      console.log(`🔌 Attempting to connect to WebSocket: ${WS_ENDPOINT}`);
+      const ws = new WebSocket(WS_ENDPOINT);
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -89,30 +111,39 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
       ws.onmessage = (event) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
+          console.log('🔵 Raw WebSocket message received:', JSON.stringify(message, null, 2));
 
           if (message.type === 'connected') {
-            console.log('WebSocket connection confirmed:', message.connection_id);
+            console.log('✅ WebSocket connection confirmed:', message.connection_id);
           } else if (message.type === 'subscribed') {
-            console.log('Subscribed to:', message.subscription_type);
+            console.log('✅ Subscribed to:', message.subscription_type);
           } else if (message.type === 'chat_updates' || message.type === 'unread_counts' || message.type === 'website_status') {
             // Broadcast to all subscribers of this type
+            console.log(`📡 Broadcasting ${message.type} to subscribers...`);
             const callbacks = subscribersRef.current.get(message.type as SubscriptionType);
             if (callbacks) {
-              callbacks.forEach(callback => {
+              console.log(`📬 Found ${callbacks.size} subscriber(s) for ${message.type}`);
+              callbacks.forEach((callback, index) => {
                 try {
+                  console.log(`  → Calling callback ${index + 1}...`);
                   callback(message.data);
+                  console.log(`  ✅ Callback ${index + 1} executed successfully`);
                 } catch (error) {
-                  console.warn('Error in subscription callback:', error);
+                  console.warn(`  ❌ Error in subscription callback ${index + 1}:`, error);
                 }
               });
+            } else {
+              console.warn(`⚠️ No subscribers found for ${message.type}`);
             }
           } else if (message.type === 'pong') {
             // Keepalive response
+            console.log('🏓 Pong received');
           } else {
-            console.log('Received WebSocket message:', message);
+            console.log('⚠️ Received unknown WebSocket message type:', message.type, message);
           }
         } catch (error) {
-          console.warn('Error parsing WebSocket message:', error);
+          console.warn('❌ Error parsing WebSocket message:', error);
+          console.warn('   Raw data:', event.data);
         }
       };
 
@@ -120,7 +151,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
         // WebSocket error events don't always have detailed error info
         // Log connection details for debugging
         console.warn('WebSocket connection error:', {
-          url: `${WS_BASE_URL}/ws/dashboard`,
+          url: WS_ENDPOINT,
           readyState: ws.readyState,
           error: error
         });
@@ -150,7 +181,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
       // Log error details but don't use console.error to avoid Next.js error handler
       console.warn('Error creating WebSocket connection:', {
         error: error?.message || error,
-        url: `${WS_BASE_URL}/ws/dashboard`,
+        url: WS_ENDPOINT,
         details: 'This might be expected if the backend is not running or WebSocket is not available'
       });
       setIsConnected(false);
@@ -158,30 +189,37 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
   }, []);
 
   const subscribe = useCallback((type: SubscriptionType, callback: (data: any) => void): (() => void) => {
+    console.log(`📝 Subscribing to ${type}...`);
     // Add callback to subscribers
     if (!subscribersRef.current.has(type)) {
       subscribersRef.current.set(type, new Set());
     }
     subscribersRef.current.get(type)!.add(callback);
+    console.log(`📊 Total subscribers for ${type}: ${subscribersRef.current.get(type)!.size}`);
 
     // Send subscribe message if connected
     if (wsRef.current?.readyState === WebSocket.OPEN) {
+      console.log(`📤 Sending subscribe message for ${type}...`);
       wsRef.current.send(JSON.stringify({
         action: 'subscribe',
         subscription_type: type
       }));
     } else {
+      console.log(`⏳ WebSocket not open (state: ${wsRef.current?.readyState}), connecting...`);
       // If not connected, connect first
       connect();
     }
 
     // Return unsubscribe function
     return () => {
+      console.log(`🔌 Unsubscribing from ${type}...`);
       const callbacks = subscribersRef.current.get(type);
       if (callbacks) {
         callbacks.delete(callback);
+        console.log(`📊 Remaining subscribers for ${type}: ${callbacks.size}`);
         // If no more subscribers, unsubscribe from server
         if (callbacks.size === 0 && wsRef.current?.readyState === WebSocket.OPEN) {
+          console.log(`📤 Sending unsubscribe message for ${type}...`);
           wsRef.current.send(JSON.stringify({
             action: 'unsubscribe',
             subscription_type: type

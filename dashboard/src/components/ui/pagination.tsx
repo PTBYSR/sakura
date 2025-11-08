@@ -67,10 +67,10 @@ export function Pagination({ count, page, onChange, color = 'primary', size = 'm
           <button
             key={pageNumber}
             onClick={() => onChange(pageNumber)}
-            className={`${sizeClasses} rounded-lg border transition-colors ${
+            className={`${sizeClasses} rounded-lg border transition-all duration-200 ${
               isActive
                 ? color === 'primary'
-                  ? 'bg-[#EE66AA] border-[#EE66AA] text-white'
+                  ? 'bg-sakura-500 border-sakura-500 text-white shadow-md shadow-sakura-500/30'
                   : 'bg-gray-600 border-gray-600 text-white'
                 : 'border-gray-700 text-gray-300 hover:bg-gray-700'
             }`}
@@ -90,4 +90,5 @@ export function Pagination({ count, page, onChange, color = 'primary', size = 'm
     </div>
   );
 }
+
 

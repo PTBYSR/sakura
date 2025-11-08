@@ -13,11 +13,7 @@ export default function NotFound() {
       </p>
       <Link
         href="/"
-        className="inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold text-white"
-        style={{
-          background: 'linear-gradient(135deg, #EE66AA 0%, #8a2be2 100%)',
-          boxShadow: '0 10px 25px rgba(238, 102, 170, 0.2)'
-        }}
+        className="inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold text-white bg-gradient-to-r from-sakura-500 to-sakura-600 hover:from-sakura-600 hover:to-sakura-700 hover:shadow-lg hover:shadow-sakura-500/50 transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-sakura-500 focus:ring-offset-2 focus:ring-offset-dark-bg"
       >
         Go back home
       </Link>

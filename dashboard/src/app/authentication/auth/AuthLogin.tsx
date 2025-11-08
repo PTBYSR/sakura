@@ -127,13 +127,13 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
               checked={rememberMe}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRememberMe(e.target.checked)}
               disabled={loading}
-              className="w-4 h-4 rounded border-gray-600 bg-[#1e1e1e] text-[#EE66AA] focus:ring-[#EE66AA]"
+              className="w-4 h-4 rounded border-gray-600 bg-[#1e1e1e] text-sakura-500 focus:ring-sakura-500"
             />
             <span>Remember this Device</span>
           </label>
           <Link
             href="/authentication/forgot-password"
-            className="text-sm font-medium text-[#EE66AA] hover:underline"
+            className="text-sm font-medium text-sakura-500 hover:text-sakura-600 hover:underline transition-colors"
           >
             Forgot Password ?
           </Link>

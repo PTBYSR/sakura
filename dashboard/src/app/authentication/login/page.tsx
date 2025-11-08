@@ -28,7 +28,7 @@ const Login2 = () => {
                 </p>
                 <Link
                   href="/authentication/register"
-                  className="text-[#EE66AA] font-medium hover:underline no-underline"
+                  className="text-sakura-500 font-medium hover:text-sakura-600 hover:underline no-underline transition-colors"
                 >
                   Create an account
                 </Link>

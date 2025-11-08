@@ -10,6 +10,8 @@ from pymongo.database import Database
 from app.core.database import get_database
 from datetime import datetime
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ws", tags=["WebSocket"])
@@ -59,15 +61,26 @@ class ConnectionManager:
             logger.warning(f"Unknown subscription type: {subscription_type}")
             return
         
+        subscribers = self.subscriptions[subscription_type]
+        logger.info(f"📡 Broadcasting {subscription_type} to {len(subscribers)} subscriber(s)")
+        logger.info(f"   Message: {json.dumps(message, default=str)}")
+        
+        if len(subscribers) == 0:
+            logger.warning(f"⚠️ No subscribers for {subscription_type}, message will not be delivered")
+            return
+        
         disconnected = []
-        for connection_id in self.subscriptions[subscription_type]:
+        for connection_id in subscribers:
             if connection_id in self.active_connections:
                 try:
                     websocket = self.active_connections[connection_id]
                     await websocket.send_json(message)
+                    logger.info(f"✅ Successfully sent message to connection {connection_id}")
                 except Exception as e:
-                    logger.error(f"Error broadcasting to {connection_id}: {e}")
+                    logger.error(f"❌ Error broadcasting to {connection_id}: {e}")
                     disconnected.append(connection_id)
+            else:
+                logger.warning(f"⚠️ Connection {connection_id} not in active_connections, skipping")
         
         # Clean up disconnected connections
         for conn_id in disconnected:
@@ -77,7 +90,9 @@ class ConnectionManager:
         """Subscribe a connection to a specific update type."""
         if subscription_type in self.subscriptions:
             self.subscriptions[subscription_type].add(connection_id)
-            logger.info(f"Connection {connection_id} subscribed to {subscription_type}")
+            logger.info(f"✅ Connection {connection_id} subscribed to {subscription_type}")
+            logger.info(f"   Total subscribers for {subscription_type}: {len(self.subscriptions[subscription_type])}")
+            logger.info(f"   All active connections: {list(self.active_connections.keys())}")
     
     def unsubscribe(self, connection_id: str, subscription_type: str):
         """Unsubscribe a connection from a specific update type."""
@@ -167,6 +182,7 @@ async def broadcast_chat_updates(db: Database):
                         "email": user.get("email", ""),
                         "category": user.get("category", "human-chats"),
                         "status": user.get("status", "active"),
+                        "dashboard_user_id": user.get("dashboard_user_id"),  # Include for filtering
                         "chats": chats
                     })
                 

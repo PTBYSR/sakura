@@ -229,7 +229,8 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = (e?: React.MouseEvent | React.KeyboardEvent) => {
+    e?.preventDefault(); // Prevent form submission
     if (newMessage.trim()) {
       sendMessage(newMessage);
       setNewMessage("");
@@ -267,14 +268,15 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
 
   return (
     <div
-      className="flex flex-col h-screen bg-[#1a1a1a] overflow-hidden"
+      className="flex flex-col bg-[#1a1a1a] overflow-hidden"
       style={{
         width: `calc(100vw - ${currentSidebarWidth}px)`,
         position: "fixed",
-        top: 0,
+        top: "70px",
         left: `${currentSidebarWidth}px`,
         right: 0,
         bottom: 0,
+        height: "calc(100vh - 70px)",
         transition: "left 0.3s ease-in-out, width 0.3s ease-in-out",
         zIndex: 1100,
       }}
@@ -301,7 +303,7 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden" style={{ height: "calc(100vh - 52px)" }}>
+      <div className="flex flex-1 overflow-hidden" style={{ height: "calc(100% - 52px)" }}>
         {/* Left Sidebar - Chat List */}
         <div className="w-[300px] bg-[#2a2a2a] border-r border-[#333] flex flex-col overflow-hidden flex-shrink-0">
           {/* Header */}
@@ -402,7 +404,7 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
                             </Chip>
                           ) : (
                             <Chip size="small" className="h-5 text-[0.7rem] bg-blue-600 text-white">
-                              <span className="inline-flex items-center gap-1"><PersonIcon className="h-3 w-3" /> Agent</span>
+                              <span className="inline-flex items-center gap-1"><PersonIcon className="h-3 w-3" /> Human Agent</span>
                             </Chip>
                           )}
                         </div>
@@ -430,11 +432,15 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
               placeholder="Enter message"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  handleSendMessage(e);
+                }
+              }}
               className="mb-3"
             />
             <div className="flex items-center justify-end">
-              <Button onClick={handleSendMessage} size="small" disabled={!newMessage.trim()} className="px-3 py-1.5 text-sm bg-[#333] hover:bg-[#444] disabled:bg-[#222] disabled:text-[#666]">
+              <Button type="button" onClick={handleSendMessage} size="small" disabled={!newMessage.trim()} className="px-3 py-1.5 text-sm bg-[#333] hover:bg-[#444] disabled:bg-[#222] disabled:text-[#666]">
                 <span className="inline-flex items-center gap-2">
                   Send <Send className="h-4 w-4" />
                 </span>

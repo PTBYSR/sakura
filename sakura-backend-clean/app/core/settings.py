@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     mongo_uri: str = Field(default="mongodb://localhost:27017", env="MONGO_URI")
     db_name: str = Field(default="sakura", env="DB_NAME")
 
+    # Redis / messaging
+    redis_url: str = Field(default="redis://localhost:6379/0", env="REDIS_URL")
+
     # AI / LLM
     openai_api_key: Optional[str] = Field(default=None, env="OPENAI_API_KEY")
     google_api_key: Optional[str] = Field(default=None, env="GOOGLE_API_KEY")

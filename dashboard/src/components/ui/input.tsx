@@ -19,7 +19,7 @@ export function Input({ label, error, helperText, className = '', ...props }: In
           w-full px-4 py-2 rounded-lg
           bg-[#1e1e1e] border border-gray-700
           text-white placeholder-gray-500
-          focus:outline-none focus:ring-2 focus:ring-[#EE66AA] focus:border-transparent
+          focus:outline-none focus:ring-2 focus:ring-sakura-500 focus:border-transparent transition-all duration-200
           disabled:opacity-50 disabled:cursor-not-allowed
           ${error ? 'border-red-500' : ''}
           ${className}
@@ -35,4 +35,5 @@ export function Input({ label, error, helperText, className = '', ...props }: In
     </div>
   );
 }
+
 

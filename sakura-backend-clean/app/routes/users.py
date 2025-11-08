@@ -1,13 +1,22 @@
 """
 User-related API routes.
 """
-from fastapi import APIRouter, Depends, HTTPException
-from datetime import datetime
-from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
+from fastapi.responses import JSONResponse
 from bson import ObjectId
-from app.models.chat_model import UserDataRequest, UserDataResponse
-from app.core.database import get_database, get_db_manager
 from pymongo.database import Database
+from typing import Optional
+from datetime import datetime
+import asyncio
+import traceback
+import json
+import httpx
+import os
+import uuid
+
+from app.core.database import get_database
+from app.models.chat_model import UserDataRequest, UserDataResponse
+from app.services.redis_publisher import publish_event
 
 router = APIRouter(prefix="/api/users", tags=["Users"])
 
@@ -289,6 +298,151 @@ async def create_chat_instance(request: dict, db: Database = Depends(get_databas
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/chats/{chat_id}/send")
+async def send_message_to_chat(
+    chat_id: str, 
+    request: Request,
+    db: Database = Depends(get_database),
+    background_tasks: BackgroundTasks = None
+):
+    """Send a message to a chat (for Widget)."""
+    print(f"\n{'='*60}")
+    print(f"📥 WIDGET MESSAGE RECEIVED")
+    print(f"{'='*60}")
+    print(f"Chat ID: {chat_id}")
+    print(f"{'='*60}\n")
+    
+    try:
+        if db is None:
+            raise HTTPException(status_code=503, detail="Database not available")
+        
+        # Parse request body - support both JSON and FormData/Blob
+        content_type = request.headers.get("content-type", "")
+        content = ""
+        role = "user"
+        
+        try:
+            if "application/json" in content_type:
+                # Parse as JSON
+                body = await request.json()
+                print(f"📥 Parsed JSON body: {body}")
+                content = body.get("content", "")
+                role = body.get("role", "user")
+            elif "multipart/form-data" in content_type or "application/x-www-form-urlencoded" in content_type:
+                # Parse as FormData
+                form_data = await request.form()
+                print(f"📥 Parsed FormData: {dict(form_data)}")
+                content = form_data.get("content", "")
+                role = form_data.get("role", "user")
+                if hasattr(content, 'read'):
+                    content = await content.read()
+                    content = content.decode('utf-8') if isinstance(content, bytes) else str(content)
+                else:
+                    content = str(content) if content else ""
+                role = str(role) if role else "user"
+            else:
+                # Try to parse as JSON (for Blob with application/json type)
+                try:
+                    body = await request.json()
+                    print(f"📥 Parsed as JSON (default): {body}")
+                    content = body.get("content", "")
+                    role = body.get("role", "user")
+                except:
+                    # If JSON parsing fails, try reading raw body and parsing manually
+                    raw_body = await request.body()
+                    if raw_body:
+                        try:
+                            import json
+                            body = json.loads(raw_body.decode('utf-8'))
+                            print(f"📥 Parsed from raw body: {body}")
+                            content = body.get("content", "")
+                            role = body.get("role", "user")
+                        except:
+                            raise HTTPException(status_code=400, detail="Could not parse request body as JSON or FormData")
+                    else:
+                        raise HTTPException(status_code=400, detail="Request body is empty")
+        except HTTPException:
+            raise
+        except Exception as e:
+            print(f"❌ Failed to parse request body: {e}")
+            import traceback
+            traceback.print_exc()
+            raise HTTPException(status_code=400, detail=f"Invalid request body: {str(e)}")
+        
+        chats_collection = db["customer-chats"]
+        
+        print(f"💬 Message content: '{content[:100]}'")
+        print(f"👤 Message role: '{role}'")
+        
+        if not content:
+            raise HTTPException(status_code=400, detail="Message content is required")
+        
+        # Add message to chat
+        message = {
+            "_id": f"msg_{int(datetime.now().timestamp())}",
+            "role": role,
+            "content": content,
+            "text": content,  # Store as both for compatibility
+            "timestamp": datetime.now(),
+            "status": "sent",
+            "read": False
+        }
+        
+        # Check if chat exists
+        chat_doc = chats_collection.find_one({"chat_id": chat_id})
+        if not chat_doc:
+            print(f"⚠️  Chat not found: {chat_id}")
+            raise HTTPException(status_code=404, detail=f"Chat not found: {chat_id}")
+        
+        # Add message to chat
+        result = chats_collection.update_one(
+            {"chat_id": chat_id},
+            {
+                "$push": {"messages": message},
+                "$set": {
+                    "updated_at": datetime.now(),
+                    "last_activity": datetime.now()
+                }
+            }
+        )
+        
+        # Update total_messages count
+        updated_chat_doc = chats_collection.find_one({"chat_id": chat_id})
+        if updated_chat_doc:
+            chats_collection.update_one(
+                {"chat_id": chat_id},
+                {"$set": {"total_messages": len(updated_chat_doc.get("messages", []))}}
+            )
+        
+        # Trigger lightweight notification via Redis for real-time dashboard update
+        try:
+            notification = {
+                "type": "chat_updates",
+                "data": {
+                    "type": "chat_message_notification",
+                    "chat_id": chat_id,
+                    "message_role": role,
+                    "timestamp": datetime.now().isoformat()
+                }
+            }
+
+            await publish_event("chat_updates", notification)
+            print("✅ Quick notification published to Redis (widget message)")
+        except Exception as ws_error:
+            print(f"⚠️ Redis notification failed (non-critical): {ws_error}")
+            import traceback
+            traceback.print_exc()
+        
+        print(f"✅ Message saved to chat {chat_id} (role: {role})")
+        return {"success": True, "message": "Message sent successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error sending message: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{user_id}/chats")
 async def get_user_chats(
     user_id: str,
@@ -334,8 +488,15 @@ async def get_user_chats(
                 search_id = user_doc.get("_id")
                 print(f"✅ Found user by user_id reference field: {user_id} (stored _id: {search_id})")
         
+        # If still not found, try email (for widget polling)
         if not user_doc:
-            print(f"❌ User not found with ID: {user_id}")
+            user_doc = customers_collection.find_one({"email": user_id})
+            if user_doc:
+                search_id = user_doc.get("_id")
+                print(f"✅ Found user by email: {user_id} (stored _id: {search_id})")
+        
+        if not user_doc:
+            print(f"❌ User not found with ID or email: {user_id}")
             raise HTTPException(status_code=404, detail="User not found")
         
         # Get all chats for this user
@@ -364,6 +525,7 @@ async def get_user_chats(
             # Convert messages
             for msg in chat_doc.get("messages", []):
                 message = {
+                    "_id": msg.get("_id", f"msg_{msg.get('timestamp', datetime.now())}"),
                     "role": msg.get("role", "user"),
                     "text": msg.get("text", msg.get("content", "")),
                     "content": msg.get("content", msg.get("text", "")),

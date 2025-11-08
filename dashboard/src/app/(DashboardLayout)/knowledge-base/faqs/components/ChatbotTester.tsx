@@ -111,7 +111,7 @@ export default function ChatbotTester({ faqs }: ChatbotTesterProps) {
             }`}
           >
             {message.role === "assistant" && (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#EE66AA] to-[#8a2be2] flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-sakura-500 to-sakura-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-sakura-500/30">
                 <MessageSquare size={16} className="text-white" />
               </div>
             )}
@@ -119,7 +119,7 @@ export default function ChatbotTester({ faqs }: ChatbotTesterProps) {
             <div
               className={`max-w-[75%] px-3 py-2 rounded-lg shadow-sm ${
                 message.role === "user"
-                  ? "bg-gradient-to-r from-[#EE66AA] to-[#8a2be2] text-white"
+                  ? "bg-gradient-to-r from-sakura-500 to-sakura-600 text-white shadow-md shadow-sakura-500/20"
                   : "bg-[#1e1e1e] border border-gray-700 text-gray-200"
               }`}
             >
@@ -140,7 +140,7 @@ export default function ChatbotTester({ faqs }: ChatbotTesterProps) {
       <div className="p-4 border-t border-gray-700 bg-[#1e1e1e]">
         <div className="flex gap-2 items-end">
           <textarea
-            className="flex-1 px-4 py-2 rounded-full bg-[#1a1a1a] border border-gray-700 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#EE66AA] focus:border-transparent resize-none max-h-24"
+            className="flex-1 px-4 py-2 rounded-full bg-[#1a1a1a] border border-gray-700 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sakura-500 focus:border-transparent resize-none max-h-24 transition-all duration-200"
             placeholder="Type your message..."
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
@@ -150,9 +150,9 @@ export default function ChatbotTester({ faqs }: ChatbotTesterProps) {
           <button
             onClick={handleSend}
             disabled={!inputMessage.trim()}
-            className={`p-2 rounded-full transition-colors flex-shrink-0 ${
+            className={`p-2 rounded-full transition-all duration-200 flex-shrink-0 ${
               inputMessage.trim()
-                ? "bg-gradient-to-r from-[#EE66AA] to-[#8a2be2] text-white hover:opacity-90"
+                ? "bg-gradient-to-r from-sakura-500 to-sakura-600 text-white hover:from-sakura-600 hover:to-sakura-700 hover:shadow-lg hover:shadow-sakura-500/50 active:scale-95 focus:outline-none focus:ring-2 focus:ring-sakura-500 focus:ring-offset-2 focus:ring-offset-dark-surface"
                 : "bg-gray-700 text-gray-500 cursor-not-allowed"
             }`}
           >

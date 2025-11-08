@@ -17,7 +17,7 @@ const Register2 = () => (
           subtitle={
             <div className="flex items-center justify-center gap-2 mt-3 text-sm">
               <span className="text-gray-400">Already have an Account?</span>
-              <Link className="font-medium text-[#EE66AA] hover:underline" href="/authentication/login">
+              <Link className="font-medium text-sakura-500 hover:text-sakura-600 hover:underline transition-colors" href="/authentication/login">
                 Sign In
               </Link>
             </div>
