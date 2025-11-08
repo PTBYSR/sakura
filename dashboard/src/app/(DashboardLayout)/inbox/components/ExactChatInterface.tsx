@@ -318,7 +318,7 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
                 </div>
                 {process.env.NODE_ENV === "development" && (
                   <div className="text-[#666] text-[0.7rem] mt-1.5">
-                    Debug: Section="{section}", Chats={chats.length}, Loading={loading ? "Yes" : "No"}, Error={error || "None"}
+                    Debug: Section=&quot;{section}&quot;, Chats={chats.length}, Loading={loading ? 'Yes' : 'No'}, Error={error || 'None'}
                   </div>
                 )}
               </div>

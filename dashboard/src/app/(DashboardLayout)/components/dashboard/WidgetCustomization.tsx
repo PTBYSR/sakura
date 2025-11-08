@@ -78,7 +78,7 @@ function AdvancedCustomization() {
         <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/60" onClick={handleClose} />
           <div className="relative max-w-md mx-auto mt-24 rounded-lg border border-[#333] bg-[#2a2a2a] shadow-lg">
-            <div className="p-4 border-b border-[#333] text-white font-semibold">Collect Visitor's Info</div>
+            <div className="p-4 border-b border-[#333] text-white font-semibold">Collect Visitor&apos;s Info</div>
             <div className="p-4 space-y-2 text-sm text-gray-200">
               {["Name", "Email", "Phone", "Company"].map((field) => (
                 <label key={field} className="flex items-center gap-2">

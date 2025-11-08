@@ -717,7 +717,7 @@ const AIAgentSettingsPage = () => {
           <div className="flex items-center justify-between mb-2">
             <div>
               <div className="text-white font-semibold text-xl mb-1">AI Agent Settings</div>
-              <div className="text-[#bbb] text-sm">Configure your AI agent's name, behavior, knowledge sources, and SOPs</div>
+              <div className="text-[#bbb] text-sm">Configure your AI agent&apos;s name, behavior, knowledge sources, and SOPs</div>
             </div>
           </div>
 
@@ -745,13 +745,13 @@ const AIAgentSettingsPage = () => {
                   rows={12}
                   value={systemPrompt}
                   onChange={(e) => setSystemPrompt(e.target.value)}
-                  placeholder="Enter the system prompt that defines your AI agent's behavior and personality..."
+                  placeholder="Enter the system prompt that defines your AI agent&apos;s behavior and personality..."
                   className="w-full px-4 py-2 rounded-lg bg-[#1e1e1e] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#EE66AA] focus:border-transparent font-mono text-sm leading-6"
                 />
                 <div className="text-xs text-gray-400 mt-1">This prompt defines how your AI agent responds to users. Be specific about tone, style, and behavior.</div>
               </div>
               <div className="text-sm text-blue-200 bg-blue-900/30 border border-blue-700 rounded-md p-2">
-                The system prompt is used to guide your AI agent's responses. Changes will take effect immediately after saving.
+                The system prompt is used to guide your AI agent&apos;s responses. Changes will take effect immediately after saving.
               </div>
             </div>
           </div>
