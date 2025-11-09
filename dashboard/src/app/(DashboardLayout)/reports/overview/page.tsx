@@ -104,7 +104,7 @@ const ReportsOverviewPage = () => {
         <div className="py-4">
           {/* Header */}
           <div className="mb-6">
-            <h5 className="text-xl font-semibold text-white mb-1">
+            <h5 className="text-xl font-semibold text-slate-900 mb-1">
               Reports
             </h5>
             <p className="text-sm text-gray-300">

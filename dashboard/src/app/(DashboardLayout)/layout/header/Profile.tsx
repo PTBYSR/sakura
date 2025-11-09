@@ -10,24 +10,16 @@ import { User, Mail, ListChecks, LogOut } from "lucide-react";
 const Profile = () => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { data: session } = authClient.useSession();
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
       }
     };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen]);
+  }, []);
 
   const handleLogout = async () => {
     await authClient.signOut({
@@ -51,17 +43,39 @@ const Profile = () => {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+  const openTooltip = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    setIsOpen(true);
+  };
+
+  const closeTooltip = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsOpen(false);
+    }, 120);
+  };
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div
+      className="relative"
+      onMouseEnter={openTooltip}
+      onMouseLeave={closeTooltip}
+      onFocus={openTooltip}
+      onBlur={() => setIsOpen(false)}
+    >
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen((prev) => !prev)}
         className={`relative inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
           isOpen ? "text-[#EE66AA]" : "text-gray-300"
-        } hover:bg-gray-700`}
-        aria-label="show user menu"
-        aria-controls="msgs-menu"
+        } hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#EE66AA]`}
+        aria-label="Show user menu"
         aria-haspopup="true"
+        aria-expanded={isOpen}
+        type="button"
       >
         {userImage ? (
           <Image
@@ -79,47 +93,20 @@ const Profile = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-[220px] bg-[#1e1e1e] border border-gray-700 rounded-lg shadow-lg z-[1300] overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-700">
+        <div className="absolute right-0 top-[110%] w-[240px] bg-[#1f1f1f] border border-gray-700 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.45)] z-[1300] overflow-hidden">
+          <div className="px-4 py-3">
             <p className="text-sm font-semibold text-white">{userName}</p>
             {userEmail && (
               <p className="text-xs text-gray-400 mt-1">{userEmail}</p>
             )}
           </div>
 
-          <div className="py-1">
-            <Link
-              href="/profile"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
-            >
-              <User className="w-5 h-5 mr-3" />
-              My Profile
-            </Link>
-            <Link
-              href="/settings"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
-            >
-              <Mail className="w-5 h-5 mr-3" />
-              My Account
-            </Link>
-            <Link
-              href="/tasks"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
-            >
-              <ListChecks className="w-5 h-5 mr-3" />
-              My Tasks
-            </Link>
-          </div>
-
-          <div className="mt-1 py-2 px-4 border-t border-gray-700">
+          <div className="px-4 py-3 border-t border-gray-700">
             <button
               onClick={handleLogout}
-              className="w-full px-4 py-2 text-sm font-medium text-[#EE66AA] border-2 border-[#EE66AA] rounded-lg hover:bg-[#EE66AA]/10 transition-colors"
+              className="w-full px-4 py-2 text-sm font-medium text-white bg-[#EE66AA] rounded-lg hover:bg-[#f17ab3] transition-colors flex items-center justify-center gap-2"
             >
-              <LogOut className="w-4 h-4 inline mr-2" />
+              <LogOut className="w-4 h-4" />
               Logout
             </button>
           </div>
@@ -127,6 +114,7 @@ const Profile = () => {
       )}
     </div>
   );
-};
+}
+;
 
 export default Profile;

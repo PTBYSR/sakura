@@ -170,7 +170,7 @@ const KnowledgeBaseWebsitesPage = () => {
     <PageContainer title="Knowledge Base Websites" description="Manage website knowledge sources">
       <div className="max-w-6xl mx-auto px-4">
         <div className="py-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
             Website Knowledge Sources
           </h1>
           <p className="text-gray-300 mb-8">
@@ -183,14 +183,17 @@ const KnowledgeBaseWebsitesPage = () => {
               <h6 className="text-lg font-semibold text-white mb-4">
                 Add New Website
               </h6>
-              <form onSubmit={handleSubmit} className="flex gap-3 items-start">
-                <div className="flex-1">
+              <form
+                onSubmit={handleSubmit}
+                className="flex flex-col sm:flex-row gap-3 items-stretch"
+              >
+                <div className="sm:flex-1">
                   <Input
                     placeholder="https://example.com"
                     value={newUrl}
                     onChange={(e) => setNewUrl(e.target.value)}
                     disabled={isSubmitting}
-                    className="w-full"
+                    className="w-full h-11"
                   />
                   <p className="text-xs text-gray-400 mt-1">
                     Enter the full URL of the website you want to index
@@ -199,9 +202,8 @@ const KnowledgeBaseWebsitesPage = () => {
                 <Button
                   type="submit"
                   variant="contained"
-                  color="primary"
                   disabled={!newUrl.trim() || isSubmitting}
-                  className="min-w-[140px]"
+                  className="h-11 px-5 shrink-0 sm:min-w-[140px]"
                 >
                   <Plus size={16} className="mr-2" />
                   {isSubmitting ? 'Processing...' : 'Add Website'}

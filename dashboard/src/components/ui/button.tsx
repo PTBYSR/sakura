@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'contained' | 'outlined' | 'text';
+  variant?: 'contained' | 'outlined' | 'text' | 'default';
   color?: 'primary' | 'secondary' | 'error' | 'success';
   size?: 'small' | 'medium' | 'large';
   children: React.ReactNode;
@@ -35,6 +35,12 @@ export function Button({
       secondary: 'text-gray-300 hover:bg-gray-700 hover:text-white active:scale-95 focus:ring-gray-500',
       error: 'text-red-400 hover:bg-red-600/10 hover:text-red-300 active:scale-95 focus:ring-red-500',
       success: 'text-green-400 hover:bg-green-600/10 hover:text-green-300 active:scale-95 focus:ring-green-500',
+    },
+    default: {
+      primary: 'bg-[#3a3a3a] text-white border border-gray-600 hover:bg-[#4a4a4a] hover:border-gray-500 active:scale-95 focus:ring-sakura-500',
+      secondary: 'bg-[#2a2a2a] text-gray-200 border border-gray-700 hover:bg-[#343434] hover:border-gray-600 active:scale-95 focus:ring-gray-500',
+      error: 'bg-[#3a1c1c] text-red-300 border border-red-600 hover:bg-[#4a2424] hover:border-red-500 active:scale-95 focus:ring-red-500',
+      success: 'bg-[#1f3224] text-green-300 border border-green-600 hover:bg-[#28412f] hover:border-green-500 active:scale-95 focus:ring-green-500',
     },
   };
   

@@ -1,12 +1,12 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Settings, HelpCircle, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Settings, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { navigationConfig, NavigationModule, NavigationItem } from "@/config/navigation";
-import { useAgents } from "@/contexts/AgentsContext";
 import { useSectionUnreadCounts } from "@/app/(DashboardLayout)/inbox/hooks/useSectionUnreadCounts";
+import { useSidebar } from "@/contexts/SidebarContext";
 
 interface NewSidebarProps {
   isMobileSidebarOpen: boolean;
@@ -26,8 +26,9 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
   const pathname = usePathname();
   const [isLgUp, setIsLgUp] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [activeModule, setActiveModule] = useState<string>("inbox");
+  const [activeModule, setActiveModule] = useState<string | null>(null);
   const { getUnreadCount, markSectionAsRead } = useSectionUnreadCounts();
+  const { setIsSidebarCollapsed } = useSidebar();
 
   const manualModuleRef = useRef<string | null>(null);
   const lastPathnameRef = useRef<string | null>(null);
@@ -55,8 +56,12 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
         return module.children?.some(child => pathname?.startsWith(child.href));
       });
 
-      if (matchingModule && matchingModule.id !== activeModule) {
-        setActiveModule(matchingModule.id);
+      if (matchingModule) {
+        if (matchingModule.id !== activeModule) {
+          setActiveModule(matchingModule.id);
+        }
+      } else if (activeModule !== null) {
+        setActiveModule(null);
       }
     }
   }, [pathname, activeModule]);
@@ -78,6 +83,9 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
   };
 
   const handleModuleClick = (moduleId: string) => {
+    if (isSidebarCollapsed) {
+      setIsSidebarCollapsed(false);
+    }
     setActiveModule(moduleId);
     manualModuleRef.current = moduleId;
     
@@ -90,6 +98,12 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
 
   const isItemActive = (href: string) => {
     return pathname === href || pathname.startsWith(href + "/");
+  };
+
+  const handleRouteChange = (event: React.MouseEvent<HTMLElement>) => {
+    if (!isLgUp && onSidebarClose) {
+      onSidebarClose(event);
+    }
   };
 
   const renderNavigationItem = (item: NavigationItem, level: number = 0) => {
@@ -181,6 +195,7 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
             target="_blank"
             rel="noopener noreferrer"
             className="no-underline text-inherit"
+            onClick={(event) => handleRouteChange(event)}
           >
             {listItemContent}
           </a>
@@ -188,10 +203,11 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
           <Link 
             href={item.href} 
             className="no-underline text-inherit"
-            onClick={() => {
+            onClick={(event) => {
               if (item.id === 'human-chats' || item.id === 'escalated-chats' || item.id === 'active-chats') {
                 markSectionAsRead(item.id);
               }
+              handleRouteChange(event);
             }}
           >
             {listItemContent}
@@ -250,7 +266,12 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
 
       <div className="flex-1" />
       
-      <Link href="/settings" className="no-underline text-inherit" title="Settings">
+      <Link
+        href="/settings"
+        className="no-underline text-inherit"
+        title="Settings"
+        onClick={(event) => handleRouteChange(event)}
+      >
         <div
           className={`w-10 h-10 rounded-lg flex items-center justify-center ${
             isItemActive("/settings") 
@@ -269,11 +290,6 @@ const NewSidebar: React.FC<NewSidebarProps> = ({
         <HelpCircle size={20} strokeWidth={1.5} />
       </div>
 
-      <Link href="/settings/account-settings" className="no-underline text-inherit" title="Account Settings">
-        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white cursor-pointer relative mt-2 transition-all duration-200 hover:bg-blue-700 after:content-[''] after:absolute after:-top-0.5 after:-right-0.5 after:w-3 after:h-3 after:rounded-full after:bg-green-500 after:border-2 after:border-black">
-          <User size={20} strokeWidth={1.5} />
-        </div>
-        </Link>
     </div>
   );
 

@@ -237,6 +237,13 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
+  // Whenever the selected chat changes, mark it as read to clear the badge
+  useEffect(() => {
+    if (selectedChat?.chat.id) {
+      markAsRead(selectedChat.chat.id);
+    }
+  }, [selectedChat?.chat.id, markAsRead]);
+
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -328,7 +335,10 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
               chats.map((chat) => (
                 <button
                   key={chat.chat.id}
-                  onClick={() => setSelectedChat(chat)}
+                  onClick={() => {
+                    setSelectedChat(chat);
+                    markAsRead(chat.chat.id);
+                  }}
                   className={`w-full flex items-start gap-3 px-2.5 py-1.5 hover:bg-[#3a3a3a] ${selectedChat?.chat.id === chat.chat.id ? 'bg-[#3a3a3a]' : ''}`}
                 >
                   <div className="min-w-[44px]">

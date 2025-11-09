@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Avatar } from "@/components/ui/avatar";
-import { Collapse } from "@/components/ui/collapse";
 import { IconButton } from "@/components/ui/icon-button";
 import {
   Save,
@@ -14,14 +13,12 @@ import {
   Globe2,
   HelpCircle,
   FileText,
-  Workflow,
   X,
   ChevronDown,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { useAgents } from "@/contexts/AgentsContext";
-import { useSOPs } from "@/contexts/SOPsContext";
 import { useRouter, usePathname } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
@@ -37,18 +34,8 @@ interface KnowledgeBaseItem {
   enabled: boolean;
 }
 
-interface SOPItem {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  status: string;
-  enabled: boolean;
-}
-
 const AIAgentSettingsPage = () => {
   const { agent, updateAgent } = useAgents();
-  const { sops } = useSOPs();
   const { data: session } = authClient.useSession();
   const router = useRouter();
   const pathname = usePathname();
@@ -62,7 +49,6 @@ const AIAgentSettingsPage = () => {
   const [originalAgentName, setOriginalAgentName] = useState(agent.name || "");
   const [originalSystemPrompt, setOriginalSystemPrompt] = useState("");
   const [originalSelectedKbItems, setOriginalSelectedKbItems] = useState<Set<string>>(new Set());
-  const [originalSelectedSopItems, setOriginalSelectedSopItems] = useState<Set<string>>(new Set());
   
   // Change detection state
   const [hasChanges, setHasChanges] = useState(false);
@@ -76,11 +62,6 @@ const AIAgentSettingsPage = () => {
   const [kbSearchQuery, setKbSearchQuery] = useState("");
   const [kbFilter, setKbFilter] = useState<"all" | "website" | "faq" | "file">("all");
   const [selectedKbItems, setSelectedKbItems] = useState<Set<string>>(new Set());
-  
-  // SOPs states
-  const [sopItems, setSopItems] = useState<SOPItem[]>([]);
-  const [sopSearchQuery, setSopSearchQuery] = useState("");
-  const [selectedSopItems, setSelectedSopItems] = useState<Set<string>>(new Set());
   
   // Snackbar states
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
@@ -263,21 +244,6 @@ const AIAgentSettingsPage = () => {
         setSelectedKbItems(new Set(enabledKbItemIds));
         setOriginalSelectedKbItems(new Set(enabledKbItemIds));
 
-        // Load SOPs from context
-        const sopItemsList: SOPItem[] = sops.map((sop) => ({
-          id: sop.id,
-          name: sop.name,
-          description: sop.description,
-          category: sop.category,
-          status: sop.status,
-          enabled: true,
-        }));
-        setSopItems(sopItemsList);
-        // Initialize SOP selections (all enabled by default for now)
-        const sopIds = new Set(sopItemsList.map(sop => sop.id));
-        setSelectedSopItems(sopIds);
-        setOriginalSelectedSopItems(new Set(sopIds));
-
         // Mark initial load as complete and reset change detection
         // Use setTimeout to ensure all state updates are complete before enabling change detection
         setTimeout(() => {
@@ -299,7 +265,7 @@ const AIAgentSettingsPage = () => {
     };
 
     loadData();
-  }, [session, sops]);
+  }, [session]);
 
   // Check for changes whenever relevant state updates (only after initial load)
   useEffect(() => {
@@ -317,15 +283,9 @@ const AIAgentSettingsPage = () => {
       Array.from(selectedKbItems).some(id => !originalSelectedKbItems.has(id)) ||
       Array.from(originalSelectedKbItems).some(id => !selectedKbItems.has(id));
     
-    // Compare SOP selections properly
-    const sopSelectionChanged =
-      selectedSopItems.size !== originalSelectedSopItems.size ||
-      Array.from(selectedSopItems).some(id => !originalSelectedSopItems.has(id)) ||
-      Array.from(originalSelectedSopItems).some(id => !selectedSopItems.has(id));
-
-    const hasAnyChanges = agentNameChanged || systemPromptChanged || kbSelectionChanged || sopSelectionChanged;
+    const hasAnyChanges = agentNameChanged || systemPromptChanged || kbSelectionChanged;
     setHasChanges(hasAnyChanges);
-  }, [agentName, systemPrompt, selectedKbItems, selectedSopItems, originalAgentName, originalSystemPrompt, originalSelectedKbItems, originalSelectedSopItems, loading]);
+  }, [agentName, systemPrompt, selectedKbItems, originalAgentName, originalSystemPrompt, originalSelectedKbItems, loading]);
 
   // Handle browser back/forward navigation
   useEffect(() => {
@@ -495,7 +455,6 @@ const AIAgentSettingsPage = () => {
       setOriginalAgentName(agentName);
       setOriginalSystemPrompt(systemPrompt);
       setOriginalSelectedKbItems(new Set(selectedKbItems));
-      setOriginalSelectedSopItems(new Set(selectedSopItems));
       setHasChanges(false);
 
       setSnackbar({
@@ -520,7 +479,6 @@ const AIAgentSettingsPage = () => {
     setAgentName(originalAgentName);
     setSystemPrompt(originalSystemPrompt);
     setSelectedKbItems(new Set(originalSelectedKbItems));
-    setSelectedSopItems(new Set(originalSelectedSopItems));
     setHasChanges(false);
     
     setSnackbar({
@@ -625,51 +583,6 @@ const AIAgentSettingsPage = () => {
     return filtered;
   };
 
-  // SOPs handlers
-  const handleSopToggle = (itemId: string) => {
-    setSelectedSopItems((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(itemId)) {
-        newSet.delete(itemId);
-      } else {
-        newSet.add(itemId);
-      }
-      return newSet;
-    });
-  };
-
-  const handleSopSelectAll = () => {
-    const filtered = getFilteredSopItems();
-    if (selectedSopItems.size === filtered.length) {
-      setSelectedSopItems(new Set());
-    } else {
-      setSelectedSopItems(new Set(filtered.map((item) => item.id)));
-    }
-  };
-
-  const handleSopUnselectAll = () => {
-    setSelectedSopItems(new Set());
-  };
-
-  const getFilteredSopItems = (): SOPItem[] => {
-    let filtered = sopItems;
-
-    // Apply search
-    if (sopSearchQuery.trim()) {
-      const query = sopSearchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          item.name.toLowerCase().includes(query) ||
-          item.description.toLowerCase().includes(query) ||
-          item.category.toLowerCase().includes(query)
-      );
-    }
-
-    return filtered;
-  };
-
-  // no-op
-
   if (loading) {
     return (
       <PageContainer title="AI Agent Settings" description="Configure your AI agent">
@@ -683,18 +596,16 @@ const AIAgentSettingsPage = () => {
   }
 
   const filteredKbItems = getFilteredKbItems();
-  const filteredSopItems = getFilteredSopItems();
-
   return (
     <PageContainer title="AI Agent Settings" description="Configure your AI agent">
       <div className="max-w-5xl mx-auto py-2">
           {/* Changes Banner */}
           {hasChanges && (
-            <div className="sticky top-0 z-50 mb-2 p-2 rounded-md bg-yellow-500/20 border border-yellow-600">
+            <div className="sticky top-0 z-50 mb-2 p-2 rounded-md bg-yellow-500/25 border border-yellow-400">
               <div className="flex items-center justify-between">
-                <div className="text-sm font-medium text-yellow-200">You have unsaved changes</div>
+                <div className="text-sm font-medium text-yellow-50">You have unsaved changes</div>
                 <div className="flex gap-2">
-                  <Button variant="outlined" size="small" onClick={handleDiscard} disabled={saving} className="border-yellow-400 text-yellow-300 hover:bg-yellow-500/10 px-3 py-1 text-sm">
+                  <Button variant="outlined" size="small" onClick={handleDiscard} disabled={saving} className="border-yellow-300 text-yellow-100 hover:bg-yellow-500/20 px-3 py-1 text-sm">
                     Discard
                   </Button>
                   <Button size="small" onClick={handleSave} disabled={saving} className="bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white px-3 py-1 text-sm inline-flex items-center gap-2">
@@ -719,7 +630,7 @@ const AIAgentSettingsPage = () => {
           <div className="flex items-center justify-between mb-2">
             <div>
               <div className="text-white font-semibold text-xl mb-1">AI Agent Settings</div>
-              <div className="text-[#bbb] text-sm">Configure your AI agent&apos;s name, behavior, knowledge sources, and SOPs</div>
+              <div className="text-gray-200 text-sm">Configure your AI agent&apos;s name, behavior, and knowledge sources</div>
             </div>
           </div>
 
@@ -733,7 +644,7 @@ const AIAgentSettingsPage = () => {
             </div>
             <div className="p-3 space-y-3">
               <div>
-                <label className="block text-sm text-gray-300 mb-1">AI Agent Name</label>
+                <label className="block text-sm text-gray-200 mb-1">AI Agent Name</label>
                 <Input
                   value={agentName}
                   onChange={(e) => setAgentName(e.target.value)}
@@ -742,7 +653,7 @@ const AIAgentSettingsPage = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-300 mb-1">System Prompt</label>
+                <label className="block text-sm text-gray-200 mb-1">System Prompt</label>
                 <textarea
                   rows={12}
                   value={systemPrompt}
@@ -857,90 +768,6 @@ const AIAgentSettingsPage = () => {
 
               <div className="text-sm text-blue-200 bg-blue-900/30 border border-blue-700 rounded-md p-2">
                 Selected knowledge sources will be used by the AI agent to answer questions.
-              </div>
-            </div>
-          </div>
-
-          {/* SOPs Section */}
-          <div className="mb-2 rounded-lg border border-[#333] bg-[#2a2a2a]">
-            <div className="flex items-center gap-3 p-3 border-b border-[#333]">
-              <Avatar size={32} className="bg-purple-600 text-white">
-                <Workflow className="h-4 w-4" />
-              </Avatar>
-              <div className="text-white font-semibold text-[0.95rem]">Standard Operating Procedures (SOPs)</div>
-            </div>
-            <div className="p-3 space-y-2">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
-                <Input
-                  placeholder="Search SOPs..."
-                  value={sopSearchQuery}
-                  onChange={(e) => setSopSearchQuery(e.target.value)}
-                  className="pl-9 text-sm"
-                />
-              </div>
-
-              {/* Bulk Actions */}
-              {selectedSopItems.size > 0 && (
-                <div className="flex items-center gap-3 p-2 rounded-md bg-white/5">
-                  <div className="text-sm">{selectedSopItems.size} selected</div>
-                  <Button size="small" onClick={handleSopSelectAll} className="px-2 py-1 text-sm bg-[#3a3a3a] hover:bg-[#4a4a4a]">Select All</Button>
-                  <Button size="small" onClick={handleSopUnselectAll} className="px-2 py-1 text-sm bg-[#3a3a3a] hover:bg-[#4a4a4a]">Unselect All</Button>
-                </div>
-              )}
-
-              {/* Select All Checkbox */}
-              {filteredSopItems.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 accent-[#EE66AA]"
-                    checked={filteredSopItems.length > 0 && filteredSopItems.every((item) => selectedSopItems.has(item.id))}
-                    ref={el => {
-                      if (el) el.indeterminate = selectedSopItems.size > 0 && selectedSopItems.size < filteredSopItems.length;
-                    }}
-                    onChange={handleSopSelectAll}
-                  />
-                  <div className="text-sm text-gray-300">Select all ({filteredSopItems.length} items)</div>
-                </div>
-              )}
-
-              {/* SOPs List */}
-              <div className="max-h-[400px] overflow-y-auto">
-                {filteredSopItems.length === 0 ? (
-                  <div className="p-2 text-center text-sm text-gray-300">
-                    {sopSearchQuery ? "No SOPs match your search." : "No SOPs available."}
-                  </div>
-                ) : (
-                  <div className="divide-y divide-[#333]">
-                    {filteredSopItems.map((item) => (
-                      <div key={item.id} className="flex items-start gap-3 py-2">
-                        <div className="min-w-6 mt-0.5">
-                          <Workflow className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm text-white font-medium">{item.name}</div>
-                          <div className="text-xs text-gray-400">{item.description}</div>
-                          <div className="flex gap-2 mt-1">
-                            <Chip size="small" variant="outlined" className="text-xs">{item.category}</Chip>
-                            <Chip size="small" className={`text-xs ${item.status === 'active' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-200'}`}>{item.status}</Chip>
-                          </div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          className="ml-2 mt-1 w-4 h-4 accent-[#EE66AA]"
-                          checked={selectedSopItems.has(item.id)}
-                          onChange={() => handleSopToggle(item.id)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="text-sm text-blue-200 bg-blue-900/30 border border-blue-700 rounded-md p-2">
-                Selected SOPs will be used by the AI agent to follow standard procedures.
               </div>
             </div>
           </div>

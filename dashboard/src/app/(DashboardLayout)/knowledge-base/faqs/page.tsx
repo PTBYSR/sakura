@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import DashboardCard from "@/app/(DashboardLayout)/components/shared/DashboardCard";
-import ChatbotTester from "./components/ChatbotTester";
 import { faqService, FAQ as FAQType } from "./services/faqService";
 import { authClient } from "@/lib/auth-client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,7 +43,6 @@ export default function FAQsPage() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [faqToDelete, setFaqToDelete] = useState<FAQ | null>(null);
   const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
-  const [clearChatKey, setClearChatKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -264,10 +262,6 @@ export default function FAQsPage() {
     }
   };
 
-  const clearChat = () => {
-    setClearChatKey((prev) => prev + 1);
-  };
-
   // Show loading state
   if (loading && faqs.length === 0) {
     return (
@@ -302,7 +296,7 @@ export default function FAQsPage() {
 
         {/* Top Bar */}
         <div className="flex justify-between items-center mb-6">
-          <h5 className="text-xl font-semibold text-white">
+          <h5 className="text-xl font-semibold text-slate-900">
             FAQs Management
           </h5>
           <Button
@@ -317,9 +311,9 @@ export default function FAQsPage() {
           </Button>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Left Panel - FAQs Editor */}
-          <div className="flex-1 md:flex-[0_0_calc(58.333%-12px)] min-w-0">
+        <div className="space-y-4">
+          {/* FAQs Editor */}
+          <div className="w-full">
             <DashboardCard>
               <div className="space-y-4">
                 {/* Search Bar */}
@@ -488,37 +482,6 @@ export default function FAQsPage() {
                     </p>
                   </div>
                 )}
-              </div>
-            </DashboardCard>
-          </div>
-
-          {/* Right Panel - Chatbot Tester */}
-          <div className="flex-1 md:flex-[0_0_calc(41.667%-12px)] min-w-0">
-            <DashboardCard>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h6 className="text-base font-semibold text-white">
-                    Chatbot Tester
-                  </h6>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="primary"
-                    onClick={clearChat}
-                    className="text-xs"
-                  >
-                    <X size={14} className="mr-2" />
-                    Clear Chat
-                  </Button>
-                </div>
-                <div className="border-t border-gray-700" />
-                {/* Chatbot Widget Embed */}
-                <div
-                  className="border border-gray-700 rounded-lg overflow-hidden bg-[#1a1a1a]"
-                  key={clearChatKey}
-                >
-                  <ChatbotTester faqs={faqs} />
-                </div>
               </div>
             </DashboardCard>
           </div>

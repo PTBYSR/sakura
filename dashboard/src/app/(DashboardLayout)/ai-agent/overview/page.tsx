@@ -6,9 +6,9 @@ import {
   Brain,
   XCircle,
   Loader2,
+  Clock,
 } from "lucide-react";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
-import { useAgents } from "@/contexts/AgentsContext";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 
@@ -22,7 +22,6 @@ interface AgentStats {
 }
 
 const AIAgentOverviewPage = () => {
-  const { agent } = useAgents();
   const [stats, setStats] = useState<AgentStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -106,11 +105,9 @@ const AIAgentOverviewPage = () => {
           {/* Header */}
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h5 className="text-xl font-semibold text-white mb-1">
-                AI Agent Overview
-              </h5>
+              <h5 className="text-xl font-semibold text-slate-900 mb-1">AI Agent Overview</h5>
               <p className="text-sm text-gray-300">
-                Current Agent: {agent.name} ({agent.type})
+                Real-time status and performance metrics sourced from the live service.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -134,7 +131,7 @@ const AIAgentOverviewPage = () => {
               <CardContent className="text-center p-4">
                 <MessageSquare className="text-[#EE66AA] w-8 h-8 mx-auto mb-2" />
                 <h6 className="text-lg font-semibold text-white mb-1">
-                  {stats?.chats_responded_to.toLocaleString() || 0}
+                  {stats?.chats_responded_to?.toLocaleString?.() ?? "-"}
                 </h6>
                 <p className="text-xs text-gray-300">
                   Chats AI Agent Has Responded To
@@ -146,7 +143,7 @@ const AIAgentOverviewPage = () => {
               <CardContent className="text-center p-4">
                 <Brain className="text-blue-500 w-8 h-8 mx-auto mb-2" />
                 <h6 className="text-lg font-semibold text-white mb-1">
-                  {stats?.model || "Unknown"}
+                  {stats?.model || "—"}
                 </h6>
                 <p className="text-xs text-gray-300">
                   AI Model
@@ -162,7 +159,7 @@ const AIAgentOverviewPage = () => {
                   }`}
                 />
                 <h6 className="text-lg font-semibold text-white mb-1">
-                  {stats?.status === "online" ? "Online" : "Offline"}
+                  {stats?.status === "online" ? "Online" : stats?.status === "offline" ? "Offline" : "Unknown"}
                 </h6>
                 <p className="text-xs text-gray-300">
                   Live Status
@@ -178,58 +175,41 @@ const AIAgentOverviewPage = () => {
                 <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white">
                   <Brain size={16} />
                 </div>
-                <h6 className="text-base font-semibold text-white">Agent Information</h6>
+                <h6 className="text-base font-semibold text-white">System Status</h6>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-4">
-                <div className="flex-1 min-w-0">
-                  <h6 className="text-base font-semibold text-white mb-2">
-                    {agent.name}
-                  </h6>
-                  <p className="text-sm text-gray-300 mb-3">
-                    {agent.description || "AI customer support agent"}
-                  </p>
-                  <div className="flex gap-2 flex-wrap">
-                    <Chip color="primary" size="small" className="text-xs">
-                      {agent.type}
-                    </Chip>
-                    <Chip 
-                      color={stats?.status === "online" ? "success" : "secondary"} 
-                      size="small" 
-                      className="text-xs"
-                    >
-                      {stats?.status === "online" ? "Active" : "Inactive"}
-                    </Chip>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-400">Live Status</p>
+                  <div className="flex items-center gap-2">
+                    {stats?.status === "online" ? (
+                      <CheckCircle2 className="text-green-500 w-4 h-4" />
+                    ) : (
+                      <XCircle className="text-red-500 w-4 h-4" />
+                    )}
+                    <span className="text-sm text-white capitalize">{stats?.status || "unknown"}</span>
                   </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white mb-2">
-                    System Status
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      {stats?.status === "online" ? (
-                        <CheckCircle2 className="text-green-500 w-4 h-4" />
-                      ) : (
-                        <XCircle className="text-red-500 w-4 h-4" />
-                      )}
-                      <p className="text-sm text-gray-300">
-                        AI Engine: {stats?.status === "online" ? "Running" : "Stopped"}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className={`w-4 h-4 ${stats?.initialized ? "text-green-500" : "text-gray-500"}`} />
-                      <p className="text-sm text-gray-300">
-                        Service Initialized: {stats?.initialized ? "Yes" : "No"}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Brain className="text-[#EE66AA] w-4 h-4" />
-                      <p className="text-sm text-gray-300">
-                        Model: {stats?.model || "Unknown"}
-                      </p>
-                    </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-400">Service Initialization</p>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className={`w-4 h-4 ${stats?.initialized ? "text-green-500" : "text-gray-500"}`} />
+                    <span className="text-sm text-white">{stats?.initialized ? "Initialized" : "Pending"}</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-400">Connected Model</p>
+                  <div className="flex items-center gap-2">
+                    <Brain className="text-[#EE66AA] w-4 h-4" />
+                    <span className="text-sm text-white truncate">{stats?.model || "Not available"}</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-400">Last Updated</p>
+                  <div className="flex items-center gap-2 text-sm text-white">
+                    <Clock className="w-4 h-4 text-gray-400" />
+                    <span>Updates every 30 seconds</span>
                   </div>
                 </div>
               </div>
