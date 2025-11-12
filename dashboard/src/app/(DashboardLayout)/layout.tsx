@@ -61,7 +61,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         {/* ------------------------------------------- */}
         {/* Header */}
         {/* ------------------------------------------- */}
-        <Header toggleMobileSidebar={() => setMobileSidebarOpen(true)} />
+        <Header toggleMobileSidebar={() => setMobileSidebarOpen((prev) => !prev)} />
         {/* ------------------------------------------- */}
         {/* PageContent */}
         {/* ------------------------------------------- */}

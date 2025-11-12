@@ -113,7 +113,7 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
             <form onSubmit={handleEmailSignUp}>
                 <div>
                     <div className="mb-6 space-y-6">
-                        <label htmlFor="name" className="block text-sm font-semibold mb-1">Name</label>
+                        <label htmlFor="name" className="block text-sm font-semibold text-gray-100 mb-1">Name</label>
                         <CustomTextField
                             id="name"
                             fullWidth
@@ -125,7 +125,7 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
                             placeholder="Your full name"
                         />
 
-                        <label htmlFor="email" className="block text-sm font-semibold mb-1">Email Address</label>
+                        <label htmlFor="email" className="block text-sm font-semibold text-gray-100 mb-1">Email Address</label>
                         <CustomTextField
                             id="email"
                             fullWidth
@@ -138,7 +138,7 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
                             placeholder="you@example.com"
                         />
 
-                        <label htmlFor="password" className="block text-sm font-semibold mb-1">Password</label>
+                        <label htmlFor="password" className="block text-sm font-semibold text-gray-100 mb-1">Password</label>
                         <div className="relative">
                           <CustomTextField
                               id="password"
@@ -164,7 +164,7 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
                         </div>
                         <p className="text-xs text-gray-400 mt-1">Must be at least 8 characters</p>
 
-                        <label htmlFor="confirmPassword" className="block text-sm font-semibold mb-1">Confirm Password</label>
+                        <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-100 mb-1">Confirm Password</label>
                         <div className="relative">
                           <CustomTextField
                               id="confirmPassword"
@@ -192,7 +192,7 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
                         variant="contained"
                         color="primary"
                         size="large"
-                        className="w-full"
+                        className="w-full bg-gradient-to-r from-sakura-400 to-sakura-500 shadow-lg shadow-sakura-500/40 hover:from-sakura-500 hover:to-sakura-600 hover:shadow-sakura-500/60 focus:ring-4 focus:ring-sakura-400/50"
                         type="submit"
                         disabled={loading}
                     >
@@ -210,14 +210,38 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
 
             <div>
                 <Button
-                    variant="outlined"
+                    variant="default"
                     color="primary"
                     size="large"
-                    className="w-full"
+                    className="w-full bg-white !text-gray-800 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:!text-gray-900 focus:ring-[#4285F4] disabled:bg-gray-100 disabled:!text-gray-400"
                     onClick={handleGoogleSignUp}
                     disabled={loading}
                 >
-                    Sign Up with Google
+                    <span className="flex items-center justify-center gap-3">
+                        <svg
+                            className="h-5 w-5"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                        >
+                            <path
+                                fill="#4285F4"
+                                d="M23.49 12.27c0-.78-.07-1.53-.18-2.27H12v4.3h6.43c-.27 1.38-1.07 2.54-2.29 3.31v2.74h3.7c2.17-2 3.42-4.95 3.42-8.08z"
+                            />
+                            <path
+                                fill="#34A853"
+                                d="M12 24c3.09 0 5.68-1.03 7.57-2.79l-3.7-2.74c-1.03.69-2.35 1.1-3.87 1.1-2.97 0-5.48-2.01-6.38-4.72H2.79v2.96A12 12 0 0012 24z"
+                            />
+                            <path
+                                fill="#FBBC05"
+                                d="M5.62 14.85a7.17 7.17 0 010-4.7V7.19H2.79a12 12 0 000 9.62l2.83-2.96z"
+                            />
+                            <path
+                                fill="#EA4335"
+                                d="M12 4.75c1.68 0 3.19.58 4.38 1.72l3.27-3.27C17.68 1.04 15.09 0 12 0 7.31 0 3.26 2.69 1.09 6.63l2.83 2.96C4.52 6.64 7.03 4.75 12 4.75z"
+                            />
+                        </svg>
+                        <span>Sign Up with Google</span>
+                    </span>
                 </Button>
             </div>
 

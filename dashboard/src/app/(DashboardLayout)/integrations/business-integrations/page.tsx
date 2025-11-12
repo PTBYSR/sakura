@@ -98,21 +98,21 @@ const BusinessIntegrationsPage = () => {
             {/* Shopify Integration */}
             <Card>
               <CardContent className="p-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start sm:items-center gap-4 min-w-0">
                     <div className="w-12 h-12 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: integrations[0].color }}>
                       {integrations[0].icon}
                     </div>
-                    <div>
-                      <h6 className="text-base font-semibold text-white">
+                    <div className="min-w-0">
+                      <h6 className="text-base font-semibold text-white truncate">
                         {integrations[0].name}
                       </h6>
-                      <p className="text-sm text-gray-300">
+                      <p className="text-sm text-gray-300 break-words">
                         {integrations[0].description}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                     {getStatusIcon(integrations[0].status)}
                     <Chip
                       label={integrations[0].status}
@@ -137,21 +137,21 @@ const BusinessIntegrationsPage = () => {
             {/* Paystack Integration */}
             <Card>
               <CardContent className="p-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start sm:items-center gap-4 min-w-0">
                     <div className="w-12 h-12 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: integrations[1].color }}>
                       {integrations[1].icon}
                     </div>
-                    <div>
-                      <h6 className="text-base font-semibold text-white">
+                    <div className="min-w-0">
+                      <h6 className="text-base font-semibold text-white truncate">
                         {integrations[1].name}
                       </h6>
-                      <p className="text-sm text-gray-300">
+                      <p className="text-sm text-gray-300 break-words">
                         {integrations[1].description}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                     {getStatusIcon(integrations[1].status)}
                     <Chip
                       label={integrations[1].status}
@@ -176,15 +176,15 @@ const BusinessIntegrationsPage = () => {
             {/* Excel Editor */}
             <Card>
               <CardContent className="p-5">
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-start gap-4 mb-4">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: integrations[2].color }}>
                     {integrations[2].icon}
                   </div>
-                  <div className="flex-1">
-                    <h6 className="text-base font-semibold text-white">
+                  <div className="flex-1 min-w-0">
+                    <h6 className="text-base font-semibold text-white truncate">
                       {integrations[2].name}
                     </h6>
-                    <p className="text-sm text-gray-300">
+                    <p className="text-sm text-gray-300 break-words">
                       {integrations[2].description}
                     </p>
                   </div>

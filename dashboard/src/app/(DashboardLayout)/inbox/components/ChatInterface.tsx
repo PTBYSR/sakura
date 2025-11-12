@@ -113,9 +113,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className="h-[calc(100vh-200px)] flex bg-[#1a1a1a] rounded-lg overflow-hidden">
+    <div className="h-[calc(100vh-200px)] flex flex-col md:flex-row bg-[#1a1a1a] rounded-lg overflow-hidden">
       {/* Left Sidebar - Chat List */}
-      <div className="w-[300px] bg-[#2a2a2a] border-r border-[#333] flex flex-col">
+      <div className="w-full md:w-[300px] bg-[#2a2a2a] border-b md:border-b-0 md:border-r border-[#333] flex flex-col">
         {/* Chat List Header */}
         <div className="p-2 border-b border-[#333]">
           <div className="text-white font-bold">All chats</div>
@@ -221,7 +221,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       </div>
 
       {/* Right Sidebar - Contact Details */}
-      <div className="w-[300px] bg-[#2a2a2a] border-l border-[#333] flex flex-col">
+      <div className="w-full md:w-[300px] bg-[#2a2a2a] border-t md:border-t-0 md:border-l border-[#333] flex flex-col">
         {/* Contact Header */}
         <div className="p-2 border-b border-[#333]">
           <div className="flex items-center justify-between">

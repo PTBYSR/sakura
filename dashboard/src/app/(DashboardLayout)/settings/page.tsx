@@ -154,7 +154,7 @@ export default function SettingsPage() {
 
   return (
     <PageContainer title="Account Settings" description="Manage your account">
-      <div className="flex flex-col items-center p-6 min-w-[400px] max-w-[700px] w-full gap-8 mx-auto">
+      <div className="flex flex-col items-center p-4 sm:p-6 min-w-0 sm:min-w-[400px] max-w-[700px] w-full gap-8 mx-auto">
         <h2 className="text-2xl font-semibold text-slate-900">
           Account Settings
         </h2>

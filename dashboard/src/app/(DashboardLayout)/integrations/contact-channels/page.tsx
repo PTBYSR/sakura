@@ -29,6 +29,7 @@ const ContactChannelsPage = () => {
   const { data: session } = authClient.useSession();
   const [widgetCode, setWidgetCode] = useState("");
   const [widgetUrl, setWidgetUrl] = useState("");
+  const [widgetLink, setWidgetLink] = useState("");
   const [loading, setLoading] = useState(true);
   const [copySuccess, setCopySuccess] = useState(false);
   
@@ -83,6 +84,7 @@ const ContactChannelsPage = () => {
 
       setWidgetCode(script);
       setWidgetUrl(`${FRONTEND_URL}/widget.js`);
+      setWidgetLink(`${FRONTEND_URL}/widget/${userId}`);
     } else {
       const defaultScript = `<script>
   (function() {
@@ -96,6 +98,7 @@ const ContactChannelsPage = () => {
 </script>`;
       setWidgetCode(defaultScript);
       setWidgetUrl(`${FRONTEND_URL}/widget.js`);
+      setWidgetLink(`${FRONTEND_URL}/widget`);
     }
     setLoading(false);
   }, [session]);
@@ -113,6 +116,16 @@ const ContactChannelsPage = () => {
   const handleCopyUrl = async () => {
     try {
       await navigator.clipboard.writeText(widgetUrl);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 3000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  const handleCopyWidgetLink = async () => {
+    try {
+      await navigator.clipboard.writeText(widgetLink);
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 3000);
     } catch (err) {
@@ -159,21 +172,21 @@ const ContactChannelsPage = () => {
               {channels.map((channel) => (
                 <Card key={channel.id}>
                   <CardContent className="p-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-start sm:items-center gap-4 min-w-0">
                         <div className="w-12 h-12 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: channel.color }}>
                           {channel.icon}
                         </div>
-                        <div>
-                          <h6 className="text-base font-semibold text-white">
+                        <div className="min-w-0">
+                          <h6 className="text-base font-semibold text-white truncate">
                             {channel.name}
                           </h6>
-                          <p className="text-sm text-gray-300">
+                          <p className="text-sm text-gray-300 break-words">
                             {channel.description}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                         {channel.status === 'connected' ? (
                           <CheckCircle2 className="text-green-500 w-4 h-4" />
                         ) : (
@@ -263,24 +276,28 @@ const ContactChannelsPage = () => {
             </CardContent>
           </Card>
 
-          {/* Widget URL Card */}
-          <Card>
+          
+
+          {/* Direct Widget Link Card */}
+          <Card className="mt-4">
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-4">
-                <Code className="text-[#EE66AA] w-5 h-5" />
+                <MessageCircle className="text-[#EE66AA] w-5 h-5" />
                 <h6 className="text-lg font-semibold text-white">
-                  Widget Script URL
+                  Your Widget Page Link
                 </h6>
               </div>
-              
+              <div className="text-sm text-gray-300 mb-3">
+                Share this link or open it to test your widget directly. For user-specific routing, it includes your userId.
+              </div>
               <div className="relative">
                 <Input
                   readOnly
-                  value={widgetUrl}
+                  value={widgetLink}
                   className="w-full pr-10 text-sm"
                 />
                 <button
-                  onClick={handleCopyUrl}
+                  onClick={handleCopyWidgetLink}
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors"
                 >
                   {copySuccess ? (
@@ -290,10 +307,15 @@ const ContactChannelsPage = () => {
                   )}
                 </button>
               </div>
-
-              <div className="mt-4 p-3 bg-blue-600/20 border border-blue-500 rounded-lg text-blue-400 text-sm">
-                Add this script tag to your website&apos;s HTML head section to enable the chat widget.
-              </div>
+              {session?.user?.id ? (
+                <div className="mt-3 p-3 bg-blue-600/20 border border-blue-500 rounded-lg text-blue-400 text-sm">
+                  Example user-specific link: <span className="underline">{widgetLink}</span>
+                </div>
+              ) : (
+                <div className="mt-3 p-3 bg-yellow-600/20 border border-yellow-500 rounded-lg text-yellow-400 text-sm">
+                  Log in to generate your user-specific link. Using generic: <span className="underline">{widgetLink}</span>
+                </div>
+              )}
             </CardContent>
           </Card>
 
