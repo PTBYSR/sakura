@@ -18,6 +18,11 @@ import {
   Search,
   Mail,
   User as PersonIcon,
+  ArrowLeft,
+  MoreVertical,
+  Paperclip,
+  ChevronRight,
+  CheckCheck,
 } from "lucide-react";
 import { useUnifiedChatData } from "../hooks/useUnifiedChatData";
 import { useSidebar } from "@/contexts/SidebarContext";
@@ -82,6 +87,15 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
     chatInfo: false,
     visitedPages: false,
   });
+  const [isLgUp, setIsLgUp] = useState(false);
+  const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
+  const [showContactModal, setShowContactModal] = useState(false);
+  useEffect(() => {
+    const checkLgUp = () => setIsLgUp(window.innerWidth >= 1024);
+    checkLgUp();
+    window.addEventListener("resize", checkLgUp);
+    return () => window.removeEventListener("resize", checkLgUp);
+  }, []);
 
   // Format timestamp function
   const formatTimestamp = (timestamp: string): string => {
@@ -140,6 +154,20 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
     // Fallback to sender name check
     const senderLower = message.sender.toLowerCase();
     return senderLower === "you" || senderLower === "agent" || (senderLower.includes("agent") && !senderLower.includes("ai"));
+  };
+
+  // Date header formatter (e.g., "Fri, Jul 26")
+  const formatDateHeader = (timestamp: string): string => {
+    try {
+      const date = new Date(timestamp);
+      return date.toLocaleDateString([], {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch {
+      return '';
+    }
   };
 
   const {
@@ -276,43 +304,61 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
   return (
     <div
       className="flex flex-col bg-[#1a1a1a] overflow-hidden"
-      style={{
-        width: `calc(100vw - ${currentSidebarWidth}px)`,
-        position: "fixed",
-        top: "70px",
-        left: `${currentSidebarWidth}px`,
-        right: 0,
-        bottom: 0,
-        height: "calc(100vh - 70px)",
-        transition: "left 0.3s ease-in-out, width 0.3s ease-in-out",
-        zIndex: 1100,
-      }}
+      style={
+        isLgUp
+          ? {
+              width: `calc(100vw - ${currentSidebarWidth}px)`,
+              position: "fixed",
+              top: "70px",
+              left: `${currentSidebarWidth}px`,
+              right: 0,
+              bottom: 0,
+              height: "calc(100vh - 70px)",
+              transition: "left 0.3s ease-in-out, width 0.3s ease-in-out",
+              zIndex: 1100,
+            }
+          : {
+              width: "100vw",
+              position: "fixed",
+              top: "70px",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: "calc(100vh - 70px)",
+              zIndex: 1100,
+            }
+      }
     >
-      {/* Top Global Navigation Bar */}
-      <div className="h-[52px] bg-[#2a2a2a] border-b border-[#333] flex items-center justify-between px-3.5 z-50">
-        {/* Search Bar */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
-              <Input
-                placeholder="Search"
-                className="w-72 pl-9 text-sm"
-              />
+      {/* Top Global Navigation Bar - hide during chat on mobile to maximize space */}
+      {(isLgUp || mobileView === 'list') && (
+        <div className="h-[52px] bg-[#2a2a2a] border-b border-[#333] flex items-center justify-between px-3.5 z-50">
+          {/* Search Bar */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
+                <Input
+                  placeholder="Search"
+                  className="w-40 sm:w-60 md:w-72 pl-9 text-sm"
+                />
+              </div>
+              <Chip size="small" className="text-[0.65rem] h-5 bg-gray-800 text-gray-300">ctrl K</Chip>
             </div>
-            <Chip size="small" className="text-[0.65rem] h-5 bg-gray-800 text-gray-300">ctrl K</Chip>
+          </div>
+          {/* Right side - Logo */}
+          <div className="flex items-center gap-3">
+            <div className="text-white font-semibold text-base">páse</div>
           </div>
         </div>
-        {/* Right side - Logo */}
-        <div className="flex items-center gap-3">
-          <div className="text-white font-semibold text-base">páse</div>
-        </div>
-      </div>
+      )}
 
       {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden" style={{ height: "calc(100% - 52px)" }}>
+      <div
+        className="flex flex-col lg:flex-row flex-1 overflow-hidden"
+        style={isLgUp ? { height: "calc(100% - 52px)" } : {}}
+      >
         {/* Left Sidebar - Chat List */}
-        <div className="w-[300px] bg-[#2a2a2a] border-r border-[#333] flex flex-col overflow-hidden flex-shrink-0">
+        <div className={`w-full lg:w-[300px] bg-[#2a2a2a] border-b lg:border-b-0 lg:border-r border-[#333] flex flex-col overflow-hidden flex-shrink-0 ${!isLgUp && mobileView === 'chat' ? 'hidden' : ''}`}>
           {/* Header */}
           <div className="p-2 border-b border-[#333]">
             <div className="text-white font-semibold text-[0.95rem] mb-1">All chats</div>
@@ -332,135 +378,197 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
                 )}
               </div>
             ) : (
-              chats.map((chat) => (
-                <button
-                  key={chat.chat.id}
-                  onClick={() => {
-                    setSelectedChat(chat);
-                    markAsRead(chat.chat.id);
-                  }}
-                  className={`w-full flex items-start gap-3 px-2.5 py-1.5 hover:bg-[#3a3a3a] ${selectedChat?.chat.id === chat.chat.id ? 'bg-[#3a3a3a]' : ''}`}
-                >
-                  <div className="min-w-[44px]">
-                    <Badge content={chat.chat.unreadCount} invisible={chat.chat.unreadCount === 0}>
-                      <Avatar size={36} fallback={chat.chat.avatar} />
-                    </Badge>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-white text-[0.875rem] font-medium mb-0.5">{chat.chat.name}</div>
-                    <div className="text-[#999] text-[0.8rem] truncate mb-0.5">{chat.chat.lastMessage}</div>
-                    <div className="text-[#666] text-[0.7rem] font-normal">{chat.chat.timestamp}</div>
-                  </div>
-                </button>
-              ))
+              chats.map((chat) => {
+                const isActive = selectedChat?.chat.id === chat.chat.id;
+                const isUnread = chat.chat.unreadCount > 0;
+                return (
+                  <button
+                    key={chat.chat.id}
+                    onClick={() => {
+                      setSelectedChat(chat);
+                      markAsRead(chat.chat.id);
+                      if (!isLgUp) {
+                        setMobileView('chat');
+                      }
+                    }}
+                    className={`w-full px-3 py-5 lg:py-3 min-h-[88px] border-b border-[#2b2b2b] text-left transition-colors ${isActive ? 'bg-[#333333]' : 'hover:bg-[#2a2a2a]'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="relative shrink-0">
+                        <Badge content={chat.chat.unreadCount} invisible={chat.chat.unreadCount === 0}>
+                          <Avatar size={46} fallback={chat.chat.avatar} />
+                        </Badge>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center">
+                          <div className="flex-1 min-w-0">
+                            <div className={`text-white text-[0.95rem] leading-tight ${isUnread ? 'font-semibold' : 'font-medium'} truncate`}>
+                              {chat.chat.name}
+                            </div>
+                          </div>
+                          <div className="ml-2 shrink-0 text-[0.7rem] text-[#9aa0a6]">
+                            {chat.chat.timestamp}
+                          </div>
+                        </div>
+                        <div className="mt-1 flex items-center gap-2 text-[0.85rem] text-[#a7adb3]">
+                          {chat.chat.unreadCount === 0 && (
+                            <CheckCheck className="w-4 h-4 text-[#6fa8ff]" />
+                          )}
+                          <span className="truncate">{chat.chat.lastMessage}</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-[#555]" />
+                    </div>
+                  </button>
+                );
+              })
             )}
           </div>
         </div>
 
         {/* Center Panel - Chat Messages */}
-        <div className="flex-1 flex flex-col bg-[#1a1a1a] overflow-hidden">
+        <div className={`flex-1 flex flex-col bg-[#1a1a1a] overflow-hidden ${!isLgUp && mobileView === 'list' ? 'hidden' : ''}`}>
           {/* Chat Header */}
-          <div className="p-2 border-b border-[#333] bg-[#2a2a2a] flex items-start justify-between">
-            <div className="flex-1">
-              <div className="text-white font-semibold text-[0.95rem] mb-1">{currentContactInfo?.name || "Select a chat"}</div>
-              {currentContactInfo?.email && (
-                <div className="mt-1 text-[#999] text-[0.8rem]">
-                  E-mail: <span className="text-[#2196f3] cursor-pointer font-normal">{currentContactInfo.email}</span>
-                </div>
+          <div className="px-2 h-14 lg:h-[52px] border-b border-[#333] bg-[#2a2a2a] flex items-center justify-between">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {!isLgUp && (
+                <button
+                  onClick={() => setMobileView('list')}
+                  className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-300 hover:bg-[#3a3a3a]"
+                  aria-label="Back to chats"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
               )}
+              <div className="min-w-0">
+                <div className="text-white font-semibold text-sm truncate">{currentContactInfo?.name || "Select a chat"}</div>
+                {currentContactInfo?.email && (
+                  <div className="text-[#999] text-[0.75rem] truncate">{currentContactInfo.email}</div>
+                )}
+              </div>
             </div>
-            {selectedChat && (
-              <div className="ml-4 flex items-center">
-                <div className="flex items-center gap-2" title={aiAgentEnabled ? "AI Agent is responding automatically" : "AI Agent responses are disabled"}>
+            {selectedChat ? (
+              <div className="ml-2 flex items-center gap-1">
+                {!isLgUp && (
+                  <button
+                    onClick={() => setShowContactModal(true)}
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-300 hover:bg-[#3a3a3a]"
+                    aria-label="Show contact info"
+                  >
+                    <Avatar size={20} fallback={currentContactInfo?.avatar || 'C'} />
+                  </button>
+                )}
+                <button
+                  className="hidden lg:inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-300 hover:bg-[#3a3a3a]"
+                  title={aiAgentEnabled ? "AI Agent is responding automatically" : "AI Agent responses are disabled"}
+                >
                   <TSwitch
                     checked={aiAgentEnabled}
                     onChange={(checked) => handleToggleAiAgent(checked)}
                     disabled={loading}
                     size="sm"
                   />
-                  <div className="flex items-center gap-1">
-                    <Bot className={`h-4 w-4 ${aiAgentEnabled ? 'text-green-500' : 'text-gray-400'}`} />
-                    <span className="text-[#999] text-[0.8rem]">AI Agent</span>
-                  </div>
-                </div>
+                </button>
+                <button
+                  className="hidden lg:inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-300 hover:bg-[#3a3a3a]"
+                  aria-label="More"
+                >
+                  <MoreVertical className="w-5 h-5" />
+                </button>
               </div>
+            ) : (
+              <div className="ml-2" />
             )}
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-2">
-            {selectedChat?.messages.map((message) => {
+          <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3">
+            {selectedChat?.messages.map((message, idx, arr) => {
               const isAI = isAIMessage(message);
               const isHumanAgent = isHumanAgentMessage(message);
               const isAgentMessage = isAI || isHumanAgent;
               const isCustomerMessage = !isAgentMessage;
               const formattedTime = formatTimestamp(message.timestamp);
+              const currentHeader = formatDateHeader(message.timestamp);
+              const prevHeader = idx > 0 ? formatDateHeader(arr[idx - 1].timestamp) : undefined;
+              const showHeader = !prevHeader || prevHeader !== currentHeader;
 
-              const bubbleBg = isAI ? '#4caf50' : isHumanAgent ? '#1976d2' : '#2a2a2a';
-              const bubbleBorder = isAI ? '#66bb6a' : isHumanAgent ? '#42a5f5' : '#333';
+              const bubbleBg = isAI ? '#2f6f3a' : isHumanAgent ? '#1f4b79' : '#232323';
+              const bubbleBorder = isAI ? '#3f8a4a' : isHumanAgent ? '#2c6aa3' : '#343434';
 
               return (
-                <div key={message.id} className={`flex ${isAgentMessage ? 'justify-end' : 'justify-start'} mb-2`}>
-                  <div className={`max-w-[70%] flex flex-col ${isAgentMessage ? 'items-end' : 'items-start'}`}>
-                    <div className="flex items-center gap-1 mb-1">
-                      {isCustomerMessage && (
-                        <Avatar size={20} colorClassName="bg-[#ff6b35] text-white" fallback={message.avatar} className="text-[0.7rem]" />
-                      )}
-                      {isAgentMessage && (
-                        <div className="flex items-center gap-1">
-                          {isAI ? (
-                            <Chip size="small" className="h-5 text-[0.7rem] bg-green-600 text-white">
-                              <span className="inline-flex items-center gap-1"><Bot className="h-3 w-3" /> AI Agent</span>
-                            </Chip>
-                          ) : (
-                            <Chip size="small" className="h-5 text-[0.7rem] bg-blue-600 text-white">
-                              <span className="inline-flex items-center gap-1"><PersonIcon className="h-3 w-3" /> Human Agent</span>
-                            </Chip>
-                          )}
+                <React.Fragment key={message.id}>
+                  {showHeader && (
+                    <div className="flex justify-center my-2">
+                      <div className="px-3 py-1 rounded-full text-[0.75rem] bg-[#2a2a2a] text-[#c9c9c9] border border-[#3a3a3a]">
+                        {currentHeader}
+                      </div>
+                    </div>
+                  )}
+                  <div className={`flex ${isAgentMessage ? 'justify-end' : 'justify-start'} mb-2`}>
+                    <div className={`max-w-[88%] lg:max-w-[70%] flex flex-col ${isAgentMessage ? 'items-end' : 'items-start'}`}>
+                      <div
+                        className={`text-white shadow border`}
+                        style={{
+                          backgroundColor: bubbleBg,
+                          borderColor: bubbleBorder,
+                          borderRadius: 18,
+                        }}
+                      >
+                        <div
+                          className={`px-3.5 py-2.5 text-[1rem] leading-relaxed break-words ${
+                            isAgentMessage ? 'rounded-tl-2xl rounded-tr-md rounded-br-2xl rounded-bl-2xl' : 'rounded-tr-2xl rounded-tl-md rounded-bl-2xl rounded-br-2xl'
+                          }`}
+                        >
+                          {message.content}
+                          <div className="mt-1.5 flex justify-end items-center gap-1 text-[0.7rem] text-[#b3c1cc] opacity-90">
+                            <span>{formattedTime}</span>
+                          </div>
                         </div>
-                      )}
-                      <span className="text-[#999] text-[0.75rem] font-normal">{formattedTime}</span>
-                    </div>
-                    <div
-                      className="text-white rounded-xl shadow"
-                      style={{ backgroundColor: bubbleBg, border: `1px solid ${bubbleBorder}` }}
-                    >
-                      <div className="p-3 text-[0.85rem] leading-relaxed font-normal">{message.content}</div>
-                    </div>
-                    <div className="text-[0.65rem] text-[#666] mt-1 font-normal">
-                      {isAgentMessage ? (message.isRead !== false ? "Read" : "Sent") : (message.isRead !== false ? "Read" : "Unread")}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </React.Fragment>
               );
             })}
           </div>
 
-          {/* Message Input Area */}
-          <div className="p-2 border-t border-[#333] bg-[#2a2a2a]">
-            <Input
-              placeholder="Enter message"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  handleSendMessage(e);
-                }
-              }}
-              className="mb-3"
-            />
-            <div className="flex items-center justify-end">
-              <Button type="button" onClick={handleSendMessage} size="small" disabled={!newMessage.trim()} className="px-3 py-1.5 text-sm bg-[#333] hover:bg-[#444] disabled:bg-[#222] disabled:text-[#666]">
-                <span className="inline-flex items-center gap-2">
-                  Send <Send className="h-4 w-4" />
-                </span>
-              </Button>
+          {/* Message Input Area - sticky and safe-area aware on mobile */}
+          <div className="border-t border-[#333] bg-[#2a2a2a] px-2 pb-[env(safe-area-inset-bottom)]">
+            <div className="flex items-end gap-2 py-2">
+              <button
+                className="inline-flex items-center justify-center w-10 h-10 rounded-lg text-gray-300 hover:bg-[#3a3a3a]"
+                aria-label="Attach"
+              >
+                <Paperclip className="w-5 h-5" />
+              </button>
+              <div className="flex-1">
+                <Input
+                  placeholder="Type a message"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      handleSendMessage(e);
+                    }
+                  }}
+                  className="bg-[#1f1f1f] border-[#444] placeholder:text-[#888] h-14 md:h-12"
+                />
+              </div>
+              <button
+                onClick={(e) => handleSendMessage(e)}
+                disabled={!newMessage.trim()}
+                className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${newMessage.trim() ? 'bg-[#1976d2] text-white hover:brightness-110' : 'bg-[#333] text-[#777]'}`}
+                aria-label="Send message"
+              >
+                <Send className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>
 
         {/* Right Sidebar - Contact Info */}
-        <div className="w-[300px] bg-[#2a2a2a] border-l border-[#333] p-2 overflow-y-auto overflow-x-hidden flex-shrink-0">
+        <div className="w-full lg:w-[300px] bg-[#2a2a2a] border-t lg:border-t-0 lg:border-l border-[#333] p-2 pb-6 lg:pb-6 overflow-y-auto overflow-x-hidden flex-shrink-0 hidden lg:block mb-3">
           {currentContactInfo ? (
             <>
               {/* Contact Profile */}
@@ -542,6 +650,61 @@ const ExactChatInterface: React.FC<ChatInterfaceProps> = ({
           )}
         </div>
       </div>
+
+      {/* Mobile Contact Modal */}
+      {!isLgUp && showContactModal && (
+        <div
+          className="fixed inset-0 z-[1600] bg-black/60 flex items-end justify-center px-3 pb-[env(safe-area-inset-bottom)]"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowContactModal(false);
+          }}
+        >
+          <div className="w-full max-w-md">
+            <div className="bg-[#2a2a2a] border border-[#3a3a3a] rounded-2xl overflow-hidden mb-2">
+              <div className="py-3 px-4 text-center border-b border-[#3a3a3a]">
+                <div className="text-white font-medium text-[0.95rem]">Contact details</div>
+              </div>
+              <div className="max-h-[60vh] overflow-y-auto px-4 py-3">
+                {currentContactInfo ? (
+                  <>
+                    <div className="flex items-center gap-3 mb-3">
+                      <Avatar size={40} colorClassName="bg-[#ff6b35] text-white" fallback={currentContactInfo.avatar} className="text-[0.95rem]" />
+                      <div>
+                        <div className="text-white font-semibold text-[0.95rem]">{currentContactInfo.name}</div>
+                        <div className="text-[#999] text-[0.8rem]">{currentContactInfo.status}</div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-[#999]" />
+                        <div className="text-[#cfcfcf] text-[0.85rem]">{currentContactInfo.email}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4 text-[#999]" />
+                        <div className="text-[#cfcfcf] text-[0.85rem]">{currentContactInfo.totalMessages} messages</div>
+                      </div>
+                      {currentContactInfo.visitedPagesCount > 0 && (
+                        <div className="flex items-center gap-2">
+                          <Globe2 className="h-4 w-4 text-[#999]" />
+                          <div className="text-[#cfcfcf] text-[0.85rem]">{currentContactInfo.visitedPagesCount} pages</div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center text-[#999] text-[0.85rem]">No contact selected</div>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={() => setShowContactModal(false)}
+              className="w-full bg-[#2a2a2a] text-white rounded-2xl py-3 border border-[#3a3a3a] mb-[env(safe-area-inset-bottom)]"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

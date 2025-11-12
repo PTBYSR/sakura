@@ -14,7 +14,9 @@
 // IMPORTS
 // ============================================================================
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useSearchParams, useParams } from 'next/navigation';
+
 import {
   Box,
   Paper,
@@ -22,8 +24,6 @@ import {
   TextField,
   IconButton,
   Avatar,
-  Chip,
-  Divider,
   ThemeProvider,
   createTheme,
   CssBaseline,
@@ -31,6 +31,7 @@ import {
   Fade,
   CircularProgress,
   Button,
+  Backdrop,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -106,6 +107,52 @@ interface UserDataResponse {
   message: string;
 }
 
+interface BackendMessage {
+  _id?: string;
+  text?: string;
+  content?: string;
+  role: 'user' | 'assistant' | 'agent';
+  timestamp?: string;
+}
+
+interface BackendChat {
+  chat_id: string;
+  messages?: BackendMessage[];
+}
+
+interface DebugUser {
+  email: string;
+  chats?: BackendChat[];
+}
+
+interface DebugUsersResponse {
+  users?: DebugUser[];
+}
+
+interface UserChatsResponse {
+  user_name?: string;
+  user_email?: string;
+  chats?: BackendChat[];
+}
+
+type CreateChatRequestBody = {
+  user_id?: string;
+  name?: string;
+  email?: string;
+};
+
+type UserDataPayload = UserData & { user_id?: string };
+
+const mapBackendMessage = (msg: BackendMessage): Message => {
+  const timestamp = msg.timestamp ?? new Date().toISOString();
+  return {
+    id: msg._id || `msg_${timestamp}`,
+    content: msg.text || msg.content || '',
+    role: msg.role === 'user' ? 'user' : msg.role === 'agent' ? 'agent' : 'assistant',
+    timestamp,
+  };
+};
+
 // ============================================================================
 // UTILITY COMPONENTS
 // ============================================================================
@@ -175,11 +222,15 @@ const theme = createTheme({
  * Main chat widget component that handles user registration, chat functionality,
  * and real-time communication with the AI backend.
  */
-interface ChatPageProps {
-  userId?: string;
-}
+export default function ChatPage() {
+  const searchParams = useSearchParams();
+  const params = useParams();
+  const routeUserId = (params as { userId?: string | string[] })?.userId;
+  const propUserId =
+    (searchParams?.get('userId') as string | null) ??
+    (Array.isArray(routeUserId) ? routeUserId[0] : routeUserId) ??
+    undefined;
 
-export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
   // ============================================================================
   // STATE MANAGEMENT
   // ============================================================================
@@ -187,7 +238,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
   // UI State
   const [stage, setStage] = useState<'form' | 'chat'>('form');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [isSubmittingForm, setIsSubmittingForm] = useState(false);
   const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
 
   // User Data
@@ -200,7 +251,6 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
   const [sessionId, setSessionId] = useState<string>('');
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(propUserId || null);
-  const [lastMessageCount, setLastMessageCount] = useState<number>(0);
 
   // Refs for DOM manipulation
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -214,130 +264,40 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
   /**
    * Clear localStorage chat data - useful for starting fresh
    */
-  const clearChatData = () => {
+  const clearChatData = useCallback(() => {
     console.log('🧹 Clearing chat data from localStorage');
     localStorage.removeItem("currentChatId");
     localStorage.removeItem("messages");
     localStorage.removeItem("stage");
-  };
+  }, []);
 
-  useEffect(() => {
-    console.log('🌐 Widget API URL:', API_BASE_URL);
-    console.log('⚙️ Environment:', process.env.NODE_ENV);
-    if (typeof window !== "undefined") {
-      // Always load saved user data from localStorage first (UI state restoration)
-      const storedName = localStorage.getItem("userName");
-      const storedEmail = localStorage.getItem("userEmail");
-      const savedStage = localStorage.getItem("stage") as 'form' | 'chat';
-      const savedChatId = localStorage.getItem("currentChatId");
-      
-      // ⚠️ IMPORTANT: Clear old chat data if this is a new session
-      // Check if we have user data in localStorage but no valid session
-      const hasStoredData = storedName || storedEmail || savedChatId;
-      const isNewSession = !propUserId && !storedEmail; // No URL userId and no saved email
-      
-      if (hasStoredData && isNewSession) {
-        console.log('🧹 Clearing old session data for fresh start');
-        clearChatData();
-      }
-      
-      if (storedName) setName(storedName);
-      if (storedEmail) setEmail(storedEmail);
-
-      // If userId provided via props (from URL), use it
-      if (propUserId) {
-        setUserId(propUserId);
-        
-        // If we have saved email, check if customer exists and has chats (more reliable than userId endpoint)
-        if (storedEmail) {
-          checkCustomerAndLoadChats(storedEmail);
-        } else if (savedStage === 'chat' && savedChatId) {
-          // If we have saved stage as 'chat' and a chat ID, restore directly to chat
-          setStage('chat');
-          setCurrentChatId(savedChatId);
-          // Load messages from localStorage if available
-          const savedMessages = localStorage.getItem("messages");
-          if (savedMessages) {
-            try {
-              const parsedMessages = JSON.parse(savedMessages);
-              if (parsedMessages && parsedMessages.length > 0) {
-                setMessages(parsedMessages);
-              }
-            } catch (e) {
-              console.error('Error parsing saved messages:', e);
-            }
-          }
-        } else {
-          // No saved email or chat, try to get user info from API based on userId
-          fetchUserInfo(propUserId);
-        }
-      } else {
-        // No userId in URL - check if we have saved email
-        if (storedEmail) {
-          checkCustomerAndLoadChats(storedEmail);
-        } else if (savedStage) {
-          // No saved email, load saved stage
-          setStage(savedStage);
-          // If stage is 'chat' and we have a chat ID, restore it
-          if (savedStage === 'chat' && savedChatId) {
-            setCurrentChatId(savedChatId);
-            // Load messages from localStorage if available
-            const savedMessages = localStorage.getItem("messages");
-            if (savedMessages) {
-              try {
-                const parsedMessages = JSON.parse(savedMessages);
-                if (parsedMessages && parsedMessages.length > 0) {
-                  setMessages(parsedMessages);
-                }
-              } catch (e) {
-                console.error('Error parsing saved messages:', e);
-              }
-            }
-          }
-        }
-      }
-
-      // Track and increment visit count
-      const visits = parseInt(localStorage.getItem('totalVisits') || '0', 10) + 1;
-      localStorage.setItem('totalVisits', visits.toString());
-    }
-  }, [propUserId]);
-
-  /**
-   * Check if customer exists by email and load their chats
-   */
-  const checkCustomerAndLoadChats = async (customerEmail: string) => {
+  const checkCustomerAndLoadChats = useCallback(async (customerEmail: string) => {
     try {
       // First, check if we have a chat ID saved
       const savedChatId = localStorage.getItem("currentChatId");
-      
+
       // Try to find customer via debug endpoint (returns all users with chats)
       try {
         const debugResponse = await fetch(`${API_BASE_URL}/api/debug/users-chats`);
         if (debugResponse.ok) {
-          const debugData = await debugResponse.json();
-          const user = debugData.users?.find((u: any) => u.email === customerEmail);
-          
+          const debugData: DebugUsersResponse = await debugResponse.json();
+          const user = debugData.users?.find((u) => u.email === customerEmail);
+
           if (user && user.chats && user.chats.length > 0) {
             // Customer exists and has chats - load the most recent one
             const latestChat = user.chats[user.chats.length - 1];
             const chatId = latestChat.chat_id;
-            
+
             setCurrentChatId(chatId);
             setStage('chat');
             localStorage.setItem("stage", "chat");
             localStorage.setItem("currentChatId", chatId);
-            
+
             // Load chat messages from backend or localStorage
             if (latestChat.messages && latestChat.messages.length > 0) {
-              const chatMessages: Message[] = latestChat.messages.map((msg: any) => ({
-              id: msg._id || `msg_${msg.timestamp}`,
-              content: msg.text || msg.content || '',
-              role: msg.role === 'user' ? 'user' : msg.role === 'agent' ? 'agent' : 'assistant',
-              timestamp: msg.timestamp
-              }));
-            setMessages(chatMessages);
-            console.log(`✅ Loaded ${chatMessages.length} messages from backend for ${customerEmail}`);
+              const chatMessages = latestChat.messages.map(mapBackendMessage);
+              setMessages(chatMessages);
+              console.log(`✅ Loaded ${chatMessages.length} messages from backend for ${customerEmail}`);
             } else {
               // ⚠️ VALIDATE: Only load localStorage messages if email matches
               const storedEmail = localStorage.getItem("userEmail");
@@ -346,12 +306,13 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
                 const savedMessages = localStorage.getItem("messages");
                 if (savedMessages) {
                   try {
-                    const parsedMessages = JSON.parse(savedMessages);
+                    const parsedMessages = JSON.parse(savedMessages) as Message[];
                     if (parsedMessages && parsedMessages.length > 0) {
                       setMessages(parsedMessages);
                       console.log(`✅ Loaded ${parsedMessages.length} messages from localStorage for ${customerEmail}`);
                     }
-                  } catch (e) {
+                  } catch (error) {
+                    console.error('Error parsing saved messages:', error);
                     setMessages([]);
                   }
                 } else {
@@ -363,7 +324,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
                 setMessages([]);
               }
             }
-            
+
             console.log('✅ Loaded existing chat for customer:', customerEmail);
             return;
           }
@@ -401,23 +362,20 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
         setStage(savedStage);
       }
     }
-  };
+  }, [clearChatData]);
 
-  /**
-   * Fetch user information from backend using userId
-   */
-  const fetchUserInfo = async (uid: string) => {
+  const fetchUserInfo = useCallback(async (uid: string) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/users/${uid}/chats`);
       if (response.ok) {
-        const data = await response.json();
+        const data: UserChatsResponse = await response.json();
         const userName = data.user_name || '';
         const userEmail = data.user_email || '';
-        
+
         // If user exists but has no proper name/email, show form to collect it
         // This handles cases where customer record exists but lacks user info
         const hasValidUserInfo = userName && userEmail && !userEmail.includes('@widget.local');
-        
+
         if (!hasValidUserInfo) {
           console.log('👤 User exists but lacks name/email, showing form');
           setStage('form');
@@ -425,45 +383,40 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
           // Still set userId so the widget knows which user to link chats to
           return;
         }
-        
+
         setName(userName);
         setEmail(userEmail);
         setStage('chat'); // Go directly to chat if user exists with valid info
-        
+
         // Load existing chats and messages
         if (data.chats && data.chats.length > 0) {
           // Load the most recent chat's messages
           const latestChat = data.chats[data.chats.length - 1];
           setCurrentChatId(latestChat.chat_id);
           localStorage.setItem("currentChatId", latestChat.chat_id);
-          
+
           // Load messages from backend if available
           if (latestChat.messages && latestChat.messages.length > 0) {
-          // Convert chat messages to widget message format
-          const chatMessages: Message[] = latestChat.messages.map((msg: any) => ({
-            id: msg._id || `msg_${msg.timestamp}`,
-            content: msg.text || msg.content || '',
-            role: msg.role === 'user' ? 'user' : msg.role === 'agent' ? 'agent' : 'assistant',
-            timestamp: msg.timestamp
-          }));
-          
-          // Merge with any existing messages from localStorage/state
-          // This preserves messages that were loaded on mount before this API call
-          setMessages(prevMessages => {
-            // If we already have messages (from localStorage restore), merge them
-            if (prevMessages.length > 0) {
-              console.log(`🔄 Merging ${chatMessages.length} backend messages with ${prevMessages.length} existing messages`);
-              // Use backend messages as base, add any localStorage messages not in backend
-              const backendMessageIds = new Set(chatMessages.map(m => m.id));
-              const unsavedMessages = prevMessages.filter(m => !backendMessageIds.has(m.id));
-              const merged = [...chatMessages, ...unsavedMessages];
-              console.log(`✅ Merged to ${merged.length} total messages`);
-              return merged;
-            }
-            // No existing messages, just use backend messages
-            console.log(`📥 Loaded ${chatMessages.length} messages from backend`);
-            return chatMessages;
-          });
+            // Convert chat messages to widget message format
+            const chatMessages: Message[] = latestChat.messages.map(mapBackendMessage);
+
+            // Merge with any existing messages from localStorage/state
+            // This preserves messages that were loaded on mount before this API call
+            setMessages(prevMessages => {
+              // If we already have messages (from localStorage restore), merge them
+              if (prevMessages.length > 0) {
+                console.log(`🔄 Merging ${chatMessages.length} backend messages with ${prevMessages.length} existing messages`);
+                // Use backend messages as base, add any localStorage messages not in backend
+                const backendMessageIds = new Set(chatMessages.map(m => m.id));
+                const unsavedMessages = prevMessages.filter(m => !backendMessageIds.has(m.id));
+                const merged = [...chatMessages, ...unsavedMessages];
+                console.log(`✅ Merged to ${merged.length} total messages`);
+                return merged;
+              }
+              // No existing messages, just use backend messages
+              console.log(`📥 Loaded ${chatMessages.length} messages from backend`);
+              return chatMessages;
+            });
           } else {
             // Chat exists but has no messages - check localStorage first
             const savedMessages = localStorage.getItem("messages");
@@ -475,8 +428,8 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
                 } else {
                   setMessages([]);
                 }
-              } catch (e) {
-                console.error('Error parsing saved messages:', e);
+              } catch {
+                console.error('Error parsing saved messages:', savedMessages);
                 setMessages([]);
               }
             } else {
@@ -488,11 +441,12 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
           const savedMessages = localStorage.getItem("messages");
           if (savedMessages) {
             try {
-              const parsedMessages = JSON.parse(savedMessages);
+              const parsedMessages = JSON.parse(savedMessages) as Message[];
               if (parsedMessages && parsedMessages.length > 0) {
                 setMessages(parsedMessages);
               }
-            } catch (e) {
+            } catch (error) {
+              console.error('Error parsing saved messages:', error);
               setMessages([]);
             }
           } else {
@@ -501,22 +455,107 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
         }
       } else if (response.status === 404) {
         // User doesn't exist yet - show the form to collect name/email
-        console.log('👤 User not found in database, showing form for new user');
+        console.log(' User not found in database, showing form for new user');
         setStage('form');
         setMessages([]);
       } else {
         // Other error - show form as fallback
-        console.error('⚠️  Error fetching user info:', response.status, response.statusText);
+        console.error(' Error fetching user info:', response.status, response.statusText);
         setStage('form');
         setMessages([]);
       }
     } catch (error) {
-      console.error('❌ Error fetching user info:', error);
+      console.error(' Error fetching user info:', error);
       // On error, show form to allow user to proceed
       setStage('form');
       setMessages([]);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    console.log(' Widget API URL:', API_BASE_URL);
+    console.log(' Environment:', process.env.NODE_ENV);
+    if (typeof window !== "undefined") {
+
+      // Always load saved user data from localStorage first (UI state restoration)
+      const storedName = localStorage.getItem("userName");
+      const storedEmail = localStorage.getItem("userEmail");
+      const savedStage = localStorage.getItem("stage") as 'form' | 'chat';
+      const savedChatId = localStorage.getItem("currentChatId");
+
+      // IMPORTANT: Clear old chat data if this is a new session
+      // Check if we have user data in localStorage but no valid session
+      const hasStoredData = storedName || storedEmail || savedChatId;
+      const isNewSession = !propUserId && !storedEmail; // No URL userId and no saved email
+
+      if (hasStoredData && isNewSession) {
+        console.log(' Clearing old session data for fresh start');
+        clearChatData();
+      }
+
+      if (storedName) setName(storedName);
+      if (storedEmail) setEmail(storedEmail);
+
+      // If userId provided via props (from URL), use it
+      if (propUserId) {
+        setUserId(propUserId);
+
+        // If we have saved email, check if customer exists and has chats (more reliable than userId endpoint)
+        if (storedEmail) {
+          checkCustomerAndLoadChats(storedEmail);
+        } else if (savedStage === 'chat' && savedChatId) {
+          // If we have saved stage as 'chat' and a chat ID, restore directly to chat
+          setStage('chat');
+          setCurrentChatId(savedChatId);
+          // Load messages from localStorage if available
+          const savedMessages = localStorage.getItem("messages");
+          if (savedMessages) {
+            try {
+              const parsedMessages = JSON.parse(savedMessages);
+              if (parsedMessages && parsedMessages.length > 0) {
+                setMessages(parsedMessages);
+              }
+            } catch (e) {
+              console.error('Error parsing saved messages:', e);
+            }
+          }
+        } else {
+          // No saved email or chat, try to get user info from API based on userId
+          fetchUserInfo(propUserId);
+        }
+      } else {
+        // No userId in URL - check if we have saved email
+        if (storedEmail) {
+          checkCustomerAndLoadChats(storedEmail);
+        } else if (savedStage) {
+
+          // No saved email, load saved stage
+          setStage(savedStage);
+          // If stage is 'chat' and we have a chat ID, restore it
+          if (savedStage === 'chat' && savedChatId) {
+            setCurrentChatId(savedChatId);
+            // Load messages from localStorage if available
+            const savedMessages = localStorage.getItem("messages");
+            if (savedMessages) {
+              try {
+                const parsedMessages = JSON.parse(savedMessages);
+                if (parsedMessages && parsedMessages.length > 0) {
+                  setMessages(parsedMessages);
+                }
+              } catch (e) {
+                console.error('Error parsing saved messages:', e);
+              }
+            }
+          }
+        }
+      }
+
+      // Track and increment visit count
+      const visits = parseInt(localStorage.getItem('totalVisits') || '0', 10) + 1;
+      localStorage.setItem('totalVisits', visits.toString());
+    }
+
+  }, [propUserId, checkCustomerAndLoadChats, fetchUserInfo, clearChatData]);
 
   /**
    * Persist stage changes to localStorage
@@ -539,7 +578,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
         try {
           const parsedMessages = JSON.parse(savedMessages) as Message[];
           if (parsedMessages && parsedMessages.length > 0) {
-            console.log(`📦 Restoring ${parsedMessages.length} messages from localStorage`);
+            console.log(` Restoring ${parsedMessages.length} messages from localStorage`);
             // Set messages immediately - this will be merged later if backend has messages
             setMessages(parsedMessages);
           }
@@ -571,114 +610,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
     }
   }, [messages, currentChatId, userId]);
 
-  /**
-   * Sync messages to database on browser close/tab close
-   * ⚠️ DISABLED: Messages are now saved immediately when sent, no need for sync on close
-   * This prevents duplicate messages from being sent repeatedly
-   */
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const syncMessagesToDatabase = async () => {
-      if (!currentChatId || messages.length === 0) return;
-
-      // ⚠️ DISABLED: Do not sync messages here - they're already saved when sent!
-      // Re-syncing all messages causes infinite loops
-      console.log('💡 Sync disabled - messages are saved immediately when created');
-      return;
-
-      // OLD CODE (CAUSES LOOP): Syncs ALL messages repeatedly
-      const messagesToSync = messages;
-
-      try {
-        console.log('💾 Syncing', messagesToSync.length, 'messages to database...');
-        
-        // Use sendBeacon for reliable delivery on page unload
-        // Fallback to regular fetch for visibility changes
-        const useBeacon = typeof navigator !== 'undefined' && 'sendBeacon' in navigator;
-        
-        // Sync messages one by one
-        let syncSuccess = true;
-        for (const message of messagesToSync) {
-          try {
-            const payload = JSON.stringify({
-              content: message.content,
-              role: message.role
-            });
-            
-            if (useBeacon) {
-              // Use sendBeacon for reliability (synchronous, survives page unload)
-              // sendBeacon can send Blob with JSON, which is better than FormData
-              const blob = new Blob([payload], { type: 'application/json' });
-              
-              const success = navigator.sendBeacon(
-                `${API_BASE_URL}/api/users/chats/${currentChatId}/send`,
-                blob
-              );
-              if (!success) {
-                syncSuccess = false;
-                console.warn('sendBeacon failed for message, will retry on next load');
-              }
-            } else {
-              // Fallback to fetch for visibility changes (async)
-              await fetch(`${API_BASE_URL}/api/users/chats/${currentChatId}/send`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: payload,
-                keepalive: true, // Important: allows request to complete after page unload
-              });
-            }
-          } catch (error) {
-            console.warn('Failed to sync message to database:', error);
-            syncSuccess = false;
-          }
-        }
-        
-        // Clear localStorage only if all messages synced successfully
-        if (syncSuccess) {
-          localStorage.removeItem("messages");
-          console.log('✅ Messages synced to database and cleared from localStorage');
-        } else {
-          console.warn('⚠️ Some messages failed to sync, keeping in localStorage');
-        }
-      } catch (error) {
-        console.error('❌ Error syncing messages to database:', error);
-        // Don't clear localStorage if sync failed - user can try again later
-      }
-    };
-
-    // ⚠️ DISABLED: Event listeners removed since sync is disabled
-    // Messages are saved immediately when created, no need to sync on page unload
-    
-    // OLD CODE (REMOVED): These caused messages to be re-sent repeatedly
-    /*
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        syncMessagesToDatabase();
-      }
-    };
-
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      syncMessagesToDatabase();
-    };
-
-    const handlePageHide = () => {
-      syncMessagesToDatabase();
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('pagehide', handlePageHide);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('pagehide', handlePageHide);
-    };
-    */
-    
-    // No cleanup needed since no listeners are registered
-  }, [currentChatId, messages]);
+  // Messages are saved immediately when created; no additional unload sync required.
 
   /**
    * Initialize API health check and session ID generation
@@ -706,7 +638,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
 
     const pollMessages = async () => {
       try {
-        console.log(`🔄 Polling for messages - Chat ID: ${currentChatId}, Email: ${email}`);
+        console.log(` Polling for messages - Chat ID: ${currentChatId}, Email: ${email}`);
         
         // Fetch latest messages from backend
         const response = await fetch(`${API_BASE_URL}/api/users/${email}/chats`, {
@@ -715,34 +647,26 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
         });
 
         if (!response.ok) {
-          console.error(`❌ Poll failed - Status: ${response.status}`);
+          console.error(` Poll failed - Status: ${response.status}`);
           return;
         }
         
         if (!isActive) return;
 
-        const data = await response.json();
-        console.log(`📦 Received ${data.chats?.length || 0} chats from backend`);
+        const data: UserChatsResponse = await response.json();
+        console.log(` Received ${data.chats?.length || 0} chats from backend`);
         
-        const currentChat = data.chats?.find((chat: any) => chat.chat_id === currentChatId);
+        const currentChat = data.chats?.find((chat: BackendChat) => chat.chat_id === currentChatId);
         
         if (!currentChat) {
-          console.warn(`⚠️ Chat ${currentChatId} not found in response`);
+          console.warn(` Chat ${currentChatId} not found in response`);
           return;
         }
         
-        console.log(`💬 Chat found with ${currentChat.messages?.length || 0} messages`);
+        console.log(` Chat found with ${currentChat.messages?.length || 0} messages`);
         
         if (currentChat && currentChat.messages && isActive) {
-          const serverMessages: Message[] = currentChat.messages.map((msg: any) => {
-            const mappedRole = msg.role === 'user' ? 'user' : msg.role === 'agent' ? 'agent' : 'assistant';
-            return {
-              id: msg._id || `msg_${msg.timestamp}`,
-              content: msg.text || msg.content || '',
-              role: mappedRole,
-              timestamp: msg.timestamp
-            };
-          });
+          const serverMessages = currentChat.messages.map(mapBackendMessage);
 
           // Always update with server messages (server is source of truth)
           setMessages(prevMessages => {
@@ -751,8 +675,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
             const serverIds = serverMessages.map(m => m.id).join(',');
             
             if (prevIds !== serverIds) {
-              console.log('📬 Messages updated - Count:', serverMessages.length);
-              setLastMessageCount(serverMessages.length);
+              console.log(' Messages updated - Count:', serverMessages.length);
               return serverMessages;
             }
             return prevMessages;
@@ -783,7 +706,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
   const generateSessionId = () => {
     const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     setSessionId(newSessionId);
-    console.log('🆔 Generated session ID:', newSessionId);
+    console.log(' Generated session ID:', newSessionId);
   };
 
   /**
@@ -887,32 +810,33 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
    */
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingForm) return;
     if (!name || !email) return;
 
     try {
+      setIsSubmittingForm(true);
       // Collect user metadata
       const userData = await collectUserMetadata();
-      
-      // If userId is available (from widget link), include it so backend can link to correct customer
-      if (userId) {
-        (userData as any).user_id = userId;
-      }
-      
-      console.log("🧠 Sending user data to backend:", userData);
+      const payload: UserDataPayload = {
+        ...userData,
+        ...(userId ? { user_id: userId } : {}),
+      };
+
+      console.log(" Sending user data to backend:", payload);
 
       // Send user data to backend
       const response = await fetch(`${API_BASE_URL}/api/users/data`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) throw new Error(`Failed to save user data: ${response.status}`);
 
-      // ⚠️ IMPORTANT: Check if email changed BEFORE saving - clear old chat data
+      // IMPORTANT: Check if email changed BEFORE saving - clear old chat data
       const storedEmail = localStorage.getItem("userEmail");
       if (storedEmail && storedEmail !== email) {
-        console.log(`🧹 Email changed from ${storedEmail} to ${email}, clearing old chat data`);
+        console.log(` Email changed from ${storedEmail} to ${email}, clearing old chat data`);
         clearChatData();
       }
 
@@ -930,12 +854,13 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
 
       // Create chat instance immediately after form submission
       try {
-        console.log('📝 Creating chat instance after form submission...');
+        console.log(' Creating chat instance after form submission...');
         const chatId = await ensureChatInstance(userId || undefined);
-        console.log('✅ Chat instance created:', chatId);
+
+        console.log(' Chat instance created:', chatId);
         setCurrentChatId(chatId);
       } catch (error) {
-        console.error('⚠️  Failed to create chat instance on form submit:', error);
+        console.error(' Failed to create chat instance on form submit:', error);
         // Don't block form submission if chat creation fails - it will be created on first message
       }
 
@@ -944,6 +869,8 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
     } catch (error) {
       console.error('Error saving user data:', error);
       setStage('chat'); // Fallback to chat even if user data save fails
+    } finally {
+      setIsSubmittingForm(false);
     }
   };
 
@@ -960,10 +887,11 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
     try {
       // Create a new chat instance
       // If userId provided, use it; otherwise use email
-      const requestBody: any = {};
+      const requestBody: CreateChatRequestBody = {};
       if (uid) {
         requestBody.user_id = uid;
       }
+
       if (name) requestBody.name = name;
       if (email) requestBody.email = email;
       
@@ -980,7 +908,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Failed to create chat:', response.status, errorText);
+        console.error(' Failed to create chat:', response.status, errorText);
         throw new Error(`Failed to create chat: ${response.status} - ${errorText}`);
       }
 
@@ -989,7 +917,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
       setCurrentChatId(newChatId);
       // Save chat ID to localStorage for persistence across refreshes
       localStorage.setItem("currentChatId", newChatId);
-      console.log('✅ Created new chat instance:', newChatId);
+      console.log(' Created new chat instance:', newChatId);
       return newChatId;
     } catch (error) {
       console.error('Error creating chat instance:', error);
@@ -1009,7 +937,6 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
         await ensureChatInstance(userId || undefined);
       } catch (error) {
         console.error('Failed to create chat instance:', error);
-        setError('Failed to initialize chat. Please try again.');
         return;
       }
     }
@@ -1029,13 +956,12 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsLoading(true);
-    setError('');
 
     try {
       // If we have a chat instance, save the message to it
       if (currentChatId) {
         try {
-          console.log(`📤 Saving user message to chat ${currentChatId}...`);
+          console.log(` Saving user message to chat ${currentChatId}...`);
           const saveResponse = await fetch(`${API_BASE_URL}/api/users/chats/${currentChatId}/send`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1046,12 +972,12 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
           });
           
           if (saveResponse.ok) {
-            console.log('✅ User message saved to chat:', currentChatId);
+            console.log(' User message saved to chat:', currentChatId);
           } else {
-            console.error(`❌ Failed to save message - Status: ${saveResponse.status}`);
+            console.error(` Failed to save message - Status: ${saveResponse.status}`);
           }
         } catch (error) {
-          console.error('❌ Error saving message to chat instance:', error);
+          console.error(' Error saving message to chat instance:', error);
         }
       }
 
@@ -1062,8 +988,8 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
         session_id: currentChatId || sessionId,
       };
       
-      console.log("💬 Sending chat payload to backend:", payload);
-      console.log("🆔 Using chat ID for AI agent check:", currentChatId || sessionId);
+      console.log(" Sending chat payload to backend:", payload);
+      console.log(" Using chat ID for AI agent check:", currentChatId || sessionId);
 
       // Send message to backend
       const response = await fetch(`${API_BASE_URL}/api/chat`, {
@@ -1076,7 +1002,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
 
       // Process response
       const chatResponse: ChatResponse = await response.json();
-      console.log("✅ Response from backend:", chatResponse);
+      console.log(" Response from backend:", chatResponse);
 
       // Save AI response to chat instance if we have one
       if (currentChatId) {
@@ -1089,7 +1015,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
               role: 'assistant' 
             }),
           });
-          console.log('✅ AI response saved to chat:', currentChatId);
+          console.log(' AI response saved to chat:', currentChatId);
         } catch (error) {
           console.warn('Failed to save AI response to chat instance:', error);
         }
@@ -1122,8 +1048,8 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
       // Messages are automatically saved to localStorage via useEffect
       // They will be synced to DB when browser closes
     } catch (error) {
+      console.error('Failed to send message:', error);
       // Handle errors gracefully
-      setError(error instanceof Error ? error.message : 'Error sending message');
       setMessages(prev => [
         ...prev,
         { 
@@ -1149,15 +1075,6 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
     }
   };
 
-  /**
-   * Clear chat history and generate new session
-   */
-  const clearChat = () => {
-    setMessages([]);
-    setError('');
-    generateSessionId();
-  };
-
   // ============================================================================
   // RENDER METHODS
   // ============================================================================
@@ -1176,6 +1093,15 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
           flexDirection: 'column',
         }}
       >
+        <Backdrop
+          open={isSubmittingForm}
+          sx={{ color: '#fff', zIndex: (t) => t.zIndex.drawer + 1 }}
+        >
+          <Stack alignItems="center" spacing={1.5}>
+            <CircularProgress color="inherit" size={24} />
+            <Typography variant="body2">Setting things up...</Typography>
+          </Stack>
+        </Backdrop>
         {/* Window Frame Header */}
         <Box
           sx={{
@@ -1248,7 +1174,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
                   mb: 3,
                 }}
               >
-                Let's get started
+                Let&apos;s get started
               </Typography>
               <Stack spacing={2}>
                 {/* Name Input */}
@@ -1258,6 +1184,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
                   placeholder="Your Name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  disabled={isSubmittingForm || apiStatus === 'offline'}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
@@ -1292,6 +1219,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
                   placeholder="Your Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={isSubmittingForm || apiStatus === 'offline'}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
@@ -1323,6 +1251,7 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
                   type="submit"
                   fullWidth
                   variant="contained"
+                  disabled={isSubmittingForm || !name || !email || apiStatus === 'offline'}
                   sx={{
                     py: 1.5,
                     borderRadius: 2,
@@ -1330,8 +1259,20 @@ export default function ChatPage({ userId: propUserId }: ChatPageProps = {}) {
                     fontSize: '1rem',
                   }}
                 >
-                  Start Chat
+                  {isSubmittingForm ? (
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <CircularProgress size={16} sx={{ color: 'white' }} />
+                      <span>Starting chat...</span>
+                    </Stack>
+                  ) : (
+                    'Start Chat'
+                  )}
                 </Button>
+                {apiStatus === 'offline' && (
+                  <Typography variant="caption" sx={{ color: 'warning.main', textAlign: 'center' }}>
+                    Backend is offline. Please try again later.
+                  </Typography>
+                )}
               </Stack>
             </Box>
           </Box>
