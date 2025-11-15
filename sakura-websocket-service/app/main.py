@@ -77,6 +77,7 @@ app.add_middleware(
 )
 
 
+
 @app.websocket("/ws/dashboard")
 async def websocket_endpoint(websocket: WebSocket) -> None:
     connection_id = str(uuid.uuid4())

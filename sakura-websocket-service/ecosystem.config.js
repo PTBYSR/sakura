@@ -5,7 +5,7 @@ module.exports = {
       script: 'uvicorn',
       args: 'app.main:app --host 0.0.0.0 --port 8001',
       // Use venv Python interpreter - update path to match your EC2 setup
-      interpreter: '/home/ec2-user/sakura-websocket-service/venv/bin/python',
+      interpreter: '/home/ec2-user/sakura/sakura-websocket-service/venv/bin/python',
       // Alternative: if venv is in parent directory or different location
       // interpreter: '/home/ec2-user/venv/bin/python',
       cwd: '/home/ec2-user/sakura-websocket-service',
