@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     heartbeat_interval_seconds: int = Field(default=30, env="WS_HEARTBEAT_INTERVAL")
 
     # MongoDB for periodic snapshots (optional but mirrors original behaviour)
-    mongo_uri: str = Field(default="mongodb://localhost:27017", env="WS_MONGO_URI")
+    mongo_uri: str = Field(default="mongodb+srv://paulemechebeco_db_user:dbuser@sakura-cluster.wcmr0rf.mongodb.net/?retryWrites=true&w=majority&appName=sakura-cluster", env="WS_MONGO_URI")
     mongo_db: str = Field(default="sakura", env="WS_MONGO_DB")
 
     chat_snapshot_interval_seconds: int = Field(default=2, env="WS_CHAT_SNAPSHOT_INTERVAL")

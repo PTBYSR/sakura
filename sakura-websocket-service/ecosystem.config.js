@@ -14,7 +14,7 @@ module.exports = {
         WS_SERVICE_PORT: '8001',
         WS_REDIS_URL: 'redis://localhost:6379/0',
         WS_ALLOWED_ORIGINS: 'http://localhost:3000,http://127.0.0.1:3000',
-        WS_MONGO_URI: 'mongodb://localhost:27017',
+        WS_MONGO_URI: 'mongodb+srv://paulemechebeco_db_user:dbuser@sakura-cluster.wcmr0rf.mongodb.net/?retryWrites=true&w=majority&appName=sakura-cluster',
         WS_MONGO_DB: 'sakura',
         WS_CHAT_SNAPSHOT_INTERVAL: '2',
         WS_UNREAD_SNAPSHOT_INTERVAL: '5',
