@@ -6,7 +6,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   (process.env.NODE_ENV === "development"
     ? "http://localhost:8000"
-    : "https://sakura-backend.onrender.com");
+    : "https://api.sakurasupport.live");
 
 export interface ChatMessage {
   id: string;
@@ -580,7 +580,7 @@ export const useUnifiedChatData = ({ inboxType, userEmail, userId, section }: Us
       process.env.NEXT_PUBLIC_API_BASE_URL ||
       (process.env.NODE_ENV === "development"
         ? "http://localhost:8000"
-        : "https://sakura-backend.onrender.com");
+        : "https://api.sakurasupport.live");
 
     // Optimistically update UI first
     // All messages sent from dashboard inbox are from human agents

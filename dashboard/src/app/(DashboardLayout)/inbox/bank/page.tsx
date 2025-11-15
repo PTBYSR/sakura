@@ -114,7 +114,7 @@ export default function DatabaseInspectorPage() {
     process.env.NEXT_PUBLIC_API_BASE_URL ||
     (process.env.NODE_ENV === "development"
       ? "http://localhost:8000"
-      : "https://sakura-backend.onrender.com");
+      : "https://api.sakurasupport.live");
 
   // Check authentication on mount
   useEffect(() => {
